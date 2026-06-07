@@ -1,0 +1,11 @@
+id: codebase-analyzer
+name: Codebase Analyzer
+type: skill
+description: 对软件项目或源码仓库进行全面调研，输出结构化的中文调研报告
+tags:
+  - analysis
+  - onboarding
+  - report
+status: active
+created_at: 2026-06-02
+updated_at: 2026-06-06
