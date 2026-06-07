@@ -1,0 +1,11 @@
+id: ssh-mcp
+name: SSH MCP
+type: mcp
+description: 让 agent 安全参与服务器运维的 MCP 服务器（设计阶段）
+tags:
+  - ssh
+  - ops
+  - security
+status: draft
+created_at: 2026-05-25
+updated_at: 2026-05-28
