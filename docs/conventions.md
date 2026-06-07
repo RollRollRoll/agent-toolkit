@@ -37,9 +37,18 @@
 ```text
 resources/skills/<skill-id>/
   README.md
-  content.md
+  SKILL.md
   metadata.yaml
+  references/
+  docs/
 ```
+
+说明：
+
+- `SKILL.md` 为 skill 主体，保留平台原生格式（含 frontmatter），
+  可直接复制到目标平台使用。
+- `references/` 可选，存放 skill 引用的辅助文件。
+- `docs/` 可选，存放该资源的设计与演进记录。
 
 ### mcp
 

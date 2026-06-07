@@ -9,9 +9,11 @@
 ```text
 resources/skills/<skill-id>/
   README.md
-  content.md
+  SKILL.md
   metadata.yaml
 ```
+
+`references/` 和 `docs/` 子目录可选，按需添加。
 
 `README.md`：
 
@@ -31,9 +33,14 @@ resources/skills/<skill-id>/
 说明如何阅读、复制或迁移这个 skill。
 ```
 
-`content.md`：
+`SKILL.md`：
 
 ```markdown
+---
+name: example-skill
+description: 说明何时应触发本 skill。
+---
+
 # Example Skill
 
 ## Instructions
