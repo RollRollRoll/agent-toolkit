@@ -1,0 +1,17 @@
+{
+  "name": "agent-toolkit",
+  "owner": {
+    "name": "kgfan"
+  },
+  "metadata": {
+    "description": "kgfan 的个人 agent 工具市场",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "agent-toolkit",
+      "source": "./",
+      "description": "个人 agent 工具集：代码库调研等可复用 skills（中文）"
+    }
+  ]
+}

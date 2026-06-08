@@ -11,10 +11,13 @@
 - `command`
 - `hook`
 
-第一阶段只作为个人知识库使用，不绑定插件市场格式。
+以个人知识库为主，同时通过 `.claude-plugin/` 清单
+将仓库发布为 Claude Code 插件市场。
 
 ## 目录职责
 
+- `.claude-plugin/`：Claude Code 插件清单（`plugin.json`）
+  与市场清单（`marketplace.json`）。
 - `resources/skills/`：个人 skill。
 - `resources/mcps/`：MCP 配置或服务说明。
 - `resources/commands/`：自定义 command。
@@ -107,6 +110,10 @@ updated_at: 2026-06-07
 2. 添加该类型约定的主体文件、`README.md` 和 `metadata.yaml`。
 3. 如果该资源属于某个组合，手动更新对应 `collections/*.yaml`。
 4. 更新 `metadata.yaml` 的 `updated_at`。
+5. 如果资源要随插件发布，更新 `.claude-plugin/plugin.json`
+   对应组件数组（`skills` / `commands` / `hooks` / `mcpServers`），
+   按语义化版本递增 `version`，并用
+   `claude plugin validate . --strict` 校验。
 
 ## 新增 collection 流程
 
@@ -116,7 +123,6 @@ updated_at: 2026-06-07
 
 ## 第一阶段非目标
 
-- 不做插件市场 manifest。
 - 不做自动同步到 Codex、Claude 或其他平台。
 - 不做 CLI。
 - 不做 schema 校验。
