@@ -5,13 +5,13 @@
   },
   "metadata": {
     "description": "kgfan 的个人 agent 工具市场",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "plugins": [
     {
       "name": "agent-toolkit",
       "source": "./",
-      "description": "个人 agent 工具集：代码库调研等可复用 skills（中文）"
+      "description": "个人 agent 工具集：代码库调研、想法打磨等可复用 skills（中文）"
     }
   ]
 }
