@@ -1,6 +1,6 @@
 {
   "name": "agent-toolkit",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "个人 agent 工具集：代码库调研、想法打磨等可复用 skills（中文）",
   "author": {
     "name": "kgfan"
@@ -16,6 +16,7 @@
   ],
   "skills": [
     "./resources/skills/codebase-analyzer",
+    "./resources/skills/execute-task",
     "./resources/skills/make-design",
     "./resources/skills/refine-idea",
     "./resources/skills/split-task",
