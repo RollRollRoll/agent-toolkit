@@ -1,0 +1,12 @@
+id: split-task
+name: Split Task
+type: skill
+description: 把确认过的技术设计拆成可独立验收、带依赖与验证的开发任务清单，只到任务拆分层，不下沉到逐行实现
+tags:
+  - plan
+  - task-breakdown
+  - vertical-slice
+  - implementation-tasks
+status: draft
+created_at: 2026-06-22
+updated_at: 2026-06-22
