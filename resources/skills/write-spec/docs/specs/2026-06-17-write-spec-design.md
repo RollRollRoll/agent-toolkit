@@ -18,11 +18,11 @@
 
 ## 定位
 
-站在 refine-idea（概念边界）与 write-plan（技术方案 + 任务）之间：
+站在 refine-idea（概念边界）与 make-design（技术方案 + 任务）之间：
 
 - 上游 refine-idea 给"做什么 / 不做什么"的概念 —— 可选输入。
 - 本 skill 把概念翻译成"系统 MUST / MUST NOT / 边界如何 / 怎么验收"的行为契约。
-- 下游 write-plan 负责技术方案与任务拆解 —— 本 skill 不碰。
+- 下游 make-design 负责技术方案与任务拆解 —— 本 skill 不碰。
 
 ## 关键设计决策（本次确认）
 
