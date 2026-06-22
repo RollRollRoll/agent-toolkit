@@ -99,7 +99,7 @@ brownfield 不建此图，走 delta。）
 
 1. **扫项目**：用 Glob / Grep / Read 摸清结构、**测试怎么跑**（决定"成功标准"能落成什么形式的检查）、
    已有 spec / 文档、相关代码。脱离代码库写出来的 spec 是愿望清单。
-2. **接上游**：若存在 refine-idea 概念单（`docs/ideas/*` 或用户指明的位置），读入作为输入；
+2. **接上游**：若存在 refine-idea 概念单（`docs/proposal/*` 或用户指明的位置），读入作为输入；
    没有，就做一次**轻量**意图确认（确认"要解决什么、不做什么"够清楚即可，不重复 refine-idea 的深挖）。
 3. **判 greenfield / brownfield**：
    - 新增能力 → 写全量 spec。
