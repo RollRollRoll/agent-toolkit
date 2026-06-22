@@ -5,7 +5,8 @@
 把一个**边界已经清晰**的想法 / 需求（理想情况下来自 refine-idea 的概念单），
 钉成一份**可被验证的行为规格**：用 Requirement + MUST + Scenario（WHEN→THEN）
 写清行为与验收，强制覆盖边界场景、把"不做什么"转成可验证的 MUST NOT，
-经用户 review 才放行进入实现。
+经用户 review 才放行进入实现。greenfield 阶段还会先用**能力覆盖图（Coverage Map）**
+系统圈定该领域的能力维度并逐项定档，防止整类功能被漏、也防全面变膨胀。
 
 它填补"概念清晰"和"动手编码"之间的空档：止步于行为与验收，
 **不做技术选型 / 架构、不拆任务**（那是下游 write-plan 的事）。
@@ -27,6 +28,7 @@
 ## 目录说明
 
 - `SKILL.md`：skill 主体（平台原生格式，含 frontmatter）。
-- `references/spec-template.md`：行为契约 spec 的落盘模板（含 delta 写法）。
+- `references/spec-template.md`：行为契约 spec 的落盘模板（含 delta 写法、能力覆盖与档位节）。
 - `references/coverage-probes.md`：双探针清单（边界 + 禁止），含怎么转成可验证项。
+- `references/coverage-map.md`：能力覆盖图（greenfield）——功能空间调研、能力维度定档（纳入 / 默认不做 / 后续版本 / 必须确认）、问题分级。
 - `docs/`：开发过程中的设计文档。

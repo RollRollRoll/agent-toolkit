@@ -92,3 +92,29 @@ resources/skills/write-spec/
 
 `.claude-plugin/plugin.json` 与 `marketplace.json`：`skills` 数组加入 `write-spec`，
 version `0.2.0` → `0.3.0`。
+
+## 2026-06-20 增强：greenfield 全面性（Coverage Map）
+
+**动机**：greenfield 阶段只盯用户明说的需求展开，**整类能力维度会被静默漏掉**——
+不是漏在边界（那有双探针兜着），而是漏在"领域本应有、但没人提起"的功能空间上。
+
+**设计**：四个机制**收敛成一条链，以 Coverage Map 为枢纽**（不做成并列章节，避免 skill 自身膨胀）：
+
+1. **功能空间调研（先问后调）**：greenfield 且领域成熟时，**先征求用户同意**，再用
+   deep-research 调研该领域常见能力维度 / 丰富度分档 / 易漏点。产出是**功能空间参考，
+   不是需求**，零默认纳入。
+2. **Coverage Map**：把"需求已含 + 调研补充"的维度汇成一张表，**落盘进 spec 一节**，让全面性可被 review。
+3. **档位**：每行必落一档 `纳入 / 默认不做 / 后续版本 / 必须确认`——防"全面变膨胀"的闸门。
+4. **问题分级**：对"必须确认"分 `现在问 / 采用默认 / 放 Open Questions`，避免一次抛几十个问题。
+
+**层次**：Coverage Map（宏观：有哪些维度、做不做）→ 双探针（微观：选定需求的边界与禁止）。
+**边界**：只动 greenfield；brownfield 仍走 delta，不建 Coverage Map。
+
+**落地**：
+
+- 新增 `references/coverage-map.md`（调研纪律 + 列维度 + 判档 + 问题分级 + 模板）。
+- `SKILL.md`：招牌机制加"greenfield 多一层"；阶段 1 升级为"调研 → 建图 → 分级确认"；
+  核心原则 / 终止条件 / 自检清单 / 反例 / 示范同步。
+- `spec-template.md`：greenfield 模板加「能力覆盖与档位」节。
+
+**两个经用户确认的决策**：Coverage Map **落盘为固定章节**；deep-research **先问后调**（不自动跑）。
