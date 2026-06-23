@@ -1,0 +1,12 @@
+id: finish-branch
+name: Finish Branch
+type: skill
+description: 开发完成测试通过后收尾分支，验证测试→检测状态→合并/保留/PR/丢弃，破坏性操作交用户拍板
+tags:
+  - execute
+  - git
+  - branch
+  - finishing
+status: draft
+created_at: 2026-06-22
+updated_at: 2026-06-22

@@ -1,0 +1,12 @@
+id: setup-worktree
+name: Setup Worktree
+type: skill
+description: 执行前建立隔离 git 工作区，检测已在worktree→平台原生工具→fallback git worktree
+tags:
+  - execute
+  - git
+  - worktree
+  - isolation
+status: draft
+created_at: 2026-06-22
+updated_at: 2026-06-22
