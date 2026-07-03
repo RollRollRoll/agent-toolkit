@@ -1,6 +1,6 @@
 {
   "name": "agent-toolkit",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "个人 agent 工具集：代码库调研、想法打磨等可复用 skills（中文）",
   "author": {
     "name": "kgfan"
@@ -22,6 +22,7 @@
     "./resources/skills/refine-idea",
     "./resources/skills/setup-worktree",
     "./resources/skills/split-task",
+    "./resources/skills/test-skill",
     "./resources/skills/write-spec"
   ]
 }

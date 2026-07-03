@@ -3,6 +3,6 @@ name: Test Skill
 type: skill
 description: 对目标 skill 发起 headless 盲测跑，逐步骤溯源并产出中文复盘报告
 tags: [skill-quality, testing, replay]
-status: draft
+status: active
 created_at: 2026-07-02
-updated_at: 2026-07-02
+updated_at: 2026-07-03
