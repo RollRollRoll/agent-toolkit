@@ -3,7 +3,7 @@
 ## 用途
 
 把一份**已确认的任务清单**（理想情况下来自 split-task），逐个落地成**实现 + 测试 + 提交**：
-按依赖 / wave 调度，每个任务由 fresh subagent 走"TDD → 验证 → 审查 → 原子提交"的干净闭环，
+按依赖 / wave 调度，每个任务走"执行 subagent（TDD → 验证）→ 独立 review subagent 审查 → 独立 fix subagent 修复 → 原子提交"的干净闭环，
 进度用 checkbox + 账本记录可恢复，最后做整体五轴 review + 覆盖核对回扫确认不落空，
 收尾的合并 / PR 交用户拍板。
 
@@ -28,6 +28,6 @@
 
 - `SKILL.md`：skill 主体（平台原生格式，含 frontmatter）。
 - `references/orchestration.md`：调度与编排——依赖 / wave 排序、并行与 worktree 隔离、subagent 派发、进度账本与 safe-resume。
-- `references/execution-loop.md`：每任务闭环——TDD seam / tracer bullet、小步推进、验证节奏、审查与 fix loop、atomic commit、bug 诊断。
+- `references/execution-loop.md`：每任务闭环——TDD seam / tracer bullet、小步推进、验证节奏、独立 review / fix subagent 闭环、atomic commit、bug 诊断。
 - `references/acceptance.md`：验收与收尾——每任务验收门、整体五轴 review、覆盖核对回扫、上游纠错守层、收尾。
 - `docs/`：开发过程中的设计文档。

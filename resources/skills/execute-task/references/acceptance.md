@@ -7,12 +7,16 @@
 ## 一 · 每任务验收门（闸门一）
 
 - 对齐 split-task 给的「验收标准 + 验证方式」，逐条核——**全绿才算完成**。
-- **不过不 commit、不标 `[x]`**：验收不绿的任务不许进账本。
+- 审查由主 agent 派发的**独立 review subagent** 执行，结论按 Critical / Important / Minor 分级；
+  有 Critical / Important 则派**独立 fix subagent** 修复 → 复审——不自审自修。
+- **Critical / Important 清零才过闸门**，Minor 记录不阻塞；修复超轮次上限（默认 3 轮）仍不过 → 停下交用户判断。
+- **不过不 commit、不标 `[x]`**：验收不绿（含复审未过）的任务不许进账本。
 - 这是任务级"做完没做完"的客观判据，不靠"看起来写好了"。
 
 ## 二 · 整体五轴 review（闸门二）
 
-全部任务完成后，对整条分支做五轴审查（吸收 agent-skills code-review-and-quality）：
+全部任务完成后，主 agent **派独立 review subagent** 对整条分支做五轴审查（吸收 agent-skills code-review-and-quality）；
+审出的 Critical / Important **派独立 fix subagent** 修复 → 复审（同样按轮次计，超限交用户），Minor 记录不阻塞：
 
 - **correctness（正确）**：行为对不对，边界 / 错误路径处理了吗，验收标准真满足吗。
 - **readability（可读）**：命名 / 结构清晰吗，后人能看懂吗。
@@ -46,8 +50,8 @@
 
 ## 收尾自检
 
-- 每任务都过了验收门才 commit / 标 `[x]`？
-- 整体过了五轴 review？
+- 每任务都过了验收门（独立 review subagent 审查、独立 fix subagent 修复）才 commit / 标 `[x]`？
+- 整体过了五轴 review（独立 review subagent）？审出的问题派独立 fix subagent 修了？
 - 覆盖核对回扫——design / spec 每条都实现且被测试覆盖、不落空？
 - 全套测试 / 构建 / typecheck 绿？
 - 发现上游错误按"小修就地 / 重大退回"处理了？
