@@ -38,8 +38,9 @@
     + 相关 design/spec 片段。它是需求的**唯一来源**——精确值（数字、签名、测试用例）只出现在这里，不重复粘进 prompt；
   - **执行报告** `task-N-report.md`：执行 subagent 写详细报告——实现了什么、测试命令与输出（TDD 红→绿证据）、
     改动文件、遇到的问题；后续 fix 的修复报告**追加到同一文件**，复审读的就是它；
-  - **diff 文件**：主 agent 用 `git diff` 重定向生成交给 review（执行 subagent 不 commit，工作区 diff 即该任务改动；
-    fix 后复审时**重新生成**新 diff，别复用旧文件）。
+  - **diff 文件**：主 agent 运行本 skill 目录下的 `scripts/review-diff.sh <任务编号>` 生成交给 review
+    （执行 subagent 不 commit，工作区 diff 即该任务改动；脚本自动按轮次命名并打印写入路径，不必人工记编号；
+    fix 后复审时**重新运行**生成新一轮 diff，别复用旧文件）。
 - **派发 prompt 只描述这一个任务**：一行任务定位（在整个项目里的位置）+ 简报路径（"先读它，它是你的需求"）+
   前序任务已定的接口 / 决策（简报无法知道的）+ 报告文件路径与回执契约。**不要**把前面任务的累积摘要粘进后面任务的派发。
 - **执行回执 = 状态 + 短摘要**（细节都在报告文件里，回执控制在十行内）：
@@ -59,6 +60,8 @@
   生成新 diff 派复审——复审读更新后的报告 + 新 diff。
 - **平台**：在 Claude Code 里用 Task / Agent 工具派发 subagent。**subagent 不可用的环境**（无该能力）→
   降级为主 agent **顺序执行**同一套闭环纪律（TDD → 验证 → 审查 → commit），不卡死。
+- **模型按角色 / 复杂度定档**：派发前用平台的模型参数（如 Agent 工具的 `model`）显式指定 cheap / standard / most-capable，
+  不写等于任其继承主 agent 当前档位（通常最贵）；判据见 [model-selection.md](model-selection.md)。
 
 ## 五 · 进度账本与 safe-resume
 
@@ -74,4 +77,5 @@
 - 每任务的执行 / 审查 / 修复各派了独立 fresh subagent（或降级顺序执行）？主 agent 在编排而非糊代码 / 自审自修？
 - handoff 走的是文件（简报 / 报告 / diff 传路径）而非粘贴正文？执行回执带了状态（DONE / BLOCKED…）且按状态处理了？
 - fix 报告里有测试证据（覆盖测试 + 命令 + 输出）才派的复审？复审用了**新生成**的 diff？
+- 每次派发都**显式指定了模型档位**，没有留空任其继承主 agent？
 - 每完成一个就回写了 checkbox + ledger？中断能 safe-resume？

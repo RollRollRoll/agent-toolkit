@@ -16,7 +16,8 @@
 ## 二 · 整体五轴 review（闸门二）
 
 全部任务完成后，主 agent **派独立 review subagent** 对整条分支做五轴审查（吸收 agent-skills code-review-and-quality）；
-审出的 Critical / Important **派独立 fix subagent** 修复 → 复审（同样按轮次计，超限交用户），Minor 记录不阻塞：
+**这次派发固定用 most-capable（最强档）模型，不沿用 session 默认**——它是全链路唯一的架构级判断点，
+判据见 [model-selection.md](model-selection.md)。审出的 Critical / Important **派独立 fix subagent** 修复 → 复审（同样按轮次计，超限交用户），Minor 记录不阻塞：
 
 - **correctness（正确）**：行为对不对，边界 / 错误路径处理了吗，验收标准真满足吗。
 - **readability（可读）**：命名 / 结构清晰吗，后人能看懂吗。
@@ -51,7 +52,7 @@
 ## 收尾自检
 
 - 每任务都过了验收门（独立 review subagent 审查、独立 fix subagent 修复）才 commit / 标 `[x]`？
-- 整体过了五轴 review（独立 review subagent）？审出的问题派独立 fix subagent 修了？
+- 整体过了五轴 review（独立 review subagent，且**固定用了 most-capable 档位**）？审出的问题派独立 fix subagent 修了？
 - 覆盖核对回扫——design / spec 每条都实现且被测试覆盖、不落空？
 - 全套测试 / 构建 / typecheck 绿？
 - 发现上游错误按"小修就地 / 重大退回"处理了？

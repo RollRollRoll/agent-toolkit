@@ -21,8 +21,9 @@
 
 ## 使用方式
 
-将本目录下的 `SKILL.md` 和 `references/` 复制到目标平台的 skill 目录
-（如 Claude Code 的 `.claude/skills/execute-task/`）即可直接使用。
+将本目录下的 `SKILL.md`、`references/` 和 `scripts/` 复制到目标平台的 skill 目录
+（如 Claude Code 的 `.claude/skills/execute-task/`）即可直接使用；
+若 `scripts/review-diff.sh` 丢失可执行权限，补一次 `chmod +x scripts/review-diff.sh`。
 
 ## 目录说明
 
@@ -30,4 +31,6 @@
 - `references/orchestration.md`：调度与编排——依赖 / wave 排序、并行与 worktree 隔离、subagent 派发、进度账本与 safe-resume。
 - `references/execution-loop.md`：每任务闭环——TDD seam / tracer bullet、小步推进、验证节奏、独立 review / fix subagent 闭环、atomic commit、bug 诊断。
 - `references/acceptance.md`：验收与收尾——每任务验收门、整体五轴 review、覆盖核对回扫、上游纠错守层、收尾。
+- `references/model-selection.md`：模型选择——派发执行 / review / fix subagent 与整体验收时，按角色与复杂度定档。
+- `scripts/review-diff.sh`：生成派 review 前的任务 diff 文件，自动按轮次命名并打印写入路径。
 - `docs/`：开发过程中的设计文档。

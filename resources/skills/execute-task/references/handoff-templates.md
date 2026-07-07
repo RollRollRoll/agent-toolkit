@@ -3,6 +3,8 @@
 > 用途：`execute-task` 阶段 2 派发 subagent 时照抄填空（占位符 `[...]`）。
 > 机制与状态协议见 [orchestration.md](orchestration.md) 第四节，此处只给可直接套用的模板。
 > subagent 不可用的降级场景不用模板——主 agent 顺序执行同一套闭环纪律。
+> **模型档位不是 prompt 正文的一部分**：派发前先按 [model-selection.md](model-selection.md) 定档（cheap / standard / most-capable），
+> 用平台的模型参数（如 Agent 工具的 `model`）指定，不要写进下面的模板文本里、也不要留空。
 
 ## 〇 · 派发前主 agent 先备好交接文件
 
@@ -10,8 +12,10 @@
 2. **任务简报** `[BRIEF_FILE]` = `.execute-task/task-N-brief.md`：从 tasks.md 摘出该任务全文
    （验收标准、验证方式、涉及文件）+ 相关 design/spec 片段。
 3. **执行报告**路径约定为 `[REPORT_FILE]` = `.execute-task/task-N-report.md`（执行 subagent 写、fix 追加）。
-4. **diff 文件**在派 review 前生成：`git diff > .execute-task/task-N-review-R1.diff`
-   （复审 R2、R3 递增命名，每轮**重新生成**）。
+4. **diff 文件**在派 review 前生成：运行本 skill 目录下的 `scripts/review-diff.sh <任务编号>`——
+   它会建好 `.execute-task/`（含自忽略 `.gitignore`）、按轮次自动递增命名（R1/R2/R3…）、跑 `git diff` 写入文件，
+   并把写入路径打印到 stdout；主 agent 拿这个打印路径填 `[DIFF_FILE]`。
+   复审时**重新运行同一命令**生成新一轮文件，不要复用旧 diff；脚本对空 diff 会打印警告，提示确认执行 subagent 是否真的有改动。
 
 ## 一 · 执行 subagent 派发模板
 
@@ -151,3 +155,4 @@ diff 文件：[DIFF_FILE]（工作区未提交改动，含带上下文的完整 
 - 简报 / 报告 / diff 走的是**路径**？prompt 里没粘正文、没粘前序任务的累积摘要？
 - review 派发里没有预判（"这个别报""顶多算 Minor"）？硬约束是逐字抄的？
 - fix 派发**点名了覆盖测试**？收到 fix 回执后核了三样证据（覆盖测试 + 命令 + 输出）才生成新 diff 派复审？
+- 用平台的模型参数**显式指定了本次派发的档位**（cheap/standard/most-capable），没有留空？
