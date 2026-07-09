@@ -156,12 +156,12 @@ diff 文件：[DIFF_FILE]（工作区未提交改动，含带上下文的完整 
 
 ## 四 · 整体验收 review 派发模板（阶段 3）
 
-先跑 `scripts/acceptance-diff.sh <起点commit>`（起点 = 阶段 1 记入账本的起点 commit）生成整体审查包，
+先跑本 skill 目录下的 `scripts/acceptance-diff.sh <起点commit>`（起点 = 阶段 1 记入账本的起点 commit）生成整体审查包，
 拿打印路径填 `[PACKAGE_FILE]`。五轴定义与覆盖回扫住在 acceptance.md，此处不重复。
 
 ```text
 你来做整体验收 review：全部任务已完成，对整条开发线做五轴审查。
-这次派发用最强档模型（见 model-selection.md），是全链路唯一的架构级判断点。
+这是全链路唯一的架构级判断点。
 
 ## 审查范围
 
@@ -182,7 +182,7 @@ diff 文件：[DIFF_FILE]（工作区未提交改动，含带上下文的完整 
 
 > 阶段 3 审出的 Critical / Important：fix 派发**复用第三节任务级 fix 模板**，「任务简报」位换成
 > design/spec 路径、边界从"单任务"换成"本次开发范围"；fix 后主 agent **先 commit 再复审**——
-> 重跑 `scripts/acceptance-diff.sh <起点>` 生成新一轮包（机制与理由见 acceptance.md）。
+> 重跑本 skill 目录下的 `scripts/acceptance-diff.sh <起点>` 生成新一轮包（机制与理由见 acceptance.md）。
 
 ## 五 · 派发前主 agent 自查
 

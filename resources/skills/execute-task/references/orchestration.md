@@ -32,8 +32,8 @@
   **主 agent 做编排**：派执行 → 派 review →（不过则派 fix → 复审）→ 过闸门 → commit → 记账本 → 下一个；
   不自己埋头糊代码、也不亲手审查 / 修复。三类派发 prompt 照抄 [handoff-templates.md](handoff-templates.md)。
 - **文件 handoff，不粘正文**：大块产物写成文件、派发只传路径——粘进派发 prompt 的内容会常驻主 agent
-  上下文，每轮都被重读。每任务三份交接文件（放仓库根下临时目录如 `.execute-task/`，内放一个只含 `*` 的
-  `.gitignore` 自忽略，不提交；放工作树内是因为 subagent 通常写不了 `.git/` 下）：
+  上下文，每轮都被重读。每任务三份交接文件（放仓库根下临时目录 `.execute-task/`，由 `scripts/workspace.sh`
+  自动创建并自忽略、不提交；放工作树内是因为 subagent 通常写不了 `.git/` 下）：
   - **任务简报** `task-N-brief.md`：运行本 skill 目录下的 `scripts/task-brief.sh <tasks文件> <任务编号>`
     机械抽取该任务全文（**不要手抄**，精确值逐字保真），再由主 agent 追加相关 design/spec 片段。
     它是需求的**唯一来源**——精确值（数字、签名、测试用例）只出现在这里，不重复粘进 prompt；
