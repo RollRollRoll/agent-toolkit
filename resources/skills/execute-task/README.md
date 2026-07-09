@@ -23,7 +23,7 @@
 
 将本目录下的 `SKILL.md`、`references/` 和 `scripts/` 复制到目标平台的 skill 目录
 （如 Claude Code 的 `.claude/skills/execute-task/`）即可直接使用；
-若 `scripts/review-diff.sh` 丢失可执行权限，补一次 `chmod +x scripts/review-diff.sh`。
+若 `scripts/` 下脚本丢失可执行权限，补一次 `chmod +x scripts/*.sh`。
 
 ## 目录说明
 
@@ -32,5 +32,8 @@
 - `references/execution-loop.md`：每任务闭环——TDD seam / tracer bullet、小步推进、验证节奏、独立 review / fix subagent 闭环、atomic commit、bug 诊断。
 - `references/acceptance.md`：验收与收尾——每任务验收门、整体五轴 review、覆盖核对回扫、上游纠错守层、收尾。
 - `references/model-selection.md`：模型选择——派发执行 / review / fix subagent 与整体验收时，按角色与复杂度定档。
-- `scripts/review-diff.sh`：生成派 review 前的任务 diff 文件，自动按轮次命名并打印写入路径。
+- `scripts/workspace.sh`：交接目录 `.execute-task/` 的单一事实来源（建目录 + 自忽略 `.gitignore`，打印路径），其余脚本经它取目录。
+- `scripts/task-brief.sh`：从 tasks 文档机械抽取单个任务全文生成简报基底，防手抄失真；design/spec 片段由主 agent 追加。
+- `scripts/review-diff.sh`：生成派 review 前的任务 diff 文件（-U10 扩展上下文），自动按轮次命名并打印写入路径。
+- `scripts/acceptance-diff.sh`：生成阶段 3 整体验收审查包（BASE..HEAD 的 commit 清单 + 变更统计 + 完整 diff）。
 - `docs/`：开发过程中的设计文档。
