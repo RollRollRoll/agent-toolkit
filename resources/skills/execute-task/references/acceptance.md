@@ -15,6 +15,10 @@
 
 ## 二 · 整体五轴 review（闸门二）
 
+**输入准备**：派发前运行本 skill 目录下的 `scripts/acceptance-diff.sh <起点commit>`（起点 = 阶段 1
+记入账本的起点 commit）——生成整体审查包（commit 清单 + 变更统计 + BASE..HEAD 完整 diff，-U10）
+并打印路径，派发时传包路径（照抄 handoff-templates.md 第四节模板），不让 review subagent 自己爬库推导改动。
+
 全部任务完成后，主 agent **派独立 review subagent** 对整条分支做五轴审查（吸收 agent-skills code-review-and-quality）；
 **这次派发固定用 most-capable（最强档）模型，不沿用 session 默认**——它是全链路唯一的架构级判断点，
 判据见 [model-selection.md](model-selection.md)。审出的 Critical / Important **派独立 fix subagent** 修复 → 复审（同样按轮次计，超限交用户），Minor 记录不阻塞：
@@ -24,6 +28,11 @@
 - **architecture（架构）**：模块边界 / 职责合理吗，有没有该抽的重复、该隔的耦合。
 - **security（安全）**：输入校验、权限、敏感数据、注入面有没有问题。
 - **performance（性能）**：有没有明显热点 / N+1 / 不必要开销（按项目实际规模判断，别过早优化）。
+
+**阶段 3 的 fix 循环（commit-then-review）**：审出的 Critical / Important 派独立 fix subagent 修复后，
+主 agent **先 commit 再复审**——重跑 `scripts/acceptance-diff.sh <起点>`（轮次递增，HEAD 已前进，
+新包已含 fix），复审读一个新包。与任务级"不过不 commit"**有意不同**：任务级的 commit 是闸门记号；
+阶段 3 面对的本来就是已 commit 的分支，闸门记号是"整体验收通过"状态本身，fix commit 只是普通代码演进。
 
 ## 三 · 覆盖核对回扫
 
@@ -53,6 +62,7 @@
 
 - 每任务都过了验收门（独立 review subagent 审查、独立 fix subagent 修复）才 commit / 标 `[x]`？
 - 整体过了五轴 review（独立 review subagent，且**固定用了 most-capable 档位**）？审出的问题派独立 fix subagent 修了？
+- 整体 review 拿到的是 `acceptance-diff.sh` 生成的审查包（而非让它自己爬库）？fix 后复审用的是 commit 过再重新生成的新包？
 - 覆盖核对回扫——design / spec 每条都实现且被测试覆盖、不落空？
 - 全套测试 / 构建 / typecheck 绿？
 - 发现上游错误按"小修就地 / 重大退回"处理了？
