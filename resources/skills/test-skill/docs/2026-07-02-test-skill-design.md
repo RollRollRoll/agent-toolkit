@@ -1,5 +1,7 @@
 # test-skill 技术设计
 
+> **历史记录（2026-07-10 标注）**：本文描述最初设计，其中权限、隔离、运行器与报告路径已被 0.8.1 修订。现行契约以 `../SKILL.md` 与 `../scripts/run-headless.py` 为准。
+
 - 日期：2026-07-02
 - 状态：已确认（brainstorming 对话逐节确认通过）
 - 定位：agent-toolkit 新增 skill `test-skill` 的设计依据

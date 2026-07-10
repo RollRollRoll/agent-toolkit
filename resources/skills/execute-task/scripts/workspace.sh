@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 用途：解析并确保 execute-task 交接文件的工作目录存在，打印其绝对路径。
-# 它是目录约定的单一事实来源：task-brief.sh / review-diff.sh / acceptance-diff.sh
+# 它是目录约定的单一事实来源：task-brief.sh / task-baseline.sh / review-diff.sh / acceptance-diff.sh
 # 都经它取目录，防三处约定漂移。
 # 目录放工作树内（而非 .git/ 下）是因为 subagent 通常写不了 .git/；
 # 自忽略 .gitignore 保证它不进 git status、不被提交。

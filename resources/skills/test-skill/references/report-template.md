@@ -7,14 +7,19 @@
 
 - 测试日期：YYYY-MM-DD
 - 被测版本：<SKILL.md 路径 + 所在 git 提交号（若在仓库中）>
+- 实际加载来源：<沙箱注入路径；若无法确认则写明证据缺口>
+- 运行 ID：<run-config.json 中的 run_id>
 - 沙箱路径：<绝对路径>
+- 编排目录：<绝对路径>
 
 ## 1. 测试概要
 
 - 测试场景：<一段话>
 - 剧本要点：模拟用户身份、真实意图、隐藏痛点（此处可以明说）
 - 实际轮数 / 时长：<N 轮，约 M 分钟>
-- 权限白名单（最终生效）：<--allowedTools 内容>
+- 内建工具边界：<run-config.json 中 tools；由 --tools 限制>
+- 免提示规则：<run-config.json 中 allowed_tools；注意它不是工具白名单>
+- 设置 / MCP 隔离：<setting_sources=project；strict MCP 空配置；bash_sandbox_required；托管策略影响>
 - 异常事件：<超时/权限拒绝/报错，无则写"无">
 
 ## 2. 步骤溯源表
@@ -58,9 +63,11 @@
 
 - 沙箱产物清单：<文件列表>
 - 剧本全文（含即兴追记附录）
-- 指令清单 checklist.md 路径
-- 原始 transcript：<沙箱路径>/transcript-run.jsonl
-  ⚠️ 沙箱为会话级临时目录，如需长期留存请自行拷贝。
+- 指令清单：<编排目录>/checklist.md
+- 原始 transcript：<编排目录>/transcript-run.jsonl
+- stderr：<编排目录>/stderr.log
+- 逐轮状态：<编排目录>/run-state.json
+  ⚠️ 沙箱与编排目录都位于会话级临时空间，如需长期留存原始证据请自行拷贝。
 ```
 
 ## 成文要求
@@ -68,3 +75,4 @@
 - 步骤溯源表必须覆盖全部语义步骤，不得抽样。
 - 指令覆盖统计中每条指令（R1..Rn）必须出现且仅出现在一个状态清单里（`存疑` 单列除外）。
 - 修改建议每条都要能直接执行（改哪节、怎么改），禁止"建议优化表述"这类空话。
+- 报告必须写入 runner 的 `report-path` 返回值，不能写入被测 skill 原目录或覆盖既有文件。

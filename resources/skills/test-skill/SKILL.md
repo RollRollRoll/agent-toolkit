@@ -1,116 +1,130 @@
 ---
 name: test-skill
-description: 当用户想测试/复盘某个 skill 的实际执行效果时使用——如"测一下这个 skill、复盘 skill 执行、看看 agent 是不是按 skill 写的做的、skill 覆盖率/溯源报告"。对目标 skill 发起一次 headless 盲测跑并产出逐步骤溯源的中文复盘报告。不要用于：写新 skill（用 writing-skills 类流程）、调试业务代码、code review、对"当前会话里已发生的执行"做复盘（本 skill 只做主动测试跑）。
+description: 当用户想测试或复盘某个 skill 的实际执行效果时使用——如“测一下这个 skill”“看看 agent 是否按 skill 执行”“生成 skill 覆盖率或溯源报告”。在隔离沙箱中发起一次 headless 盲测，逐步骤溯源并产出中文复盘报告。不要用于编写新 skill、调试业务代码、代码审查，或复盘当前会话已经发生的执行。
 ---
 
 # Test Skill — skill 盲测复盘
 
-## 你的任务
+## 任务
 
-对一个目标 skill 发起一次**盲测跑**：在隔离沙箱里用 headless `claude -p` 进程执行它（被测进程不知道自己在被测试），你按剧本扮演用户与它多轮对话；跑完后逐步骤溯源——agent 的每个动作依据 skill 哪条指令、哪些指令被违反或跳过——最终产出一份中文复盘报告，回答"这个 skill 写得好不好、哪里要改"。
+在隔离沙箱中驱动一次多轮 headless 会话。被测进程只看到自然的用户任务，不知道自己正在被测试。运行结束后，把每个语义步骤与目标 `SKILL.md` 的指令逐项对齐，产出可复核的中文报告。
 
-你在整个流程中身兼四职：**编排者**（搭环境、驱动进程）、**模拟用户**（照剧本回答）、**分析者**（事后溯源）、**报告作者**。
+使用 `scripts/run-headless.py` 执行所有 headless 轮次。不要自行拼接 `claude -p` 命令；运行器负责跨平台超时、会话 ID、逐轮状态、JSONL、stderr、参数传递和唯一报告路径。
 
-## 为什么必须盲测
-
-执行者若知道自己被检查，会比平时更严格地遵守 skill，测出来的是"监考下的表现"而非平时表现，复盘结论会系统性偏乐观。因此：**被测进程收到的一切输入（任务、每轮回复、fixture 文件内容）一律不得出现"测试 / 评估 / 复盘 / 检查你"等透露测试意图的表述。**
-
-盲测不等于隐藏 skill 名——正常用户本来就会显式点名 skill（"用 refine-idea 帮我理一理……"），首轮任务就应自然地点名它。
-
-## 流程总览
+## 流程
 
 ```text
-阶段 0  预检与输入确认（CLI 可用？目标 skill 在哪？场景有了吗？）
-阶段 1  指令清单化（SKILL.md → 编号指令 R1..Rn + 背景条目）
-阶段 2  沙箱搭建（scratchpad 独立目录 + fixture + 注入被测 skill）
-阶段 3  剧本与开跑确认（隐藏痛点剧本 + 成本确认门）
-阶段 4  盲测驱动循环（claude -p 首轮 → 照剧本回复 → --resume 续轮 → 停止条件）
-阶段 5  溯源分析（步骤时间线 ←对齐→ 指令清单，双侧判定）
-阶段 6  复盘报告（六节中文报告，落到约定位置）
+阶段 0  定位与 CLI 预检
+阶段 1  创建隔离目录并清单化指令
+阶段 2  铺设 fixture 与注入目标 skill
+阶段 3  生成剧本并取得成本确认
+阶段 4  驱动盲测会话
+阶段 5  重建时间线并双侧判定
+阶段 6  写入持久报告
 ```
 
-## 阶段 0：预检与输入确认
+### 阶段 0：定位与 CLI 预检
 
-1. 运行 `claude --version` 确认 CLI 可用。失败即停，告知用户当前环境无法做 headless 测试。
-2. 定位目标 skill 的 SKILL.md，支持三种输入形式：
-   - **仓库 id**：`resources/skills/<id>/SKILL.md`；
-   - **SKILL.md 路径**：直接使用；
-   - **已安装 skill 名**：在插件缓存（如 `~/.claude/plugins/cache/`）中查找。
-   定位失败时列出你找到的相近候选请用户指认，不要自行猜测。
-3. 用户未提供测试场景时，依据目标 skill 的 description 设计一个典型适用场景；场景在阶段 3 连同剧本一起交用户确认。
-
-## 阶段 1：指令清单化
-
-4. 通读目标 SKILL.md 全文（含 frontmatter），拆出编号指令清单 R1..Rn。**一条指令 = 一个可独立判定"遵守与否"的行为要求**；一个章节常拆出多条。
-5. 纯背景、动机阐述、举例段落不算指令，记为背景条目 B1..Bm——不参与覆盖统计，诊断环节引用。
-6. frontmatter description 中"何时不用"的限定同样拆入指令清单（执行中依然可判定）。
-7. 清单写入**编排目录** `checklist.md`（编排目录见第 8 条；严禁写入沙箱），每条包含：编号、原文摘录、所在章节、**适用条件**（什么情况下该条才适用——阶段 5 区分"被跳过"与"未触发"全靠它）。
-
-## 阶段 2：沙箱搭建
-
-8. 在会话 scratchpad 下创建两个同级目录：**沙箱**（被测进程的 cwd，`git init`）和**编排目录**（命名 `<沙箱名>-run/`，存放 checklist.md、剧本、transcript、stderr 等一切编排产物）。**沙箱内只允许出现 fixture、`.claude/` 注入和被测进程自己的产物**——编排产物一旦落入被测 cwd 就会被 `ls` 尽收眼底：轻则污染场景数据（实测中被测 agent 把它们写进了交付物），重则内容被读取、盲测即破。
-9. 按场景铺设 fixture（被测 skill 需要的既有文档、代码等）。fixture 内容同样遵守盲测红线。
-10. 注入被测 skill：把目标 skill 目录完整复制到 `沙箱/.claude/skills/<原名>/`。已实测（见 `docs/2026-07-02-assumption-test-notes.md`）：headless 下项目级 skill 会被加载，同名时项目级可遮蔽已安装插件版。**但遮蔽不完全可靠**——真实测试中出现过被测进程改选插件命名空间版本（`<插件名>:<id>`）的案例。因此阶段 5 分析时**必须核对 transcript 中实际触发的 skill 名与来源**：与注入版一致则正常；若加载的是插件版，先 diff 两版内容——逐字一致则结果有效（报告中注记），不一致则**本次结果无效**，禁用同名插件或改用副本名注入后重跑。
-
-## 阶段 3：剧本与开跑确认
-
-11. 按 `references/persona-template.md` 生成模拟用户剧本（写入编排目录 `persona.md`），必含：身份背景、真实意图、**隐藏痛点**（首轮绝不说出，考验 skill 的意图挖掘指令）、常见问题答案素材、回答风格、不透露边界。
-12. 向用户呈现：场景、剧本要点、预计轮数、成本量级（一次测试是完整多轮 agent 会话，token 消耗可观），**取得确认后才开跑**。用户可以跳过剧本细节审阅，但成本确认门不可跳过。
-
-## 阶段 4：盲测驱动循环
-
-13. 命令逐字使用以下模板（来自 `docs/2026-07-02-assumption-test-notes.md` 实测终稿），cwd 必须是沙箱；`--allowedTools` 白名单默认如下，按被测 skill 实际需要增补，并在报告概要中记录最终白名单：
+1. 定位目标 `SKILL.md`。支持仓库 id、文件路径和已安装 skill 名；存在多个候选时请用户指认，不要猜测。
+2. 记下三个绝对路径：本 skill 目录、发起测试时的项目目录、会话 scratchpad。后续每次工具调用都直接使用绝对路径；不要依赖 shell 变量、当前目录或上一次 Bash 调用的状态。
+3. 只做可执行文件与版本预检，不发起模型调用：
 
 ```bash
-# RUNDIR = 编排目录绝对路径；cwd = 测试沙箱（transcript 等一律落编排目录，严禁落沙箱）
-timeout 600 claude -p "$FIRST_PROMPT" \
-  --output-format stream-json --verbose \
-  --permission-mode acceptEdits \
-  --allowedTools "Read Write Edit Glob Grep Bash(git:*)" \
-  >> "$RUNDIR/transcript-run.jsonl" 2>> "$RUNDIR/stderr.log"
-
-# session_id 提取（首轮后执行一次，全程沿用；--resume 不改变 session_id，已实测）
-SID=$(python3 -c "
-import json
-for line in open('$RUNDIR/transcript-run.jsonl'):
-    line=line.strip()
-    if not line: continue
-    d=json.loads(line)
-    if d.get('session_id'): print(d['session_id']); break
-")
-
-# 续轮（每轮一次，沿用同一 SID）
-timeout 600 claude -p --resume "$SID" "$SIMULATED_USER_REPLY" \
-  --output-format stream-json --verbose \
-  --permission-mode acceptEdits \
-  --allowedTools "Read Write Edit Glob Grep Bash(git:*)" \
-  >> "$RUNDIR/transcript-run.jsonl" 2>> "$RUNDIR/stderr.log"
+python3 <本-skill-绝对路径>/scripts/run-headless.py doctor --claude claude
 ```
 
-14. 首轮 prompt = 普通用户口吻 + 显式点名被测 skill 原名 + 场景任务。例："用 refine-idea 帮我理一理：我想要一个实验管理 dashboard。"
-15. 每轮结束后解析 transcript 新增部分，判断被测进程最后的输出属于哪类：
-    - **在提问 / 等待用户输入** → 按剧本生成回复，发起续轮；
-    - **收尾陈述**（总结产出、无待答问题）→ 停止循环。
-16. 剧本未覆盖的问题按人设合理即兴，即兴问答**追记进剧本附录**——复盘时"用户说过什么"必须全部有据可查。
-17. 停止条件（满足其一即停）：收尾判定；轮数上限（默认 10，可在开跑确认时调整）；单轮 `timeout 600` 秒。
-18. 被测进程报错或权限拒绝：同一轮最多重试 1 次；仍失败则停止驱动，带着已有 transcript 进入阶段 5——失败样本也是复盘素材（权限拒绝反映该 skill 的隐含权限需求，写进报告）。
+预检失败即停。Claude Code 官方说明 `--help` 不保证列出全部参数，因此 runner 只把未列出的参数记入诊断，
+不据此误判“不支持”；真正运行仍会带齐隔离参数，旧 CLI 解析失败时直接停止，不降级成宽松权限。
 
-## 阶段 5：溯源分析
+### 阶段 1：创建隔离目录并清单化指令
 
-19. 解析 `transcript-run.jsonl`（逐行 JSON；遇到未知事件类型跳过而非报错），重建**语义步骤时间线**。判定口径唯一依据 `references/judging-criteria.md`，动手前先读它。
-20. 双侧判定：每个步骤三选一——`依据 Rx` / `偏离 Rx` / `无依据`；每条指令四选一——`已遵守` / `被违反` / `被跳过` / `未触发`。
-21. transcript 超过约 200k 字符时：按对话轮切分，spawn 子 agent 分段分析（每段都附上 `checklist.md` 与判定标准全文），你负责汇总并统一判定口径。
-22. 若被测进程从未触发目标 skill：跳过步骤溯源，直接进阶段 6，报告主体改写"触发失败"发现——显式点名仍未触发，通常指向 description 措辞或加载配置问题。
+4. 在 scratchpad 下规划两个尚不存在的同级目录：测试沙箱 `<运行名>/` 与编排目录 `<运行名>-run/`。持久报告目录固定为发起测试项目下的 `skill-test-reports/<被测-id>/`，不得放进目标 skill 原目录。
+5. 初始化运行。下面的路径均替换为绝对路径；默认只开放目标 skill 与沙箱项目内的文件工具，按场景做最小化增删：
 
-## 阶段 6：复盘报告
+```bash
+python3 <本-skill-绝对路径>/scripts/run-headless.py init \
+  --sandbox <沙箱绝对路径> \
+  --run-dir <编排目录绝对路径> \
+  --report-dir <发起测试项目绝对路径>/skill-test-reports/<被测-id> \
+  --skill-name <被测-id> \
+  --tools "Skill,Read,Write,Edit,Glob,Grep" \
+  --allowed-tools "Skill(<被测-id>),Read(/**),Write(/**),Edit(/**)" \
+  --timeout 600 --max-turns 10
+```
 
-23. 按 `references/report-template.md` 撰写中文报告，六节齐全（测试概要 / 步骤溯源表 / 指令覆盖统计 / 设计诊断 / 修改建议 / 附录）。
-24. 存放规则：目标 skill 属于当前 git 仓库 → `resources/skills/<被测id>/docs/test-report-YYYY-MM-DD.md`；否则 → **发起测试时编排者所在的项目目录**（不是沙箱）下的 `skill-test-reports/`。
-25. 报告末尾提醒：沙箱位于会话级临时目录，原始 transcript 如需长期留存请自行拷贝（附上沙箱路径）。
+`init` 必须先成功，它会创建沙箱和编排目录并写入 `run-config.json`。随后在沙箱执行 `git init`。
+被测场景确实需要 Bash 时才把它加入 `--tools`，并显式列出逐条只读命令规则；禁止 `Bash`、
+`Bash(*)`、`Bash(git:*)` 这类宽规则。此时 runner 会强制启用 Claude Code OS sandbox、限制读取编排/报告目录并禁止 unsandboxed fallback；平台缺少 sandbox 能力就 fail closed。初始化仓库由编排者在真实 headless 调用前完成，不需要把该权限交给被测进程。
 
-## 红线（任何阶段不得违反）
+6. 通读目标 `SKILL.md` 全文。把可独立判定的行为要求拆为 R1..Rn，把纯背景和示例拆为 B1..Bm；frontmatter 中“不适用”限制也属于指令。将清单写入编排目录 `checklist.md`，每条记录原文、章节和适用条件。
 
-- **盲测红线**：被测进程的一切输入不得透露测试意图。
-- **权限红线**：只用 `--permission-mode acceptEdits` + `--allowedTools` 白名单，禁止 `--dangerously-skip-permissions`。
-- **零侵入**：不得修改被测 skill 原目录的任何文件。
-- **成本确认门**（阶段 3 第 12 条）不可跳过。
+### 阶段 2：铺设 fixture 与注入目标 skill
+
+7. 只在沙箱中铺设场景 fixture。fixture 和文件名不得透露测试意图。
+8. 把目标 skill 的完整副本注入 `沙箱/.claude/skills/<被测-id>/`。沙箱 `.claude/` 中只允许出现这个受控副本和确有必要的空项目配置；不得复制原项目的 settings、插件或 MCP 配置。
+9. 编排产物只能放在同级编排目录，不能放进沙箱。被测进程的 cwd 始终是沙箱。
+
+### 阶段 3：生成剧本并取得成本确认
+
+10. 按 [persona-template.md](references/persona-template.md) 生成 `编排目录/persona.md`。保留现有隐藏痛点模型，不额外扩展人设维度。
+11. 向用户呈现场景、剧本要点、预计轮数，以及 `run-config.json` 中的实际工具边界和成本量级。取得明确确认后才执行 `start`；成本确认门不可跳过。
+12. 将首轮自然语言任务写入 `编排目录/turn-001.txt`。被测进程收到的任何 prompt 都不得包含“测试、评估、复盘、检查你”等措辞；自然地点名目标 skill 是允许的。
+
+### 阶段 4：驱动盲测会话
+
+13. 首轮仅执行：
+
+```bash
+python3 <本-skill-绝对路径>/scripts/run-headless.py start \
+  --run-dir <编排目录绝对路径> \
+  --prompt-file <编排目录绝对路径>/turn-001.txt
+```
+
+运行器把 transcript、stderr、`session-id` 和逐轮字节范围写入编排目录，不写入沙箱。
+
+14. 解析本轮新增 transcript。若输出在等待用户输入，按剧本生成回复，写入下一个 `turn-NNN.txt`，再执行：
+
+```bash
+python3 <本-skill-绝对路径>/scripts/run-headless.py resume \
+  --run-dir <编排目录绝对路径> \
+  --prompt-file <编排目录绝对路径>/turn-NNN.txt
+```
+
+运行器自行从 `session-id` 恢复会话，不要在 shell 中保存 `SID`。剧本未覆盖的问题可按人设即兴，但必须追记进 `persona.md` 附录。
+
+15. 满足任一条件即停：被测进程收尾；达到 `max_turns`；单轮超时；CLI、权限或会话校验失败。失败后不得在同一运行目录继续或覆盖记录；保留样本进入分析。若确需重跑，创建全新的沙箱与编排目录，并重新取得成本确认。
+16. 需要查看可靠状态时执行 `status --run-dir <编排目录绝对路径>`，以 `run-state.json` 为准，不从 shell 变量推断。
+
+### 阶段 5：重建时间线并双侧判定
+
+17. 先读 [judging-criteria.md](references/judging-criteria.md)，再解析编排目录的 `transcript-run.jsonl`。遇到未知事件类型或损坏行时记录并跳过，不得让整个分析中断。
+18. 核对 transcript 中实际触发的 skill 名与来源是否为沙箱注入副本。若不是，或来源无法确认且会影响结论，把结果标为无效或存疑，不得伪装成有效盲测。
+19. 双侧判定：每个语义步骤三选一——`依据 Rx`、`偏离 Rx`、`无依据`；每条指令四选一——`已遵守`、`被违反`、`被跳过`、`未触发`。
+20. transcript 超过约 200k 字符时，按对话轮切分给子 agent；每段必须同时提供完整 checklist 和判定标准，最后统一口径。
+
+### 阶段 6：写入持久报告
+
+21. 按 [report-template.md](references/report-template.md) 写六节中文报告。先原子预留唯一文件名：
+
+```bash
+python3 <本-skill-绝对路径>/scripts/run-headless.py report-path \
+  --run-dir <编排目录绝对路径>
+```
+
+把报告写入命令返回的路径；重复调用会返回同一路径。同日多次运行由时间与 `run_id` 区分，不得覆盖旧报告。
+
+22. 报告中的原始证据路径必须指向编排目录的 `transcript-run.jsonl`、`stderr.log`、`run-state.json`、`checklist.md` 和 `persona.md`，不能指向沙箱。提醒用户 scratchpad 会被清理，如需长期留存应复制原始证据。
+
+## Fail-closed 边界
+
+- `--tools` 才限制内建工具可用性；`--allowedTools` 只免除权限提示，不是工具白名单。运行器同时使用精确 `--tools`、限定到沙箱项目的最小 `--allowedTools` 和 `--permission-mode dontAsk`，未预授权动作直接拒绝。Bash 默认不开放；启用时额外强制 OS sandbox，sandbox 不可用即失败。
+- MCP 不受 `--tools` 限制。运行器固定使用 `--strict-mcp-config` 与空 `--mcp-config`。
+- 运行器固定使用 `--setting-sources project`，以排除 user/local 设置并保留沙箱项目 skill。系统或组织托管策略仍可能生效，发现相关 hook、插件或权限影响时必须写入报告。
+- 禁止 `--dangerously-skip-permissions`，禁止绕过 runner 直接运行 headless CLI，禁止为兼容旧 CLI 删除隔离参数。
+
+## 红线
+
+- **盲测**：被测进程的一切输入不得透露测试意图。
+- **零侵入**：不得修改目标 skill 原目录；持久报告只能写入独立的 `skill-test-reports/`。
+- **隔离**：checklist、persona、transcript、stderr、状态文件不得进入沙箱。
+- **成本确认**：用户确认之前不得执行 `start` 或任何真实 headless 轮次。

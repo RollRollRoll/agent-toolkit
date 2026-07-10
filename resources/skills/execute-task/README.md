@@ -3,9 +3,11 @@
 ## 用途
 
 把一份**已确认的任务清单**（理想情况下来自 split-task），逐个落地成**实现 + 测试 + 提交**：
-按依赖 / wave 调度，每个任务走"执行 subagent（TDD → 验证）→ 独立 review subagent 审查 → 独立 fix subagent 修复 → 原子提交"的干净闭环，
+按依赖 / wave 调度（默认串行，仅在隔离、同基线、无冲突和 merge 授权齐备时并行），每个任务走"执行 subagent（TDD → 验证）→ 独立 review subagent 审查 → 独立 fix subagent 修复 → 原子提交"的干净闭环，
 进度用 checkbox + 账本记录可恢复，最后做整体五轴 review + 覆盖核对回扫确认不落空，
 收尾的合并 / PR 交用户拍板。
+任何代码修改前必须先获得用户对当前分支、任务范围和提交批次的明确授权；每任务从干净 HEAD 开始，
+审查包覆盖全部未提交变化，代码、测试与 tasks checkbox 进入同一个原子提交。
 
 它是这条链**唯一真正写代码**的 skill，填补"任务拆好了"和"功能交付"之间的最后一棒：
 自包含（以 superpowers 执行逻辑为骨架、融合五源，运行时不依赖外部插件），守层（不拆任务 / 不定决策 / 不定行为）。
@@ -23,7 +25,7 @@
 
 将本目录下的 `SKILL.md`、`references/` 和 `scripts/` 复制到目标平台的 skill 目录
 （如 Claude Code 的 `.claude/skills/execute-task/`）即可直接使用；
-若 `scripts/` 下脚本丢失可执行权限，补一次 `chmod +x scripts/*.sh`。
+若 `scripts/` 下脚本丢失可执行权限，按所在环境的权限变更规则取得确认后，再补一次 `chmod +x scripts/*.sh`。
 
 ## 目录说明
 
@@ -34,6 +36,7 @@
 - `references/model-selection.md`：模型选择——派发执行 / review / fix subagent 与整体验收时，按角色与复杂度定档。
 - `scripts/workspace.sh`：交接目录 `.execute-task/` 的单一事实来源（建目录 + 自忽略 `.gitignore`，打印路径），其余脚本经它取目录。
 - `scripts/task-brief.sh`：从 tasks 文档机械抽取单个任务全文生成简报基底，防手抄失真；design/spec 片段由主 agent 追加。
-- `scripts/review-diff.sh`：生成派 review 前的任务 diff 文件（-U10 扩展上下文），自动按轮次命名并打印写入路径。
-- `scripts/acceptance-diff.sh`：生成阶段 3 整体验收审查包（BASE..HEAD 的 commit 清单 + 变更统计 + 完整 diff）。
+- `scripts/task-baseline.sh`：每任务开工前确认真实工作区干净并记录 HEAD，供任务审查校验提交漂移。
+- `scripts/review-diff.sh`：生成派 review 前的完整任务 diff（暂存、未暂存、删除、未跟踪、binary、-U10），不修改真实 index。
+- `scripts/acceptance-diff.sh`：拒绝 dirty 工作区后生成阶段 3 整体验收审查包（BASE..HEAD 的 commit 清单 + 变更统计 + 完整 diff）。
 - `docs/`：开发过程中的设计文档。

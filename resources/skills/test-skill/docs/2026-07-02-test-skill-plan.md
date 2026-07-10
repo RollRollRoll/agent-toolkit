@@ -1,5 +1,7 @@
 # test-skill 实现计划
 
+> **历史记录（2026-07-10 标注）**：本文是已经执行过的初版计划，其中命令模板、权限边界与报告路径不再适用。现行契约以 `../SKILL.md` 与 `../scripts/run-headless.py` 为准。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 为 agent-toolkit 新增 `test-skill`——对任意 skill 发起 headless 盲测跑，事后逐步骤溯源并产出中文复盘报告。

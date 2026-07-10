@@ -1,5 +1,7 @@
 # headless 驱动技术假设实测记录
 
+> **历史记录（2026-07-10 标注）**：本文保留早期实验事实，但其中 `timeout`、shell 变量、`acceptEdits`、把 `--allowedTools` 当白名单以及报告路径等执行样例已被 0.8.1 取代。现行契约以 `../SKILL.md` 与 `../scripts/run-headless.py` 为准，不得复制本文命令执行新测试。
+
 - 日期：2026-07-02
 - 环境：claude CLI 2.1.198（Claude Code），Linux/WSL2
 - 依据：设计文档第 8 节的 4 条假设；实验沙箱为会话 scratchpad 下 `assumption-probe/`

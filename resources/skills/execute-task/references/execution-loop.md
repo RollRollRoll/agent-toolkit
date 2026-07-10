@@ -2,7 +2,7 @@
 
 > 用途：`execute-task` 招牌机制「核心一」的操作细则。阶段 2 每个任务内部怎么走。
 >
-> **闭环**：执行 subagent 在 seam 上 TDD → 小步实现 → 验证；独立 review subagent 审查；不过则独立 fix subagent 修复 → 复审；绿后 atomic commit。一个任务一个干净闭环。
+> **闭环**：干净基线 → 执行 subagent 在 seam 上 TDD → 小步实现 → 验证；独立 review subagent 审查；不过则独立 fix subagent 修复 → 复审；绿后 checkbox 与代码一起 atomic commit。一个任务一个干净闭环。
 
 ## 一 · 在 seam 上 TDD（tracer bullet）
 
@@ -47,9 +47,10 @@
 
 ## 五 · atomic commit
 
-- **一个任务一个原子提交**：提交粒度对齐任务，便于追溯与回滚。
+- **先有授权**：任何代码修改前，阶段 0 必须已获得用户对当前分支、tasks 范围和本批次提交的明确授权；拒绝 / 含糊就停止。每次 commit 前核对仍在授权范围内。
+- **一个任务一个原子提交**：复审绿后先把 tasks.md 对应项改成 `[x]`，将已审代码、测试和 checkbox 一起提交；提交粒度对齐任务，便于追溯与回滚。
 - 提交信息可追溯到任务（如 `feat: list_experiments 查询+校验+稳定排序`）。
-- **复审绿、过了闸门一才提交**（由主 agent 执行 commit）——验收不绿不 commit。
+- **复审绿、过了闸门一才提交**（由主 agent 执行 commit）——验收不绿不 commit。提交成功后才写 ignored ledger，随后确认真实工作区干净；未干净不开始下一任务。
 
 ## 六 · bug 类任务的诊断（按需）
 
@@ -71,4 +72,4 @@
 - 审查派了独立 review subagent、修复派了独立 fix subagent（没有自审自修、主 agent 没亲手审 / 修）？
 - 交接走了文件三件套（简报 / 报告 / diff）？review 以 diff 为准核对了报告？fix 留了测试证据、复审用了新 diff？
 - review 结论按 Critical / Important / Minor 分级了？fix loop 按轮次计、超限时停下交用户而不是无限循环？
-- 复审绿、过了验收门才 atomic commit？提交信息可追溯到任务？
+- 复审绿、过了验收门才 atomic commit？提交在用户授权内，且包含已审代码 / 测试 / checkbox？提交后才写 ignored ledger 并确认 clean？
