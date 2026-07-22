@@ -7,18 +7,18 @@
 目录：
 
 ```text
-resources/skills/<skill-id>/
+skills/<skill-id>/
   README.md
   SKILL.md
   metadata.yaml
-skills/<skill-id>/
-  SKILL.md  # Codex 插件薄适配入口
+  references/
+  docs/
+  scripts/
+  assets/
 ```
 
-Codex 薄适配入口只复制 canonical Skill 的 `name` / `description`，正文引用
-`../../resources/skills/<skill-id>/SKILL.md` 并要求完整执行；不要复制整套主体、references 或 scripts。
-
-`references/` 和 `docs/` 子目录可选，按需添加。
+Claude Code 和 Codex 共用这个完整目录。`references/`、`docs/`、`scripts/` 和
+`assets/` 子目录可选，按需添加；`SKILL.md` 使用相对路径引用这些 supporting files。
 
 `README.md`：
 
@@ -71,7 +71,7 @@ updated_at: 2026-06-07
 目录：
 
 ```text
-resources/mcps/<mcp-id>/
+mcps/<mcp-id>/
   README.md
   config.example.json
   metadata.yaml
@@ -123,7 +123,7 @@ updated_at: 2026-06-07
 目录：
 
 ```text
-resources/commands/<command-id>/
+commands/<command-id>/
   README.md
   command.md
   metadata.yaml
@@ -173,7 +173,7 @@ updated_at: 2026-06-07
 目录：
 
 ```text
-resources/hooks/<hook-id>/
+hooks/<hook-id>/
   README.md
   hook.md
   metadata.yaml

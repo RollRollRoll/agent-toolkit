@@ -13,8 +13,7 @@
 
 以个人知识库为主。Claude Code 是主要支持平台，通过 `.claude-plugin/` 发布；
 Codex 作为补充平台，通过 `.codex-plugin/` 和 `.agents/plugins/` 发布。
-两平台共用 `resources/skills/` 下的 canonical Skill，Codex 的根目录 `skills/`
-只存薄适配入口。
+两平台直接加载根目录 `skills/` 下的同一套完整 Skill。
 
 ## 目录职责
 
@@ -22,11 +21,10 @@ Codex 作为补充平台，通过 `.codex-plugin/` 和 `.agents/plugins/` 发布
   与市场清单（`marketplace.json`）。
 - `.codex-plugin/`：Codex 插件清单。
 - `.agents/plugins/`：Codex 仓库级 marketplace 清单。
-- `skills/`：Codex 插件发现入口；每个入口只引用对应 canonical Skill。
-- `resources/skills/`：两平台共用的 canonical Skill。
-- `resources/mcps/`：MCP 配置或服务说明。
-- `resources/commands/`：自定义 command。
-- `resources/hooks/`：hook 定义或说明。
+- `skills/`：两平台共用的完整 Skill；辅助资料、脚本和测试放在对应 Skill 目录内。
+- `mcps/`：MCP 配置或服务说明。
+- `commands/`：自定义 command。
+- `hooks/`：hook 定义或说明。
 - `collections/`：资源组合清单。
 - `docs/`：维护规范和模板。
 
@@ -43,25 +41,28 @@ Codex 作为补充平台，通过 `.codex-plugin/` 和 `.agents/plugins/` 发布
 ### skill
 
 ```text
-resources/skills/<skill-id>/
+skills/<skill-id>/
   README.md
   SKILL.md
   metadata.yaml
   references/
   docs/
+  scripts/
+  assets/
 ```
 
 说明：
 
 - `SKILL.md` 为 skill 主体，保留平台原生格式（含 frontmatter），
-  可直接复制到目标平台使用。
+  由 Claude Code 和 Codex 直接加载。
 - `references/` 可选，存放 skill 引用的辅助文件。
 - `docs/` 可选，存放该资源的设计与演进记录。
+- `scripts/` 和 `assets/` 可选，存放 Skill 使用的脚本与静态资源。
 
 ### mcp
 
 ```text
-resources/mcps/<mcp-id>/
+mcps/<mcp-id>/
   README.md
   config.example.json
   metadata.yaml
@@ -70,7 +71,7 @@ resources/mcps/<mcp-id>/
 ### command
 
 ```text
-resources/commands/<command-id>/
+commands/<command-id>/
   README.md
   command.md
   metadata.yaml
@@ -79,7 +80,7 @@ resources/commands/<command-id>/
 ### hook
 
 ```text
-resources/hooks/<hook-id>/
+hooks/<hook-id>/
   README.md
   hook.md
   metadata.yaml
@@ -111,13 +112,13 @@ updated_at: 2026-06-07
 
 ## 新增资源流程
 
-1. 在对应 `resources/<type>/` 下创建资源目录。
+1. 在对应的根目录 `<type>/<resource-id>/` 下创建资源目录。
 2. 添加该类型约定的主体文件、`README.md` 和 `metadata.yaml`。
 3. 如果该资源属于某个组合，手动更新对应 `collections/*.yaml`。
 4. 更新 `metadata.yaml` 的 `updated_at`。
 5. 如果 Skill 要随插件发布：
    - 更新 `.claude-plugin/plugin.json` 的 `skills` 数组；
-   - 新增或更新 `skills/<skill-id>/SKILL.md` Codex 薄适配入口；
+   - 确认 `.codex-plugin/plugin.json` 的 `skills` 指向根目录 `skills/`；
    - 同步递增 Claude plugin / marketplace 与 Codex plugin 版本；
    - 分别运行 `claude plugin validate . --strict` 和 Codex plugin / Skill 校验器。
 

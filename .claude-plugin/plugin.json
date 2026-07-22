@@ -15,15 +15,15 @@
     "chinese"
   ],
   "skills": [
-    "./resources/skills/agent-config-sync",
-    "./resources/skills/codebase-analyzer",
-    "./resources/skills/execute-task",
-    "./resources/skills/finish-branch",
-    "./resources/skills/make-design",
-    "./resources/skills/refine-idea",
-    "./resources/skills/setup-worktree",
-    "./resources/skills/split-task",
-    "./resources/skills/test-skill",
-    "./resources/skills/write-spec"
+    "./skills/agent-config-sync",
+    "./skills/codebase-analyzer",
+    "./skills/execute-task",
+    "./skills/finish-branch",
+    "./skills/make-design",
+    "./skills/refine-idea",
+    "./skills/setup-worktree",
+    "./skills/split-task",
+    "./skills/test-skill",
+    "./skills/write-spec"
   ]
 }

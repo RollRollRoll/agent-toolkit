@@ -4,9 +4,8 @@
 `command` 和 `hook`。
 
 以个人知识库为主，重点是让资源清晰、独立、可维护。
-Claude Code 是原始和主要支持平台，通过 `.claude-plugin/` 发布；Codex 作为补充平台，
-通过 `.codex-plugin/`、`.agents/plugins/` 与根目录 `skills/` 薄适配入口发布。两平台共用
-`resources/skills/` 下的 Skill 主体，不复制两套业务流程。
+Claude Code 通过 `.claude-plugin/` 发布，Codex 通过 `.codex-plugin/` 和
+`.agents/plugins/` 发布；两平台直接加载根目录 `skills/` 下的同一套 Skill。
 
 ## 安装（Claude Code）
 
@@ -46,12 +45,13 @@ agent-toolkit/
   .agents/plugins/
     marketplace.json
   skills/
-    <skill-id>/SKILL.md
-  resources/
-    skills/
-    mcps/
-    commands/
-    hooks/
+    <skill-id>/
+      SKILL.md
+      references/
+      scripts/
+  mcps/
+  commands/
+  hooks/
   collections/
   docs/
 ```
@@ -61,23 +61,22 @@ agent-toolkit/
 - `.claude-plugin/`：Claude Code 插件与市场清单。
 - `.codex-plugin/`：Codex 插件清单。
 - `.agents/plugins/`：Codex 仓库级 marketplace 清单。
-- `skills/`：Codex 插件发现用的薄适配入口，转交到 canonical Skill 主体。
-- `resources/skills/`：存放两平台共用的 canonical Skill 主体。
-- `resources/mcps/`：存放 MCP 配置或服务说明。
-- `resources/commands/`：存放自定义 command。
-- `resources/hooks/`：存放 hook 定义或说明。
+- `skills/`：两平台共用的完整 Skill；辅助资料、脚本和测试均放在对应 Skill 目录内。
+- `mcps/`：存放 MCP 配置或服务说明。
+- `commands/`：存放自定义 command。
+- `hooks/`：存放 hook 定义或说明。
 - `collections/`：手动记录资源组合关系。
 - `docs/`：存放维护规范和模板。
 
 ## 新增资源
 
-1. 在对应的 `resources/<type>/` 下创建资源目录。
+1. 在对应的根目录 `<type>/<resource-id>/` 下创建资源目录。
 2. 添加 `README.md`、资源主体文件和 `metadata.yaml`。
 3. 如果资源属于某个组合，更新对应的 `collections/*.yaml`。
 4. 手动维护 `metadata.yaml` 的 `updated_at`。
 5. 如果 Skill 要随插件发布：
    - 更新 `.claude-plugin/plugin.json` 的 `skills` 数组；
-   - 在 `skills/<skill-id>/SKILL.md` 添加 Codex 薄适配入口；
+   - 确认 `.codex-plugin/plugin.json` 的 `skills` 指向根目录 `skills/`；
    - 同步递增 `.claude-plugin/plugin.json`、`.claude-plugin/marketplace.json`
      与 `.codex-plugin/plugin.json` 的版本。
 
