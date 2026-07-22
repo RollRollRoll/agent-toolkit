@@ -84,6 +84,13 @@ function normalizedStatus(item) {
   return item.status;
 }
 
+function formatDisplayPath(pointer) {
+  if (!pointer) return "根配置";
+  return pointer.slice(1).split("/")
+    .map((part) => part.replace(/~1/g, "/").replace(/~0/g, "~"))
+    .join(" › ");
+}
+
 function allItems(snapshot) {
   const result = [];
   for (const [target, targetPlan] of Object.entries(snapshot.plan.targets)) {
@@ -116,7 +123,7 @@ function renderList() {
   const target = ui.targetFilter.value;
   const status = ui.statusFilter.value;
   const visible = app.items.filter((item) => {
-    const haystack = `${item.path} ${item.target} ${(item.sources || []).join(" ")}`.toLowerCase();
+    const haystack = `${item.path} ${formatDisplayPath(item.path)} ${item.target} ${(item.sources || []).join(" ")}`.toLowerCase();
     return (!query || haystack.includes(query))
       && (target === "all" || item.target === target)
       && (status === "all" || normalizedStatus(item) === status);
@@ -131,7 +138,9 @@ function renderList() {
     button.addEventListener("click", () => selectItem(item.key));
     const dot = element("span", `status-dot ${statusName}`);
     const main = element("span", "item-main");
-    main.append(element("span", "item-path", item.path || "/"));
+    const path = element("span", "item-path", formatDisplayPath(item.path));
+    path.title = `原始路径：${item.path || "（根）"}`;
+    main.append(path);
     const sourceCount = item.candidates ? item.candidates.flatMap((entry) => entry.sources || []).length : (item.sources || []).length;
     main.append(element("span", "item-meta", `${sourceCount} 个来源 · ${labels[item.status] || item.status}`));
     button.append(dot, main, element("span", "target-tag", item.target));
@@ -197,7 +206,8 @@ function renderDetail(item) {
   ui.detailTarget.textContent = item.target;
   ui.detailStatus.textContent = labels[item.status] || item.status;
   ui.detailStatus.className = `pill ${normalizedStatus(item)}`;
-  ui.detailPath.textContent = item.path || "/";
+  ui.detailPath.textContent = formatDisplayPath(item.path);
+  ui.detailPath.title = `原始路径：${item.path || "（根）"}`;
   const candidates = item.candidates || [{ sources: item.sources || [], value: item.value }];
   ui.sourceCount.textContent = `${candidates.flatMap((entry) => entry.sources || []).length} 个来源`;
   ui.candidateList.replaceChildren(...candidates.map((candidate) => {

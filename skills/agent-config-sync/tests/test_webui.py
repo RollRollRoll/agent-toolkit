@@ -129,6 +129,24 @@ def test_ui_does_not_render_import_workflow(tmp_path):
         thread.join(timeout=2)
 
 
+def test_ui_displays_json_pointer_as_readable_hierarchy(tmp_path):
+    state = _make_state(tmp_path)
+    server = create_server(state, port=0, token="test-token")
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    host, port = server.server_address
+    try:
+        script = urlopen(f"http://{host}:{port}/app.js").read().decode("utf-8")
+        assert 'function formatDisplayPath(pointer)' in script
+        assert '.join(" › ")' in script
+        assert '"item-path", formatDisplayPath(item.path)' in script
+        assert 'ui.detailPath.textContent = formatDisplayPath(item.path)' in script
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
+
+
 def test_ui_command_passes_resolved_paths_and_options(tmp_path, monkeypatch):
     plan_path = tmp_path / "import-plan.yaml"
     output_path = tmp_path / "agent-config.yaml"
