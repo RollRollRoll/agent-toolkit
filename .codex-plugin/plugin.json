@@ -1,6 +1,6 @@
 {
   "name": "agent-toolkit",
-  "version": "0.10.0+codex.20260722032623",
+  "version": "0.11.0",
   "description": "个人 agent 工具集：代码库调研、想法打磨与开发执行等可复用中文 skills",
   "author": {
     "name": "kgfan"
