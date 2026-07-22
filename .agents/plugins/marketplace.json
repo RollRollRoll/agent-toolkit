@@ -7,8 +7,9 @@
     {
       "name": "agent-toolkit",
       "source": {
-        "source": "local",
-        "path": "./"
+        "source": "url",
+        "url": "https://github.com/RollRollRoll/agent-toolkit.git",
+        "ref": "main"
       },
       "policy": {
         "installation": "AVAILABLE",
