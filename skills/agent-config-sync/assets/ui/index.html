@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Agent Config Sync</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        <span>Agent Config Sync</span>
+      </div>
+      <div class="stepper" aria-label="处理进度">
+        <span class="step done"><b>1</b> 导入</span>
+        <span class="step active"><b>2</b> 审阅</span>
+        <span class="step"><b>3</b> 导出</span>
+      </div>
+      <button id="refresh-state" class="button ghost" type="button">刷新计划</button>
+    </header>
+
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">本地配置审阅台</p>
+          <h1>先把事实整理清楚，再生成配置。</h1>
+          <p class="hero-copy">合并 Codex 与 Claude Code 的多份配置，解决冲突并剔除不需要的字段。所有文件操作只发生在本机。</p>
+        </div>
+        <div class="path-card">
+          <span>事实文件</span>
+          <code id="output-path">加载中…</code>
+          <span id="output-state" class="pill neutral">检查中</span>
+        </div>
+      </section>
+
+      <section id="summary" class="summary" aria-label="导入摘要"></section>
+
+      <section class="workspace">
+        <aside class="catalog panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">配置项</p>
+              <h2>合并结果</h2>
+            </div>
+            <span id="visible-count" class="muted"></span>
+          </div>
+          <label class="search">
+            <span class="sr-only">搜索配置项</span>
+            <input id="search" type="search" placeholder="搜索路径或来源…" autocomplete="off">
+          </label>
+          <div class="filters" aria-label="筛选器">
+            <select id="target-filter" aria-label="目标">
+              <option value="all">全部目标</option>
+              <option value="codex">Codex</option>
+              <option value="claude">Claude Code</option>
+            </select>
+            <select id="status-filter" aria-label="状态">
+              <option value="all">全部状态</option>
+              <option value="conflict">冲突</option>
+              <option value="duplicate">重复</option>
+              <option value="unique">唯一</option>
+              <option value="protected">已保护</option>
+              <option value="excluded">已剔除</option>
+            </select>
+          </div>
+          <div id="item-list" class="item-list" role="listbox" aria-label="配置项列表"></div>
+        </aside>
+
+        <section class="detail panel" aria-live="polite">
+          <div id="empty-detail" class="empty-state">
+            <span class="empty-icon" aria-hidden="true">↖</span>
+            <h2>选择一项开始审阅</h2>
+            <p>这里会显示来源值、处理决策与官方配置说明。</p>
+          </div>
+          <div id="detail-content" hidden>
+            <div class="detail-head">
+              <div>
+                <div class="detail-tags"><span id="detail-target" class="target-tag"></span><span id="detail-status" class="pill"></span></div>
+                <h2 id="detail-path"></h2>
+              </div>
+              <button id="refresh-docs" class="button ghost compact" type="button">刷新说明</button>
+            </div>
+
+            <div class="detail-grid">
+              <section class="subpanel">
+                <div class="subpanel-head"><h3>来源与候选值</h3><span id="source-count" class="muted"></span></div>
+                <div id="candidate-list" class="candidate-list"></div>
+              </section>
+
+              <section class="subpanel docs-panel">
+                <div class="subpanel-head"><h3>配置 Schema 说明</h3><span id="docs-freshness" class="pill neutral">未查询</span></div>
+                <div id="docs-content" class="docs-content"><p class="muted">正在读取官方 Schema…</p></div>
+              </section>
+            </div>
+
+            <section class="decision-box">
+              <div>
+                <h3>处理决策</h3>
+                <p id="decision-hint" class="muted"></p>
+              </div>
+              <div class="decision-controls">
+                <select id="decision-select" aria-label="处理决策"></select>
+                <textarea id="manual-value" rows="4" placeholder="输入 JSON 值；普通文本会按字符串处理" hidden></textarea>
+                <button id="save-decision" class="button primary" type="button">保存决策</button>
+              </div>
+            </section>
+          </div>
+        </section>
+      </section>
+
+      <section class="export panel">
+        <div class="export-head">
+          <div>
+            <p class="eyebrow">生成预览</p>
+            <h2>导出结果</h2>
+            <p id="preview-message" class="muted">解决全部冲突后即可预览。</p>
+          </div>
+          <div class="export-actions">
+            <button id="download-preview" class="button ghost" type="button" disabled>下载当前预览</button>
+            <button id="generate" class="button primary" type="button" disabled>生成事实文件</button>
+          </div>
+        </div>
+        <div class="preview-tabs" role="tablist">
+          <button type="button" data-preview="facts" class="active" role="tab">agent-config.yaml</button>
+          <button type="button" data-preview="codex" role="tab">Codex TOML</button>
+          <button type="button" data-preview="claude" role="tab">Claude JSON</button>
+        </div>
+        <pre id="preview"><code>等待生成预览…</code></pre>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

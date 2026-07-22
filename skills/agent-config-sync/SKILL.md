@@ -1,6 +1,6 @@
 ---
 name: agent-config-sync
-description: 声明式管理并跨 Windows、Linux、macOS 与 WSL 同步 Codex ~/.codex/config.toml 和 Claude Code ~/.claude/settings.json。用于初始化、检测、校验、渲染、预览差异、应用、检查状态或诊断 agent-config.yaml；不用于凭据、登录状态、项目级配置、~/.claude.json、skills、agents、hooks 或 MCP 配置。
+description: 从一份或多份现有配置抽取可审阅的 agent-config.yaml，并跨 Windows、Linux、macOS 与 WSL 声明式同步 Codex ~/.codex/config.toml 和 Claude Code ~/.claude/settings.json。用于导入、去重、解决冲突、剔除配置项、初始化、检测、校验、渲染、预览差异、应用、检查状态或诊断；不用于凭据、登录状态、项目级配置、~/.claude.json、skills、agents、hooks 或 MCP 配置。
 ---
 
 # Agent Config Sync
@@ -18,6 +18,17 @@ python3 scripts/aiconfig.py
 所有命令默认从当前目录向上查找 `agent-config.yaml`，也可传 `--config <path>`。
 
 ## 标准工作流
+
+从已有配置抽取事实时：
+
+1. 对用户明确提供的每个文件运行 `aiconfig import inspect --source <target>=<path>`，同一目标可重复传入。
+2. 读取生成的 `.agent-config/import-plan.yaml`，说明自动去重项、冲突、敏感字段和越界字段。
+3. 需要可视化审阅时运行 `aiconfig ui`；界面可展示来源、冲突、导出预览，并联网读取配置项说明。
+4. 让用户逐项决定冲突使用 `take`、`union`、`set` 或 `exclude`；不要自行选择来源或合并不同数组。
+5. 将决定写入计划后运行 `aiconfig import generate`，或由本地界面生成。未解决冲突时停止。
+6. 运行 `aiconfig validate` 和 `aiconfig plan`，确认生成声明的效果。
+
+`import inspect` 只归并同一目标的多份配置，不推导多机器 overlay。Codex 与 Claude Code 配置始终分别处理。详细计划格式和决策规则见 [导入现有配置](references/importing.md)。
 
 只读分析时：
 
@@ -39,6 +50,9 @@ python3 scripts/aiconfig.py
 ## 常用任务
 
 - 初始化声明：`aiconfig init`
+- 归并现有配置：`aiconfig import inspect --source codex=<path> --source claude=<path>`
+- 根据确认计划生成声明：`aiconfig import generate`
+- 可视化审阅导入计划：`aiconfig ui [--open]`
 - 查看环境：`aiconfig detect` 或 `aiconfig detect --json`
 - 校验全部/单个目标：`aiconfig validate [codex|claude]`
 - 渲染到 `.agent-config/generated/`：`aiconfig render [codex|claude]`
@@ -54,11 +68,15 @@ python3 scripts/aiconfig.py
 - 不修改项目级 `.codex/config.toml`、`.claude/settings.json`。
 - 不在校验失败后继续应用。
 - 不绕过备份、原子写入或本地修改检测。
+- 不静默覆盖导入计划或已有 `agent-config.yaml`。
+- 不把不同数组自动合并；只在用户明确选择 `union` 后执行稳定并集。
+- UI 只监听回环地址，不上传配置；联网说明只读取公开 Schema，不发送配置路径或值。
 
 ## 按需读取参考
 
 - 编写或解释声明时读取 [声明格式](references/declaration-format.md)。
+- 从现有文件抽取、去重、解决冲突或剔除字段时读取 [导入现有配置](references/importing.md)。
+- 启动可视化审阅或解释联网说明来源时读取 [本地审阅界面](references/ui.md)。
 - 处理覆盖、数组操作或删除时读取 [合并规则](references/merge-rules.md)。
 - 解释目标边界时读取 [Codex 配置](references/codex-config.md) 或 [Claude 设置](references/claude-settings.md)。
 - 遇到稳定错误码时读取 [故障排查](references/troubleshooting.md)。
-
