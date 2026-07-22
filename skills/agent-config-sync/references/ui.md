@@ -1,12 +1,18 @@
 # 本地审阅界面
 
+## 默认交互入口
+
+用户未明确偏好时，先询问是否启动本地前端页面，并等待用户选择。用户同意后启动界面，并以前端作为主要操作入口；页面可用时不要同时通过对话逐项提问。只有用户明确希望自动打开浏览器时才使用 `--open`。
+
+用户拒绝，或 UI 启动失败、页面不可访问、当前环境无法操作页面时，简要说明原因并降级为逐项问答，不要反复尝试启动 UI。问答使用与界面相同的 `keep`、`take`、`union`、`set`、`exclude` 决策规则。
+
 先生成导入计划，再启动界面：
 
 ```bash
 aiconfig import inspect \
   --source codex=~/.codex/config.toml \
   --source claude=~/.claude/settings.json
-aiconfig ui --plan .agent-config/import-plan.yaml --output agent-config.yaml --open
+aiconfig ui --plan .agent-config/import-plan.yaml --output agent-config.yaml
 ```
 
 界面提供以下能力：

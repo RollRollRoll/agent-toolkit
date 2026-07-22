@@ -1,5 +1,9 @@
 # 导入现有配置
 
+## 选择交互方式
+
+用户未明确偏好时，先询问是否启动本地前端页面，并等待用户选择。用户同意后以前端作为主要审阅与决策入口；用户拒绝，或 UI 启动失败、页面不可访问、当前环境无法操作页面时，说明原因并切换为逐项问答。前端可用时不要同时在对话中重复询问相同决策。
+
 ## 两阶段流程
 
 显式提供一份或多份来源，同一目标可重复：
@@ -17,13 +21,15 @@ aiconfig import inspect \
 aiconfig import generate --plan .agent-config/import-plan.yaml --output agent-config.yaml
 ```
 
-也可启动本地审阅界面完成逐项决策、预览和生成：
+用户选择前端后，启动本地审阅界面完成逐项决策、预览和生成：
 
 ```bash
-aiconfig ui --plan .agent-config/import-plan.yaml --output agent-config.yaml --open
+aiconfig ui --plan .agent-config/import-plan.yaml --output agent-config.yaml
 ```
 
-界面与手工编辑使用同一份计划格式，决策规则完全一致。联网说明、缓存和本地安全边界见 [本地审阅界面](ui.md)。
+命令会输出带会话令牌的本地地址；只有用户明确要求自动打开浏览器时才增加 `--open`。界面与手工编辑使用同一份计划格式，决策规则完全一致。联网说明、缓存和本地安全边界见 [本地审阅界面](ui.md)。
+
+使用问答降级时，按计划中的冲突顺序逐项展示候选来源和值，等待用户明确选择 `take`、`union`、`set` 或 `exclude`，再把决定写回计划。不得自行决定，也不得自动合并不同数组。
 
 已有计划或事实文件默认不覆盖；只有用户明确同意时才使用 `--force`。首版只把多份同目标配置归并到 `base`，不推导 overlay，也不跨 Codex 与 Claude Code 合并字段。
 

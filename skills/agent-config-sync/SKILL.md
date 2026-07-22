@@ -21,12 +21,13 @@ python3 scripts/aiconfig.py
 
 从已有配置抽取事实时：
 
-1. 对用户明确提供的每个文件运行 `aiconfig import inspect --source <target>=<path>`，同一目标可重复传入。
-2. 读取生成的 `.agent-config/import-plan.yaml`，说明自动去重项、冲突、敏感字段和越界字段。
-3. 需要可视化审阅时运行 `aiconfig ui`；界面可展示来源、冲突、导出预览，并联网读取配置项说明。
-4. 让用户逐项决定冲突使用 `take`、`union`、`set` 或 `exclude`；不要自行选择来源或合并不同数组。
-5. 将决定写入计划后运行 `aiconfig import generate`，或由本地界面生成。未解决冲突时停止。
-6. 运行 `aiconfig validate` 和 `aiconfig plan`，确认生成声明的效果。
+1. 用户未明确交互偏好时，先询问是否启动本地前端页面，并等待用户选择；用户已明确要求使用或不使用前端时不要重复询问。
+2. 对用户明确提供的每个文件运行 `aiconfig import inspect --source <target>=<path>`，同一目标可重复传入。
+3. 读取生成的 `.agent-config/import-plan.yaml`，说明自动去重项、冲突、敏感字段和越界字段。
+4. 用户选择前端时运行 `aiconfig ui`，把页面作为主要审阅与决策入口；提供带会话令牌的本地地址，只有用户明确要求自动打开浏览器时才使用 `--open`。页面可用时不要同时通过对话逐项提问。
+5. 用户拒绝前端，或 UI 启动失败、页面不可访问、当前环境无法操作页面时，说明降级原因并改用问答：逐项展示冲突候选，让用户明确选择 `take`、`union`、`set` 或 `exclude`。不要自行选择来源或合并不同数组。
+6. 将页面或问答中的决定写入计划后运行 `aiconfig import generate`，或由本地界面生成。未解决冲突时停止。
+7. 运行 `aiconfig validate` 和 `aiconfig plan`，确认生成声明的效果。
 
 `import inspect` 只归并同一目标的多份配置，不推导多机器 overlay。Codex 与 Claude Code 配置始终分别处理。详细计划格式和决策规则见 [导入现有配置](references/importing.md)。
 
