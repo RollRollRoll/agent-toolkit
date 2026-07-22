@@ -313,7 +313,7 @@
 
 > 根据 [project-type-checklists.md](project-type-checklists.md) 判断出的项目类型，追加对应专项分析。命中几类就写几个小节，并各自说明判断依据（看证据，不看名字）。若未匹配到明确类型，本节写"未匹配到专项类型（原因：…）"。每条结论同样要给源码路径。
 
-### 8.x {{项目类型，如 "CLI 项目" / "Web 服务" / "Library / SDK" / "Agent 项目" / "MCP Server" / "DevTool / Workflow 工具" / "Claude Code 插件 / 扩展"}}
+### 8.x {{项目类型，如 "CLI 项目" / "Web 服务" / "Library / SDK" / "Agent 项目" / "MCP Server" / "DevTool / Workflow 工具" / "Agent 编程工具插件 / 扩展（Claude Code / Codex）"}}
 
 - **判断依据**：{{为什么归为此类，给出依赖 / 入口 / 目录证据}}
 - {{按该类型清单逐条作答，每条带 `path:line`；不适用的写"不适用（原因）"，没查清的写"未确认"}}
@@ -327,19 +327,19 @@
 | {{意图 1}} | {{命令 / 触发}} | {{主流程简述}} | {{失败 / 降级 / 特殊输入}} | `{{path:line}}` |
 | … | … | … | … | … |
 
-#### 若命中 Claude Code 插件 / 扩展：扩展件逐条画像 + 装配图
+#### 若命中 Claude Code / Codex 插件或扩展：扩展件逐条画像 + 装配图
 
-> 每个 skill / command / hook / subagent 逐条画像（详见 [project-type-checklists.md](project-type-checklists.md) 的 g 类）。条目多时按 [parallel-strategy.md](parallel-strategy.md) 的「按扩展条目并行」派子 agent。
+> 每个 skill / command / hook / subagent / custom agent 逐条画像，并标注平台与发现路径（详见 [project-type-checklists.md](project-type-checklists.md) 的 g 类）。条目多时按 [parallel-strategy.md](parallel-strategy.md) 的「按扩展条目并行」派子 agent。
 
-| 条目 | 类型 | 触发条件 | 输入 → 输出 | 内部关键逻辑 | 依赖 / 被依赖 |
-|---|---|---|---|---|---|
-| {{名称}} | skill / command / hook / subagent | {{触发}} | {{入 → 出}} | `{{path:line}}` | {{协作关系}} |
-| … | … | … | … | … | … |
+| 条目 | 类型 | 平台 / 发现路径 | 触发条件 | 输入 → 输出 | 内部关键逻辑 | 依赖 / 被依赖 |
+|---|---|---|---|---|---|---|
+| {{名称}} | skill / command / hook / subagent / custom agent | {{Claude / Codex / 双平台；清单或目录}} | {{触发}} | {{入 → 出}} | `{{path:line}}` | {{协作关系}} |
+| … | … | … | … | … | … | … |
 
 **整体装配图**（技术编排视角，区别于场景表的用户视角）：
 
 ```
-{{ASCII：command → skill → subagent → hook 的编排关系，5~15 行看懂全貌}}
+{{ASCII：平台清单 → skill / command → subagent / custom agent → hook 的编排关系，5~15 行看懂全貌}}
 ```
 
 ---

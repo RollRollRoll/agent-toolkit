@@ -15,7 +15,7 @@
 - **Agent 项目**：依赖含 `langchain`/`langgraph`/`autogen`/`crewai` 或某家 LLM SDK；代码里有 prompt 模板、tool 注册、agent 循环。
 - **MCP Server**：依赖含 `@modelcontextprotocol/sdk` 或 `mcp`；声明 tools/resources/prompts；走 stdio / SSE / HTTP transport。
 - **DevTool / Workflow 工具**：本身面向开发者，用来生成代码 / 文档、编排流程、对接 Git/CI/Issue。
-- **Claude Code 插件 / 扩展**：有 `.claude/` 目录、`SKILL.md`、`commands/*.md`、`settings.json` 里的 `hooks`、`agents/` 或 subagent 定义、`plugin.json` / `.claude-plugin/`。
+- **Agent 编程工具插件 / 扩展**：有 `SKILL.md`，并命中 Claude Code 的 `.claude/` / `.claude-plugin/`，或 Codex 的 `.agents/` / `.codex/` / `.codex-plugin/` / `AGENTS.md` 等平台信号。
 
 > 判不出明确类型也没关系——写明"未匹配到专项类型"，只产出通用报告即可，不要硬套。
 
@@ -90,25 +90,25 @@
 
 ---
 
-## g. Claude Code 插件 / 扩展
+## g. Agent 编程工具插件 / 扩展（Claude Code / Codex）
 
 > 含 skill / slash command / hooks / subagent 设计的项目。**仅深度报告档**做逐条完整解读。
 
 ### 判断依据（看证据，不看名字）
-- `.claude/` 目录；`SKILL.md` 文件（skill 定义）
-- `commands/*.md` 或 `.claude/commands/`（slash command）
-- `settings.json` / `settings.local.json` 里的 `hooks` 配置，或 `hooks/` 目录
-- `agents/` 目录或 subagent 定义
-- `plugin.json` / `.claude-plugin/`（插件清单）
+- **共同信号**：`SKILL.md`、references / scripts、MCP 配置、hooks、subagent / custom agent 定义。
+- **Claude Code**：`.claude/`、`.claude/skills/`、`.claude/commands/`、`CLAUDE.md`、`settings.json` / `settings.local.json`、`.claude-plugin/plugin.json` / `marketplace.json`、`agents/`。
+- **Codex**：`.agents/skills/`、`.agents/plugins/marketplace.json`、`AGENTS.md` / `AGENTS.override.md`、`.codex/config.toml`、`.codex/agents/*.toml`、`.codex/hooks.json` 或配置内 hooks、`.codex-plugin/plugin.json`。
+- 同一仓库可同时支持两平台；逐项说明哪些文件共用、哪些是薄适配层、哪些行为只在某个平台成立，不把同名概念视为参数完全兼容。
 
-### 逐条画像模板（每个 skill / command / hook / subagent 统一画像）
-- **是什么 + 触发条件**：skill 的 `description` / command 的调用方式 / hook 的匹配时机与事件 / subagent 的角色定位
+### 逐条画像模板（每个 skill / command / hook / subagent / custom agent 统一画像）
+- **是什么 + 触发条件**：skill 的 `description` / command 的调用方式 / hook 的匹配时机与事件 / subagent 或 custom agent 的角色定位
+- **平台与发现路径**：Claude Code、Codex 或双平台；由哪个清单、目录或配置发现，是否存在薄适配入口。
 - **输入输出 / 副作用**：吃什么、产出什么、有无写文件 / 改代码 / 执行命令等副作用
 - **内部关键逻辑**：带 `path:line`，引用了哪些 references / 脚本 / 模板
 - **依赖与协作**：调用谁、被谁调用
 
 ### 整体装配图
-> 这些扩展件如何"**技术编排**"成一个整体——哪个 command 触发哪个 skill、hook 在什么时机插入、subagent 被谁调起。**技术视角**，区别于 f 类场景全景的用户视角。
+> 这些扩展件如何"**技术编排**"成一个整体——哪个入口触发哪个 skill、hook 在什么时机插入、subagent 被谁调起、Claude/Codex 清单如何指向共享主体。**技术视角**，区别于 f 类场景全景的用户视角。
 
 ### 条目多时：并行解读
 > 条目较多、一次性解读会撑满上下文时，按 [parallel-strategy.md](parallel-strategy.md) 的「按扩展条目并行」节派子 agent 分批解读。

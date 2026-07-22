@@ -64,7 +64,7 @@
   修完**复跑覆盖其改动的测试**（派发里点名覆盖测试，一行小修不必全套）、把修复报告（含测试命令与输出）
   追加进执行报告、回执短摘要。主 agent **确认报告里有测试证据**（覆盖测试 + 命令 + 输出三样齐）后，
   生成新 diff 派复审——复审读更新后的报告 + 新 diff。
-- **平台**：在 Claude Code 里用 Task / Agent 工具派发 subagent。**subagent 不可用的环境**（无该能力）→
+- **平台**：派发前读取 [platform-agents.md](platform-agents.md)。Claude Code 保留 Task / Agent 工具路径；Codex 使用 subagent agent thread，并按角色选内置或自定义 agent。**subagent 不可用的环境**（无该能力）→
   降级为主 agent **顺序执行**同一套闭环纪律（TDD → 验证 → 审查 → commit），不卡死。
 - **模型按角色 / 复杂度定档**：派发前用平台的模型参数（如 Agent 工具的 `model`）显式指定 cheap / standard / most-capable，
   不写等于任其继承主 agent 当前档位（通常最贵）；判据见 [model-selection.md](model-selection.md)。

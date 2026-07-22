@@ -5,6 +5,7 @@
 > subagent 不可用的降级场景不用模板——主 agent 顺序执行同一套闭环纪律。
 > **模型档位不是 prompt 正文的一部分**：派发前先按 [model-selection.md](model-selection.md) 定档（cheap / standard / most-capable），
 > 用平台的模型参数（如 Agent 工具的 `model`）指定，不要写进下面的模板文本里、也不要留空。
+> 派发机制、权限继承和并行工作目录按 [platform-agents.md](platform-agents.md) 执行；Codex 并行写任务必须把各自 worktree 绝对路径写入 `[目录]`，不能让多个 agent 共用同一 checkout。
 
 ## 〇 · 派发前主 agent 先备好交接文件
 

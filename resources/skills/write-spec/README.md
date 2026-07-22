@@ -23,7 +23,7 @@
 ## 使用方式
 
 将本目录下的 `SKILL.md` 和 `references/` 复制到目标平台的 skill 目录
-（如 Claude Code 的 `.claude/skills/write-spec/`）即可直接使用。
+（Claude Code：`.claude/skills/write-spec/`；Codex：`.agents/skills/write-spec/`）即可直接使用。
 
 ## 目录说明
 

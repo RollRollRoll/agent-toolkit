@@ -6,6 +6,7 @@
 # <被测 skill> 盲测复盘报告
 
 - 测试日期：YYYY-MM-DD
+- 被测平台：<Claude Code | Codex>
 - 被测版本：<SKILL.md 路径 + 所在 git 提交号（若在仓库中）>
 - 实际加载来源：<沙箱注入路径；若无法确认则写明证据缺口>
 - 运行 ID：<run-config.json 中的 run_id>
@@ -17,9 +18,8 @@
 - 测试场景：<一段话>
 - 剧本要点：模拟用户身份、真实意图、隐藏痛点（此处可以明说）
 - 实际轮数 / 时长：<N 轮，约 M 分钟>
-- 内建工具边界：<run-config.json 中 tools；由 --tools 限制>
-- 免提示规则：<run-config.json 中 allowed_tools；注意它不是工具白名单>
-- 设置 / MCP 隔离：<setting_sources=project；strict MCP 空配置；bash_sandbox_required；托管策略影响>
+- 执行边界：<Claude：tools + allowed_tools；Codex：sandbox_mode + approval_policy>
+- 设置 / 扩展隔离：<Claude：setting_sources + strict MCP；Codex：isolated_home + ignore_user_config/rules + web_search；托管策略影响>
 - 异常事件：<超时/权限拒绝/报错，无则写"无">
 
 ## 2. 步骤溯源表

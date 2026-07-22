@@ -11,14 +11,19 @@
 - `command`
 - `hook`
 
-以个人知识库为主，同时通过 `.claude-plugin/` 清单
-将仓库发布为 Claude Code 插件市场。
+以个人知识库为主。Claude Code 是主要支持平台，通过 `.claude-plugin/` 发布；
+Codex 作为补充平台，通过 `.codex-plugin/` 和 `.agents/plugins/` 发布。
+两平台共用 `resources/skills/` 下的 canonical Skill，Codex 的根目录 `skills/`
+只存薄适配入口。
 
 ## 目录职责
 
 - `.claude-plugin/`：Claude Code 插件清单（`plugin.json`）
   与市场清单（`marketplace.json`）。
-- `resources/skills/`：个人 skill。
+- `.codex-plugin/`：Codex 插件清单。
+- `.agents/plugins/`：Codex 仓库级 marketplace 清单。
+- `skills/`：Codex 插件发现入口；每个入口只引用对应 canonical Skill。
+- `resources/skills/`：两平台共用的 canonical Skill。
 - `resources/mcps/`：MCP 配置或服务说明。
 - `resources/commands/`：自定义 command。
 - `resources/hooks/`：hook 定义或说明。
@@ -110,10 +115,11 @@ updated_at: 2026-06-07
 2. 添加该类型约定的主体文件、`README.md` 和 `metadata.yaml`。
 3. 如果该资源属于某个组合，手动更新对应 `collections/*.yaml`。
 4. 更新 `metadata.yaml` 的 `updated_at`。
-5. 如果资源要随插件发布，更新 `.claude-plugin/plugin.json`
-   对应组件数组（`skills` / `commands` / `hooks` / `mcpServers`），
-   按语义化版本递增 `version`，并用
-   `claude plugin validate . --strict` 校验。
+5. 如果 Skill 要随插件发布：
+   - 更新 `.claude-plugin/plugin.json` 的 `skills` 数组；
+   - 新增或更新 `skills/<skill-id>/SKILL.md` Codex 薄适配入口；
+   - 同步递增 Claude plugin / marketplace 与 Codex plugin 版本；
+   - 分别运行 `claude plugin validate . --strict` 和 Codex plugin / Skill 校验器。
 
 ## 新增 collection 流程
 
@@ -123,8 +129,8 @@ updated_at: 2026-06-07
 
 ## 第一阶段非目标
 
-- 不做自动同步到 Codex、Claude 或其他平台。
+- 不自动改写用户机器上的 Claude Code / Codex 已安装副本。
 - 不做 CLI。
 - 不做 schema 校验。
-- 不做打包、发布、安装流程。
+- 不做自动打包、发布或安装流程。
 - 不做跨平台格式转换。

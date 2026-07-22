@@ -20,7 +20,7 @@
 ## 使用方式
 
 将本目录下的 `SKILL.md` 和 `references/` 复制到目标平台的 skill 目录
-（如 Claude Code 的 `.claude/skills/codebase-analyzer/`）即可直接使用。
+（Claude Code：`.claude/skills/codebase-analyzer/`；Codex：`.agents/skills/codebase-analyzer/`）即可直接使用。
 
 ## 目录说明
 

@@ -11,7 +11,12 @@ resources/skills/<skill-id>/
   README.md
   SKILL.md
   metadata.yaml
+skills/<skill-id>/
+  SKILL.md  # Codex 插件薄适配入口
 ```
+
+Codex 薄适配入口只复制 canonical Skill 的 `name` / `description`，正文引用
+`../../resources/skills/<skill-id>/SKILL.md` 并要求完整执行；不要复制整套主体、references 或 scripts。
 
 `references/` 和 `docs/` 子目录可选，按需添加。
 

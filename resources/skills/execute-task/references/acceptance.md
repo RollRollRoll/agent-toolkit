@@ -60,7 +60,7 @@
 - **整体验收通过后，调用 `finish-branch` 做收尾**：它会先清理本次开发的调试残留并重跑最终测试，再检测
   repo/worktree 状态，给出合并到主干 / 本地保留 / 创建 PR / 丢弃选项。
 - **危险操作 gate**：commit 必须已有阶段 0 明确授权；合并 / PR / push / 丢弃 / 移除 worktree **不自动做**，
-  由 finish-branch 对具体动作逐项取得用户确认（呼应 CLAUDE.md）。
+  由 finish-branch 对具体动作逐项取得用户确认（遵循当前 `CLAUDE.md` / `AGENTS.md` 与平台审批策略）。
 - execute-task 到"整体验收通过 + 收尾决策交付"为止，不擅自合并、不自动往下。
 
 ## 收尾自检

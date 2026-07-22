@@ -1,0 +1,13 @@
+id: agent-config-sync
+name: Agent Config Sync
+type: skill
+description: 从统一声明按机器上下文安全生成并同步 Codex 与 Claude Code 用户配置
+tags:
+  - codex
+  - claude-code
+  - configuration
+  - cross-platform
+status: draft
+created_at: 2026-07-20
+updated_at: 2026-07-20
+

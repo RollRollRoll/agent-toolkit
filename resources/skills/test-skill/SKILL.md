@@ -9,7 +9,7 @@ description: 当用户想测试或复盘某个 skill 的实际执行效果时使
 
 在隔离沙箱中驱动一次多轮 headless 会话。被测进程只看到自然的用户任务，不知道自己正在被测试。运行结束后，把每个语义步骤与目标 `SKILL.md` 的指令逐项对齐，产出可复核的中文报告。
 
-使用 `scripts/run-headless.py` 执行所有 headless 轮次。不要自行拼接 `claude -p` 命令；运行器负责跨平台超时、会话 ID、逐轮状态、JSONL、stderr、参数传递和唯一报告路径。
+先按 [platform-runners.md](references/platform-runners.md) 选择 Claude Code 或 Codex runner，再用同一个 runner 完成该次盲测的全部轮次。不要自行拼接 `claude -p` 或 `codex exec`；运行器负责超时、会话 ID、逐轮状态、JSONL、stderr、参数传递和唯一报告路径。
 
 ## 流程
 
@@ -27,41 +27,19 @@ description: 当用户想测试或复盘某个 skill 的实际执行效果时使
 
 1. 定位目标 `SKILL.md`。支持仓库 id、文件路径和已安装 skill 名；存在多个候选时请用户指认，不要猜测。
 2. 记下三个绝对路径：本 skill 目录、发起测试时的项目目录、会话 scratchpad。后续每次工具调用都直接使用绝对路径；不要依赖 shell 变量、当前目录或上一次 Bash 调用的状态。
-3. 只做可执行文件与版本预检，不发起模型调用：
-
-```bash
-python3 <本-skill-绝对路径>/scripts/run-headless.py doctor --claude claude
-```
-
-预检失败即停。Claude Code 官方说明 `--help` 不保证列出全部参数，因此 runner 只把未列出的参数记入诊断，
-不据此误判“不支持”；真正运行仍会带齐隔离参数，旧 CLI 解析失败时直接停止，不降级成宽松权限。
+3. 完整读取 [platform-runners.md](references/platform-runners.md)，按用户指定平台选择 runner；用户未指定时，以当前宿主和目标安装来源为判断依据，仍无法判断才询问。只执行该平台的 `doctor` 预检，不发起模型调用。预检失败即停，不切换到另一平台，也不删除隔离参数降级运行。
 
 ### 阶段 1：创建隔离目录并清单化指令
 
 4. 在 scratchpad 下规划两个尚不存在的同级目录：测试沙箱 `<运行名>/` 与编排目录 `<运行名>-run/`。持久报告目录固定为发起测试项目下的 `skill-test-reports/<被测-id>/`，不得放进目标 skill 原目录。
-5. 初始化运行。下面的路径均替换为绝对路径；默认只开放目标 skill 与沙箱项目内的文件工具，按场景做最小化增删：
-
-```bash
-python3 <本-skill-绝对路径>/scripts/run-headless.py init \
-  --sandbox <沙箱绝对路径> \
-  --run-dir <编排目录绝对路径> \
-  --report-dir <发起测试项目绝对路径>/skill-test-reports/<被测-id> \
-  --skill-name <被测-id> \
-  --tools "Skill,Read,Write,Edit,Glob,Grep" \
-  --allowed-tools "Skill(<被测-id>),Read(/**),Write(/**),Edit(/**)" \
-  --timeout 600 --max-turns 10
-```
-
-`init` 必须先成功，它会创建沙箱和编排目录并写入 `run-config.json`。随后在沙箱执行 `git init`。
-被测场景确实需要 Bash 时才把它加入 `--tools`，并显式列出逐条只读命令规则；禁止 `Bash`、
-`Bash(*)`、`Bash(git:*)` 这类宽规则。此时 runner 会强制启用 Claude Code OS sandbox、限制读取编排/报告目录并禁止 unsandboxed fallback；平台缺少 sandbox 能力就 fail closed。初始化仓库由编排者在真实 headless 调用前完成，不需要把该权限交给被测进程。
+5. 按 [platform-runners.md](references/platform-runners.md) 的对应命令初始化运行；路径全部使用绝对路径，权限或 sandbox 选择按场景取最小值。`init` 必须先成功，它会创建沙箱和编排目录并写入带 `platform` 或平台配置的 `run-config.json`。随后由编排者在沙箱执行 `git init`；初始化仓库不需要交给被测进程。
 
 6. 通读目标 `SKILL.md` 全文。把可独立判定的行为要求拆为 R1..Rn，把纯背景和示例拆为 B1..Bm；frontmatter 中“不适用”限制也属于指令。将清单写入编排目录 `checklist.md`，每条记录原文、章节和适用条件。
 
 ### 阶段 2：铺设 fixture 与注入目标 skill
 
 7. 只在沙箱中铺设场景 fixture。fixture 和文件名不得透露测试意图。
-8. 把目标 skill 的完整副本注入 `沙箱/.claude/skills/<被测-id>/`。沙箱 `.claude/` 中只允许出现这个受控副本和确有必要的空项目配置；不得复制原项目的 settings、插件或 MCP 配置。
+8. 按平台注入目标 skill 的完整副本：Claude Code 使用 `沙箱/.claude/skills/<被测-id>/`，Codex 使用 `沙箱/.agents/skills/<被测-id>/`。对应平台目录只允许出现这个受控副本和确有必要的空项目配置；不得复制原项目的 settings、插件、hooks、rules 或 MCP 配置。Codex 的首轮自然语言任务显式使用 `$<被测-id>`，Claude Code 自然地点名目标 skill。
 9. 编排产物只能放在同级编排目录，不能放进沙箱。被测进程的 cwd 始终是沙箱。
 
 ### 阶段 3：生成剧本并取得成本确认
@@ -72,23 +50,11 @@ python3 <本-skill-绝对路径>/scripts/run-headless.py init \
 
 ### 阶段 4：驱动盲测会话
 
-13. 首轮仅执行：
-
-```bash
-python3 <本-skill-绝对路径>/scripts/run-headless.py start \
-  --run-dir <编排目录绝对路径> \
-  --prompt-file <编排目录绝对路径>/turn-001.txt
-```
+13. 首轮仅用本次已选 runner 执行 `start --run-dir <编排目录绝对路径> --prompt-file <编排目录绝对路径>/turn-001.txt`，完整命令见 [platform-runners.md](references/platform-runners.md)。
 
 运行器把 transcript、stderr、`session-id` 和逐轮字节范围写入编排目录，不写入沙箱。
 
-14. 解析本轮新增 transcript。若输出在等待用户输入，按剧本生成回复，写入下一个 `turn-NNN.txt`，再执行：
-
-```bash
-python3 <本-skill-绝对路径>/scripts/run-headless.py resume \
-  --run-dir <编排目录绝对路径> \
-  --prompt-file <编排目录绝对路径>/turn-NNN.txt
-```
+14. 解析本轮新增 transcript。若输出在等待用户输入，按剧本生成回复，写入下一个 `turn-NNN.txt`，再用同一 runner 执行 `resume --run-dir <编排目录绝对路径> --prompt-file <编排目录绝对路径>/turn-NNN.txt`。
 
 运行器自行从 `session-id` 恢复会话，不要在 shell 中保存 `SID`。剧本未覆盖的问题可按人设即兴，但必须追记进 `persona.md` 附录。
 
@@ -104,12 +70,7 @@ python3 <本-skill-绝对路径>/scripts/run-headless.py resume \
 
 ### 阶段 6：写入持久报告
 
-21. 按 [report-template.md](references/report-template.md) 写六节中文报告。先原子预留唯一文件名：
-
-```bash
-python3 <本-skill-绝对路径>/scripts/run-headless.py report-path \
-  --run-dir <编排目录绝对路径>
-```
+21. 按 [report-template.md](references/report-template.md) 写六节中文报告。先用同一 runner 执行 `report-path --run-dir <编排目录绝对路径>`，原子预留唯一文件名。
 
 把报告写入命令返回的路径；重复调用会返回同一路径。同日多次运行由时间与 `run_id` 区分，不得覆盖旧报告。
 
@@ -117,10 +78,9 @@ python3 <本-skill-绝对路径>/scripts/run-headless.py report-path \
 
 ## Fail-closed 边界
 
-- `--tools` 才限制内建工具可用性；`--allowedTools` 只免除权限提示，不是工具白名单。运行器同时使用精确 `--tools`、限定到沙箱项目的最小 `--allowedTools` 和 `--permission-mode dontAsk`，未预授权动作直接拒绝。Bash 默认不开放；启用时额外强制 OS sandbox，sandbox 不可用即失败。
-- MCP 不受 `--tools` 限制。运行器固定使用 `--strict-mcp-config` 与空 `--mcp-config`。
-- 运行器固定使用 `--setting-sources project`，以排除 user/local 设置并保留沙箱项目 skill。系统或组织托管策略仍可能生效，发现相关 hook、插件或权限影响时必须写入报告。
-- 禁止 `--dangerously-skip-permissions`，禁止绕过 runner 直接运行 headless CLI，禁止为兼容旧 CLI 删除隔离参数。
+- 两个平台的权限模型不同，必须完整遵守 [platform-runners.md](references/platform-runners.md) 的对应边界，不把 Claude Code 的工具白名单语义套到 Codex，也不把 Codex sandbox 语义套到 Claude Code。
+- 禁止 `--dangerously-skip-permissions` 和 `--dangerously-bypass-approvals-and-sandbox`，禁止绕过 runner 直接运行 headless CLI，禁止为兼容旧 CLI 删除隔离参数。
+- 系统或组织托管策略仍可能生效；发现相关 hook、插件、MCP、skills 或权限影响时必须写入报告。无法确认实际加载来源且会影响结论时，结果标为无效或存疑。
 
 ## 红线
 

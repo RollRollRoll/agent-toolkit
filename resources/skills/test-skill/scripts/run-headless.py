@@ -244,6 +244,7 @@ def _command_init(args: argparse.Namespace) -> int:
         "schema_version": SCHEMA_VERSION,
         "run_id": uuid.uuid4().hex[:12],
         "created_at": created_at,
+        "platform": "claude-code",
         "sandbox": str(sandbox),
         "run_dir": str(run_dir),
         "report_dir": str(report_dir),

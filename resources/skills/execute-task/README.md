@@ -24,8 +24,11 @@
 ## 使用方式
 
 将本目录下的 `SKILL.md`、`references/` 和 `scripts/` 复制到目标平台的 skill 目录
-（如 Claude Code 的 `.claude/skills/execute-task/`）即可直接使用；
+（Claude Code：`.claude/skills/execute-task/`；Codex：`.agents/skills/execute-task/`）即可直接使用；
 若 `scripts/` 下脚本丢失可执行权限，按所在环境的权限变更规则取得确认后，再补一次 `chmod +x scripts/*.sh`。
+
+Claude Code 使用 Task / Agent 工具派发执行、审查和修复 subagent；Codex 使用 agent thread，并可按角色选
+内置 `worker` / `explorer` 或项目自定义 agent。两者共用同一套任务闭环、验收和提交纪律。
 
 ## 目录说明
 
@@ -34,6 +37,7 @@
 - `references/execution-loop.md`：每任务闭环——TDD seam / tracer bullet、小步推进、验证节奏、独立 review / fix subagent 闭环、atomic commit、bug 诊断。
 - `references/acceptance.md`：验收与收尾——每任务验收门、整体五轴 review、覆盖核对回扫、上游纠错守层、收尾。
 - `references/model-selection.md`：模型选择——派发执行 / review / fix subagent 与整体验收时，按角色与复杂度定档。
+- `references/platform-agents.md`：Claude Code / Codex 的 subagent、权限、模型与工作目录映射。
 - `scripts/workspace.sh`：交接目录 `.execute-task/` 的单一事实来源（建目录 + 自忽略 `.gitignore`，打印路径），其余脚本经它取目录。
 - `scripts/task-brief.sh`：从 tasks 文档机械抽取单个任务全文生成简报基底，防手抄失真；design/spec 片段由主 agent 追加。
 - `scripts/task-baseline.sh`：每任务开工前确认真实工作区干净并记录 HEAD，供任务审查校验提交漂移。

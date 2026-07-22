@@ -68,7 +68,7 @@
 
 ## 派活模板（给子 agent 的 prompt）
 
-如果当前环境提供"子 agent / 多 agent"工具，就用它把每个模块作为独立的只读调研任务派出去（例如 Claude Code 里是 `Agent` 工具、`subagent_type=Explore`；其他环境用各自等价的子 agent 机制）。**若当前环境没有这类工具，跳过本节，改为单 agent 顺序调研，并在报告里说明"未启用并行"。** 派活的 prompt 模板如下：
+如果当前环境提供"子 agent / 多 agent"工具，就用它把每个模块作为独立的只读调研任务派出去（Claude Code 使用 `Agent` + `subagent_type=Explore`；Codex 使用只读 `explorer` 或等价 agent thread；其他环境用各自等价机制）。**若当前环境没有这类工具，跳过本节，改为单 agent 顺序调研，并在报告里说明"未启用并行"。** 派活的 prompt 模板如下：
 
 ```
 你是一个项目调研助手。请调研以下模块，并以中文返回**结构化的简报**，不要自己写完整报告（主 agent 会聚合）。
@@ -115,12 +115,12 @@
 
 ---
 
-## 变体：按扩展条目并行（服务 Claude Code 插件 / 扩展类项目）
+## 变体：按扩展条目并行（服务 Claude Code / Codex 插件与扩展项目）
 
-> 上面的并行按"业务模块"切；当项目是 Claude Code 插件、含大量 skill / command / hook / subagent 时，改按"扩展条目"切。对应 [project-type-checklists.md](project-type-checklists.md) 的 g 类。
+> 上面的并行按"业务模块"切；当项目是 Claude Code / Codex 插件、含大量 skill / command / hook / subagent / custom agent 时，改按"扩展条目"切。对应 [project-type-checklists.md](project-type-checklists.md) 的 g 类。
 
 ### 何时启用
-- 深度报告档 + 命中 g 类（Claude Code 插件 / 扩展）+ 条目数较多（一次性逐条解读会撑满上下文）。
+- 深度报告档 + 命中 g 类（Claude Code / Codex 插件或扩展）+ 条目数较多（一次性逐条解读会撑满上下文）。
 
 ### 切分方式
 - **按单个条目切**：一个 skill / command / hook / subagent 各派一个子 agent。

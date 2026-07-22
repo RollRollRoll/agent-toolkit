@@ -1,0 +1,47 @@
+apiVersion: agent-config/v1
+
+variables:
+  workspace: "${home}/workspace"
+
+targets:
+  codex:
+    output: "~/.codex/config.toml"
+    base:
+      approval_policy: "on-request"
+      sandbox_mode: "workspace-write"
+      sandbox_workspace_write:
+        network_access: false
+        writable_roots:
+          - "${workspace}"
+    overlays:
+      - name: wsl
+        when:
+          os: linux
+          runtime: wsl
+        variables:
+          workspace: "/home/${user}/workspace"
+        set:
+          sandbox_workspace_write:
+            writable_roots:
+              $append:
+                - "/mnt/d/Workspace"
+
+  claude:
+    output: "~/.claude/settings.json"
+    base:
+      $schema: "https://json.schemastore.org/claude-code-settings.json"
+      permissions:
+        defaultMode: "default"
+        deny:
+          - "Read(./.env)"
+      sandbox:
+        enabled: true
+    overlays:
+      - name: macos
+        when:
+          os: macos
+        set:
+          permissions:
+            additionalDirectories:
+              - "/Users/${user}/Workspace"
+

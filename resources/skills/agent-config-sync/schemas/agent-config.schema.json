@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/agent-config.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "targets"],
+  "properties": {
+    "apiVersion": {"const": "agent-config/v1"},
+    "variables": {"type": "object"},
+    "targets": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "codex": {"$ref": "#/$defs/target"},
+        "claude": {"$ref": "#/$defs/target"}
+      }
+    }
+  },
+  "$defs": {
+    "stringOrList": {
+      "oneOf": [
+        {"type": "string", "minLength": 1},
+        {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+      ]
+    },
+    "condition": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "os": {"$ref": "#/$defs/stringOrList"},
+        "runtime": {"$ref": "#/$defs/stringOrList"},
+        "hostname": {"$ref": "#/$defs/stringOrList"},
+        "profile": {"$ref": "#/$defs/stringOrList"},
+        "tags": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["contains"],
+          "properties": {
+            "contains": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+          }
+        }
+      }
+    },
+    "overlay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "when", "set"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "when": {"$ref": "#/$defs/condition"},
+        "variables": {"type": "object"},
+        "set": {"type": "object"}
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["output", "base"],
+      "properties": {
+        "output": {"type": "string", "minLength": 1},
+        "base": {"type": "object"},
+        "overlays": {"type": "array", "items": {"$ref": "#/$defs/overlay"}, "default": []}
+      }
+    }
+  }
+}

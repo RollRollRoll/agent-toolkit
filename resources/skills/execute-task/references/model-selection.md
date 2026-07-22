@@ -8,7 +8,7 @@
 - **派发时必须显式指定模型**——不写等于让 subagent 继承主 agent 当前档位（通常是最贵最强档），
   悄悄废掉分档的意义。
 - 三档：**cheap（便宜档）/ standard（标准档）/ most-capable（最强档）**——具体对应平台上哪个模型，
-  由当前可用模型决定，不在此写死。
+  由当前平台与账号实际可用模型决定，不在此写死。平台参数映射见 [platform-agents.md](platform-agents.md)。
 
 ## 二 · 按角色定档
 
@@ -32,6 +32,6 @@
 
 ## 派发前自查
 
-- 三类派发都**显式指定了模型**（用平台的模型参数，如 Claude Code Agent 工具的 `model`），没有留空任其继承主 agent？
+- 三类派发都**显式指定了模型与必要的推理档位**（Claude Code 用 Agent `model`；Codex 用 agent 配置或派发时支持的 model / reasoning 参数），没有留空任其继承主 agent？
 - 执行 / review 的档位判断依据是「简报完整度 + 涉及文件数」，不是拍脑袋？
 - 阶段 3 整体验收固定用了 most-capable，没有沿用 session 默认档位？
