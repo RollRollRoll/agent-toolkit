@@ -26,18 +26,11 @@ code, pre { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospac
 
 .topbar {
   position: sticky; top: 0; z-index: 10; min-height: 64px; padding: 0 4vw;
-  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
   background: rgba(255, 253, 248, 0.92); border-bottom: 1px solid var(--line); backdrop-filter: blur(14px);
 }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 760; letter-spacing: -0.02em; }
 .brand-mark { display: grid; place-items: center; width: 32px; height: 32px; color: white; background: var(--green); border-radius: 10px; }
-.topbar > .button { justify-self: end; }
-.stepper { display: flex; gap: 8px; color: var(--muted); font-size: 13px; }
-.step { display: flex; align-items: center; gap: 6px; padding: 6px 9px; border-radius: 999px; }
-.step b { display: grid; place-items: center; width: 20px; height: 20px; border: 1px solid var(--line); border-radius: 50%; font-size: 11px; }
-.step.done { color: var(--green); }
-.step.active { color: var(--ink); background: var(--green-soft); }
-.step.active b, .step.done b { color: white; border-color: var(--green); background: var(--green); }
 
 .shell { width: min(1440px, 94vw); margin: 0 auto; padding: 42px 0 64px; }
 .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 420px); gap: 36px; align-items: end; }
@@ -129,8 +122,6 @@ select { padding: 9px 10px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 @media (max-width: 980px) {
-  .topbar { grid-template-columns: 1fr auto; }
-  .stepper { display: none; }
   .hero, .workspace { grid-template-columns: 1fr; }
   .workspace { min-height: auto; }
   .catalog { max-height: 520px; }

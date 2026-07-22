@@ -113,6 +113,22 @@ def test_http_api_requires_session_token(tmp_path):
         thread.join(timeout=2)
 
 
+def test_ui_does_not_render_import_workflow(tmp_path):
+    state = _make_state(tmp_path)
+    server = create_server(state, port=0, token="test-token")
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    host, port = server.server_address
+    try:
+        html = urlopen(f"http://{host}:{port}/").read().decode("utf-8")
+        assert 'class="stepper"' not in html
+        assert 'aria-label="处理进度"' not in html
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
+
+
 def test_ui_command_passes_resolved_paths_and_options(tmp_path, monkeypatch):
     plan_path = tmp_path / "import-plan.yaml"
     output_path = tmp_path / "agent-config.yaml"
