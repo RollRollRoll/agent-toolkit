@@ -147,6 +147,26 @@ def test_ui_displays_json_pointer_as_readable_hierarchy(tmp_path):
         thread.join(timeout=2)
 
 
+def test_ui_reveals_selected_detail_and_distinguishes_decisions(tmp_path):
+    state = _make_state(tmp_path)
+    server = create_server(state, port=0, token="test-token")
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    host, port = server.server_address
+    try:
+        script = urlopen(f"http://{host}:{port}/app.js").read().decode("utf-8")
+        styles = urlopen(f"http://{host}:{port}/styles.css").read().decode("utf-8")
+        assert "ui.detail.scrollIntoView" in script
+        assert 'element("span", `decision-tag ${decisionName}`' in script
+        assert ".decision-tag.retained" in styles
+        assert ".decision-tag.excluded" in styles
+        assert ".item-row.decision-excluded.selected" in styles
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
+
+
 def test_ui_command_passes_resolved_paths_and_options(tmp_path, monkeypatch):
     plan_path = tmp_path / "import-plan.yaml"
     output_path = tmp_path / "agent-config.yaml"

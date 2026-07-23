@@ -17,6 +17,7 @@ const ui = {
   search: document.querySelector("#search"),
   targetFilter: document.querySelector("#target-filter"),
   statusFilter: document.querySelector("#status-filter"),
+  detail: document.querySelector(".detail"),
   emptyDetail: document.querySelector("#empty-detail"),
   detailContent: document.querySelector("#detail-content"),
   detailTarget: document.querySelector("#detail-target"),
@@ -27,6 +28,7 @@ const ui = {
   docsContent: document.querySelector("#docs-content"),
   docsFreshness: document.querySelector("#docs-freshness"),
   decisionSelect: document.querySelector("#decision-select"),
+  decisionBox: document.querySelector(".decision-box"),
   decisionHint: document.querySelector("#decision-hint"),
   manualValue: document.querySelector("#manual-value"),
   saveDecision: document.querySelector("#save-decision"),
@@ -84,6 +86,12 @@ function normalizedStatus(item) {
   return item.status;
 }
 
+function decisionState(item) {
+  if (item.action === "exclude") return "excluded";
+  if (item.action === "unresolved") return "pending";
+  return "retained";
+}
+
 function formatDisplayPath(pointer) {
   if (!pointer) return "根配置";
   return pointer.slice(1).split("/")
@@ -131,7 +139,8 @@ function renderList() {
   ui.visibleCount.textContent = `${visible.length} / ${app.items.length}`;
   const nodes = visible.map((item) => {
     const statusName = normalizedStatus(item);
-    const button = element("button", `item-row${item.key === app.selectedKey ? " selected" : ""}`);
+    const decisionName = decisionState(item);
+    const button = element("button", `item-row decision-${decisionName}${item.key === app.selectedKey ? " selected" : ""}`);
     button.type = "button";
     button.setAttribute("role", "option");
     button.setAttribute("aria-selected", item.key === app.selectedKey ? "true" : "false");
@@ -143,7 +152,12 @@ function renderList() {
     main.append(path);
     const sourceCount = item.candidates ? item.candidates.flatMap((entry) => entry.sources || []).length : (item.sources || []).length;
     main.append(element("span", "item-meta", `${sourceCount} 个来源 · ${labels[item.status] || item.status}`));
-    button.append(dot, main, element("span", "target-tag", item.target));
+    const tags = element("span", "item-tags");
+    tags.append(
+      element("span", "target-tag", item.target),
+      element("span", `decision-tag ${decisionName}`, decisionName === "excluded" ? "剔除" : decisionName === "pending" ? "待处理" : "保留"),
+    );
+    button.append(dot, main, tags);
     return button;
   });
   if (!nodes.length) nodes.push(element("p", "empty-state", "没有匹配的配置项。"));
@@ -198,6 +212,13 @@ function renderDecision(item) {
   }
   ui.manualValue.hidden = ui.decisionSelect.value !== "set";
   ui.manualValue.value = item.selectedValue === undefined ? "" : formatValue(item.selectedValue);
+  renderDecisionStyle();
+}
+
+function renderDecisionStyle() {
+  const value = ui.decisionSelect.value;
+  ui.decisionBox.classList.toggle("excluded", value === "exclude");
+  ui.decisionBox.classList.toggle("pending", value === "unresolved");
 }
 
 function renderDetail(item) {
@@ -264,6 +285,10 @@ function selectItem(key) {
   const item = currentItem();
   if (item) {
     renderDetail(item);
+    ui.detail.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      block: "start",
+    });
     loadDocs(false);
   }
 }
@@ -361,7 +386,10 @@ async function generate(force = false) {
 ui.search.addEventListener("input", renderList);
 ui.targetFilter.addEventListener("change", renderList);
 ui.statusFilter.addEventListener("change", renderList);
-ui.decisionSelect.addEventListener("change", () => { ui.manualValue.hidden = ui.decisionSelect.value !== "set"; });
+ui.decisionSelect.addEventListener("change", () => {
+  ui.manualValue.hidden = ui.decisionSelect.value !== "set";
+  renderDecisionStyle();
+});
 ui.saveDecision.addEventListener("click", saveDecision);
 document.querySelector("#refresh-docs").addEventListener("click", () => loadDocs(true));
 document.querySelector("#refresh-state").addEventListener("click", loadState);
