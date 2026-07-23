@@ -1,0 +1,12 @@
+id: git-commit-push
+name: Git Commit & Push
+type: skill
+description: 安全审查改动、拆分原子提交并在用户确认后推送到指定远端
+tags:
+  - git
+  - commit
+  - push
+  - workflow
+status: draft
+created_at: 2026-07-23
+updated_at: 2026-07-23
