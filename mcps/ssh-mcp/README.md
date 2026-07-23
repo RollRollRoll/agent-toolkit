@@ -2,11 +2,16 @@
 
 ## 用途
 
-让 agent 安全地参与远程服务器运维的 MCP 服务器设计方案。
+让 agent 安全地参与远程服务器运维的 MCP 服务器。
 核心原则：不让 agent 直接拿 shell、不暴露私钥、所有动作可审计、
 高危操作可审批可回滚。
 
-当前处于设计阶段（0→1），暂无实现代码和可用配置。
+实现位于 [RollRollRoll/ssh-mcp](https://github.com/RollRollRoll/ssh-mcp)。
+本目录不复制上游源码，只提供 Codex、Claude Code 插件清单与 MCP 启动配置；
+两个平台均通过 npm 上的固定版本启动服务。
+
+使用前请在启动 Codex 或 Claude Code 的环境中设置 `SSH_MCP_CONFIG`，
+其值必须是本机 YAML 配置文件的绝对路径。
 
 ## 设计要点
 
@@ -28,7 +33,8 @@
 - `docs/tasks.md`：任务拆解。
 - `docs/specs/`：16 个能力模块的规格。
 
-## 后续
+## 插件文件
 
-实现完成后补充 `config.example.json`，并将 `metadata.yaml` 的
-`status` 从 `draft` 更新为 `active`。
+- `.codex-plugin/plugin.json`：Codex 插件清单。
+- `.claude-plugin/plugin.json`：Claude Code 插件清单。
+- `.mcp.json`：两个平台共用的 stdio MCP 启动配置。

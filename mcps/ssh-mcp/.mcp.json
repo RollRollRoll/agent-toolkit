@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "ssh-mcp": {
+      "command": "npx",
+      "args": [
+        "--yes",
+        "--package",
+        "@rollrollroll/ssh-mcp@0.1.0",
+        "ssh-mcp"
+      ],
+      "env_vars": [
+        "SSH_MCP_CONFIG"
+      ]
+    }
+  }
+}

@@ -12,6 +12,11 @@
       "name": "agent-toolkit",
       "source": "./",
       "description": "个人 agent 工具集：代码库调研、想法打磨等可复用 skills（中文）"
+    },
+    {
+      "name": "ssh-mcp",
+      "source": "./mcps/ssh-mcp",
+      "description": "通过本机 stdio 为登记的开发与测试主机提供受控 SSH 操作"
     }
   ]
 }
