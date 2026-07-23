@@ -7,8 +7,8 @@
 高危操作可审批可回滚。
 
 实现位于 [RollRollRoll/ssh-mcp](https://github.com/RollRollRoll/ssh-mcp)。
-本目录不复制上游源码，只提供 Codex、Claude Code 插件清单与 MCP 启动配置；
-两个平台均通过 npm 上的固定版本启动服务。
+本目录不复制上游源码，仅保留资源说明、设计资料与元数据。SSH MCP 已合并进
+仓库根目录的 `agent-toolkit` 插件，两个平台均通过 npm 上的固定版本启动服务。
 
 使用前请在启动 Codex 或 Claude Code 的环境中设置 `SSH_MCP_CONFIG`，
 其值必须是本机 YAML 配置文件的绝对路径。
@@ -33,8 +33,8 @@
 - `docs/tasks.md`：任务拆解。
 - `docs/specs/`：16 个能力模块的规格。
 
-## 插件文件
+## 发布文件
 
-- `.codex-plugin/plugin.json`：Codex 插件清单。
-- `.claude-plugin/plugin.json`：Claude Code 插件清单。
-- `.mcp.json`：两个平台共用的 stdio MCP 启动配置。
+- `../../.codex-plugin/plugin.json`：Codex 根插件清单。
+- `../../.claude-plugin/plugin.json`：Claude Code 根插件清单。
+- `../../.mcp.json`：两个平台共用的 stdio MCP 启动配置。

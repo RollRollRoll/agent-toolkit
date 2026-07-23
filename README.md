@@ -5,7 +5,8 @@
 
 以个人知识库为主，重点是让资源清晰、独立、可维护。
 Claude Code 通过 `.claude-plugin/` 发布，Codex 通过 `.codex-plugin/` 和
-`.agents/plugins/` 发布；两平台直接加载根目录 `skills/` 下的同一套 Skill。
+`.agents/plugins/` 发布；两平台直接加载根目录 `skills/` 下的同一套 Skill，
+并通过根目录 `.mcp.json` 加载 SSH MCP。
 
 ## 安装（Claude Code）
 
@@ -21,6 +22,9 @@ Claude Code 通过 `.claude-plugin/` 发布，Codex 通过 `.codex-plugin/` 和
 - 插件级：`/plugin` 交互界面，或 `claude plugin enable|disable agent-toolkit`。
 - skill 级：在 `/permissions` 中添加 deny 规则，如 `Skill(codebase-analyzer)`。
 
+如需使用 SSH MCP，请在启动 Claude Code 前设置 `SSH_MCP_CONFIG`，其值为
+本机 YAML 配置文件的绝对路径。
+
 ## 安装（Codex）
 
 在 Codex CLI 中执行：
@@ -33,10 +37,14 @@ codex plugin add agent-toolkit@agent-toolkit
 也可以在 Codex CLI 的 `/plugins` 或 Codex App 的 Plugins 界面中，从已添加的
 `agent-toolkit` marketplace 安装。安装或更新后新开任务，让 Codex 重新加载 Skill。
 
+如需使用 SSH MCP，请在启动 Codex 前设置 `SSH_MCP_CONFIG`，其值为本机 YAML
+配置文件的绝对路径。
+
 ## 目录结构
 
 ```text
 agent-toolkit/
+  .mcp.json
   .claude-plugin/
     plugin.json
     marketplace.json
@@ -61,8 +69,9 @@ agent-toolkit/
 - `.claude-plugin/`：Claude Code 插件与市场清单。
 - `.codex-plugin/`：Codex 插件清单。
 - `.agents/plugins/`：Codex 仓库级 marketplace 清单。
+- `.mcp.json`：两平台共用的 SSH MCP 启动配置。
 - `skills/`：两平台共用的完整 Skill；辅助资料、脚本和测试均放在对应 Skill 目录内。
-- `mcps/`：存放 MCP 配置或服务说明。
+- `mcps/`：存放 MCP 资源说明、设计资料与元数据。
 - `commands/`：存放自定义 command。
 - `hooks/`：存放 hook 定义或说明。
 - `collections/`：手动记录资源组合关系。

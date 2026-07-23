@@ -5,18 +5,13 @@
   },
   "metadata": {
     "description": "kgfan 的个人 agent 工具市场",
-    "version": "0.11.0"
+    "version": "0.12.0"
   },
   "plugins": [
     {
       "name": "agent-toolkit",
       "source": "./",
-      "description": "个人 agent 工具集：代码库调研、想法打磨等可复用 skills（中文）"
-    },
-    {
-      "name": "ssh-mcp",
-      "source": "./mcps/ssh-mcp",
-      "description": "通过本机 stdio 为登记的开发与测试主机提供受控 SSH 操作"
+      "description": "个人 agent 工具集：可复用中文 skills 与受控 SSH MCP"
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "name": "agent-toolkit",
-  "version": "0.11.0",
-  "description": "个人 agent 工具集：代码库调研、想法打磨与开发执行等可复用中文 skills",
+  "version": "0.12.0",
+  "description": "个人 agent 工具集：可复用中文 skills 与受控 SSH MCP",
   "author": {
     "name": "kgfan"
   },
@@ -12,13 +12,16 @@
     "skills",
     "codebase-analysis",
     "software-development",
+    "ssh",
+    "mcp",
     "chinese"
   ],
   "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Agent Toolkit",
-    "shortDescription": "中文 Agent 开发工作流与代码库调研工具集",
-    "longDescription": "覆盖想法打磨、行为规格、技术设计、任务拆分、开发执行、代码库调研与 Skill 盲测的中文工作流。",
+    "shortDescription": "中文 Agent 开发工作流、代码库调研与 SSH 工具集",
+    "longDescription": "覆盖想法打磨、行为规格、技术设计、任务拆分、开发执行、代码库调研、Skill 盲测与受控 SSH 操作。",
     "developerName": "kgfan",
     "category": "Productivity",
     "capabilities": [
