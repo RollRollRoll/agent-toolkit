@@ -57,7 +57,6 @@ agent-toolkit/
       SKILL.md
       references/
       scripts/
-  mcps/
   commands/
   hooks/
   collections/
@@ -71,7 +70,6 @@ agent-toolkit/
 - `.agents/plugins/`：Codex 仓库级 marketplace 清单。
 - `.mcp.json`：两平台共用的 SSH MCP 启动配置。
 - `skills/`：两平台共用的完整 Skill；辅助资料、脚本和测试均放在对应 Skill 目录内。
-- `mcps/`：存放 MCP 资源说明、设计资料与元数据。
 - `commands/`：存放自定义 command。
 - `hooks/`：存放 hook 定义或说明。
 - `collections/`：手动记录资源组合关系。

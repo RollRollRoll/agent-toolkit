@@ -66,58 +66,6 @@ created_at: 2026-06-07
 updated_at: 2026-06-07
 ```
 
-## mcp
-
-目录：
-
-```text
-mcps/<mcp-id>/
-  README.md
-  config.example.json
-  metadata.yaml
-```
-
-`README.md`：
-
-```markdown
-# Example MCP
-
-## 用途
-
-说明这个 MCP 配置或服务解决什么问题。
-
-## 依赖
-
-- 说明需要的运行环境或账号。
-
-## 配置方式
-
-说明如何使用 `config.example.json`。
-```
-
-`config.example.json`：
-
-```json
-{
-  "name": "example-mcp",
-  "command": "example-command",
-  "args": []
-}
-```
-
-`metadata.yaml`：
-
-```yaml
-id: example-mcp
-name: Example MCP
-type: mcp
-description: 示例 MCP
-tags: []
-status: draft
-created_at: 2026-06-07
-updated_at: 2026-06-07
-```
-
 ## command
 
 目录：
@@ -236,8 +184,6 @@ description: 示例资源组合
 resources:
   skills:
     - example-skill
-  mcps:
-    - example-mcp
   commands:
     - example-command
   hooks:

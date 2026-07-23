@@ -23,7 +23,6 @@ Codex 作为补充平台，通过 `.codex-plugin/` 和 `.agents/plugins/` 发布
 - `.agents/plugins/`：Codex 仓库级 marketplace 清单。
 - `.mcp.json`：两平台共用的根插件 MCP 启动配置。
 - `skills/`：两平台共用的完整 Skill；辅助资料、脚本和测试放在对应 Skill 目录内。
-- `mcps/`：MCP 资源说明、设计资料与元数据。
 - `commands/`：自定义 command。
 - `hooks/`：hook 定义或说明。
 - `collections/`：资源组合清单。
@@ -60,15 +59,6 @@ skills/<skill-id>/
 - `docs/` 可选，存放该资源的设计与演进记录。
 - `scripts/` 和 `assets/` 可选，存放 Skill 使用的脚本与静态资源。
 
-### mcp
-
-```text
-mcps/<mcp-id>/
-  README.md
-  config.example.json
-  metadata.yaml
-```
-
 ### command
 
 ```text
@@ -104,7 +94,7 @@ updated_at: 2026-06-07
 
 - `id`：资源唯一标识，必须与目录名一致。
 - `name`：资源展示名称。
-- `type`：资源类型，只能是 `skill`、`mcp`、`command`、`hook`。
+- `type`：资源类型，只能是 `skill`、`command`、`hook`。
 - `description`：一句话说明资源用途。
 - `tags`：人工检索标签。
 - `status`：资源状态，建议使用 `draft`、`active`、`archived`。
