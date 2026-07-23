@@ -19,6 +19,8 @@ aiconfig ui --plan .agent-config/import-plan.yaml --output agent-config.yaml
 
 - 展示全部来源、自动去重结果、冲突、敏感字段和越界字段。
 - 按目标和状态筛选，并逐项选择 `keep`、`take`、`union`、`set` 或 `exclude`。
+- 根据条目状态、本机路径和 Schema 默认值给出保留或剔除建议及理由，但不自动替用户修改决策；冲突项只建议先解决冲突，不替用户选择来源。
+- 桌面端滚动配置项列表时，右侧详情保持在当前视口内；选择条目不会把页面跳回详情区顶部。
 - 把决策即时写回导入计划，冲突全部解决后预览事实 YAML、Codex TOML 与 Claude JSON。
 - 下载预览，或生成 `agent-config.yaml`；已有文件必须再次确认，覆盖前自动备份。
 - 联网读取 Codex 与 Claude Code 配置 Schema 的字段说明、类型、允许值和默认值。

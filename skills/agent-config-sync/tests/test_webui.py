@@ -147,7 +147,7 @@ def test_ui_displays_json_pointer_as_readable_hierarchy(tmp_path):
         thread.join(timeout=2)
 
 
-def test_ui_reveals_selected_detail_and_distinguishes_decisions(tmp_path):
+def test_ui_keeps_selected_detail_visible_and_distinguishes_decisions(tmp_path):
     state = _make_state(tmp_path)
     server = create_server(state, port=0, token="test-token")
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -156,11 +156,41 @@ def test_ui_reveals_selected_detail_and_distinguishes_decisions(tmp_path):
     try:
         script = urlopen(f"http://{host}:{port}/app.js").read().decode("utf-8")
         styles = urlopen(f"http://{host}:{port}/styles.css").read().decode("utf-8")
-        assert "ui.detail.scrollIntoView" in script
+        assert "scrollIntoView" not in script
+        assert "position: sticky" in styles
+        assert "top: 80px" in styles
+        assert "height: calc(100vh - 96px)" in styles
+        assert ".item-list { flex: 1" in styles
         assert 'element("span", `decision-tag ${decisionName}`' in script
         assert ".decision-tag.retained" in styles
         assert ".decision-tag.excluded" in styles
         assert ".item-row.decision-excluded.selected" in styles
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
+
+
+def test_ui_recommends_retaining_or_excluding_each_item(tmp_path):
+    state = _make_state(tmp_path)
+    server = create_server(state, port=0, token="test-token")
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    host, port = server.server_address
+    try:
+        html = urlopen(f"http://{host}:{port}/").read().decode("utf-8")
+        script = urlopen(f"http://{host}:{port}/app.js").read().decode("utf-8")
+        assert 'id="recommendation-label"' in html
+        assert 'id="recommendation-reason"' in html
+        assert "function decisionRecommendation(item, docs = null)" in script
+        assert 'label: "建议剔除"' in script
+        assert 'label: "建议保留"' in script
+        assert 'label: "建议保留（先解决冲突）"' in script
+        assert 'label: "建议剔除（本机路径）"' in script
+        assert 'label: "可考虑剔除"' in script
+        assert 'item.path.startsWith("/projects/")' in script
+        assert "docs.default !== null && valuesEqual(item.value, docs.default)" in script
+        assert "建议只辅助判断，不会自动更改决策" in html
     finally:
         server.shutdown()
         server.server_close()

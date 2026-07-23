@@ -90,14 +90,22 @@
             </div>
 
             <section class="decision-box">
-              <div>
-                <h3>处理决策</h3>
-                <p id="decision-hint" class="muted"></p>
+              <div class="recommendation">
+                <div class="recommendation-head">
+                  <h3>处理建议</h3>
+                  <span id="recommendation-label" class="recommendation-tag"></span>
+                </div>
+                <p id="recommendation-reason"></p>
+                <p class="recommendation-note">建议只辅助判断，不会自动更改决策。</p>
               </div>
               <div class="decision-controls">
-                <select id="decision-select" aria-label="处理决策"></select>
+                <label class="decision-field">
+                  <span>处理决策</span>
+                  <select id="decision-select" aria-label="处理决策"></select>
+                </label>
                 <textarea id="manual-value" rows="4" placeholder="输入 JSON 值；普通文本会按字符串处理" hidden></textarea>
                 <button id="save-decision" class="button primary" type="button">保存决策</button>
+                <p id="decision-hint" class="muted"></p>
               </div>
             </section>
           </div>

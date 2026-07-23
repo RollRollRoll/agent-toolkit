@@ -52,8 +52,8 @@ h3 { margin-bottom: 0; font-size: 14px; }
 .metric.danger strong { color: var(--red); }
 
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
-.workspace { display: grid; grid-template-columns: minmax(300px, 0.8fr) minmax(520px, 1.7fr); min-height: 650px; gap: 16px; }
-.catalog { min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.workspace { height: calc(100vh - 96px); min-height: 650px; max-height: 900px; display: grid; grid-template-columns: minmax(300px, 0.8fr) minmax(520px, 1.7fr); gap: 16px; align-items: start; }
+.catalog { height: 100%; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 .panel-head, .detail-head, .subpanel-head, .export-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
 .panel-head { padding: 22px 22px 14px; }
 .search { padding: 0 22px 12px; }
@@ -62,7 +62,7 @@ h3 { margin-bottom: 0; font-size: 14px; }
 .search input:focus, select:focus, textarea:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(21, 95, 70, 0.12); }
 .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 22px 14px; border-bottom: 1px solid var(--line); }
 select { padding: 9px 10px; }
-.item-list { min-height: 300px; overflow: auto; }
+.item-list { flex: 1; min-height: 300px; overflow: auto; }
 .item-row { width: 100%; padding: 15px 20px; display: grid; grid-template-columns: 9px 1fr auto; gap: 12px; align-items: center; text-align: left; color: inherit; background: transparent; border: 0; border-bottom: 1px solid #ebe7dd; }
 .item-row:hover { background: #f8f5ee; }
 .item-row.selected { background: var(--green-soft); box-shadow: inset 3px 0 var(--green); }
@@ -83,7 +83,7 @@ select { padding: 9px 10px; }
 .decision-tag.excluded { color: var(--red); background: var(--red-soft); }
 .decision-tag.pending { color: var(--amber); background: var(--amber-soft); }
 
-.detail { padding: 26px; overflow: hidden; scroll-margin-top: 80px; }
+.detail { position: sticky; top: 80px; height: 100%; max-height: calc(100vh - 96px); padding: 26px; overflow: auto; }
 .empty-state { height: 100%; min-height: 560px; display: grid; place-content: center; justify-items: center; color: var(--muted); text-align: center; }
 .empty-state h2 { margin: 14px 0 8px; color: var(--ink); }
 .empty-icon { display: grid; place-items: center; width: 54px; height: 54px; background: var(--green-soft); color: var(--green); border-radius: 50%; font-size: 24px; }
@@ -105,8 +105,16 @@ select { padding: 9px 10px; }
 .decision-box.excluded .button.primary { background: var(--red); }
 .decision-box.pending { border-color: #e2c48e; background: var(--amber-soft); }
 .decision-box p { margin: 7px 0 0; font-size: 12px; line-height: 1.5; }
-.decision-controls { display: grid; grid-template-columns: 1fr auto; gap: 9px; }
+.recommendation-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.recommendation-tag { flex: none; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; }
+.recommendation-tag.keep { color: var(--green); background: rgba(255, 255, 255, .72); }
+.recommendation-tag.exclude { color: var(--red); background: rgba(255, 255, 255, .72); }
+.recommendation-tag.review { color: var(--amber); background: rgba(255, 255, 255, .72); }
+.recommendation-note { color: var(--muted); }
+.decision-controls { display: grid; grid-template-columns: 1fr auto; gap: 9px; align-items: end; }
+.decision-field { display: grid; gap: 7px; font-size: 12px; font-weight: 700; }
 .decision-controls textarea { grid-column: 1 / -1; padding: 10px; resize: vertical; }
+.decision-controls > p { grid-column: 1 / -1; }
 
 .export { margin-top: 16px; padding: 24px; }
 .export-head p { margin: 7px 0 0; }
@@ -134,8 +142,9 @@ select { padding: 9px 10px; }
 
 @media (max-width: 980px) {
   .hero, .workspace { grid-template-columns: 1fr; }
-  .workspace { min-height: auto; }
-  .catalog { max-height: 520px; }
+  .workspace { height: auto; min-height: auto; max-height: none; }
+  .catalog { height: auto; max-height: 520px; }
+  .detail { position: static; height: auto; max-height: none; overflow: visible; }
 }
 @media (max-width: 680px) {
   .topbar { padding: 0 18px; }

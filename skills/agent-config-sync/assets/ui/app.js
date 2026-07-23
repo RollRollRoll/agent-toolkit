@@ -17,7 +17,6 @@ const ui = {
   search: document.querySelector("#search"),
   targetFilter: document.querySelector("#target-filter"),
   statusFilter: document.querySelector("#status-filter"),
-  detail: document.querySelector(".detail"),
   emptyDetail: document.querySelector("#empty-detail"),
   detailContent: document.querySelector("#detail-content"),
   detailTarget: document.querySelector("#detail-target"),
@@ -29,6 +28,8 @@ const ui = {
   docsFreshness: document.querySelector("#docs-freshness"),
   decisionSelect: document.querySelector("#decision-select"),
   decisionBox: document.querySelector(".decision-box"),
+  recommendationLabel: document.querySelector("#recommendation-label"),
+  recommendationReason: document.querySelector("#recommendation-reason"),
   decisionHint: document.querySelector("#decision-hint"),
   manualValue: document.querySelector("#manual-value"),
   saveDecision: document.querySelector("#save-decision"),
@@ -180,7 +181,69 @@ function addDecisionOption(value, text) {
   ui.decisionSelect.append(option);
 }
 
+function valuesEqual(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function decisionRecommendation(item, docs = null) {
+  if (item.status === "sensitive") {
+    return {
+      kind: "exclude",
+      label: "建议剔除",
+      reason: "检测到疑似秘密，导入规则禁止保留。需要此值时，请在导入后改用安全的环境变量占位符。",
+    };
+  }
+  if (item.status === "out-of-scope") {
+    return {
+      kind: "exclude",
+      label: "建议剔除",
+      reason: "该字段不属于受管理配置文件范围，导入规则禁止保留。",
+    };
+  }
+  if (item.target === "codex" && item.path.startsWith("/projects/")) {
+    return {
+      kind: "exclude",
+      label: "建议剔除（本机路径）",
+      reason: "项目配置包含本机绝对路径与信任状态，跨设备同步通常无法复用；需要时请在对应设备单独配置。",
+    };
+  }
+  if (item.status === "conflict") {
+    return {
+      kind: "review",
+      label: "建议保留（先解决冲突）",
+      reason: "多个来源的值不一致。若仍需要此项，请选择正确来源、合并数组或手动设置；仅在确认不再需要时剔除。",
+    };
+  }
+  if (docs?.found && docs.default !== undefined && docs.default !== null && valuesEqual(item.value, docs.default)) {
+    return {
+      kind: "review",
+      label: "可考虑剔除",
+      reason: "当前值与官方 Schema 默认值相同，剔除可精简配置；若希望在默认值变化后仍保持当前行为，则继续保留。",
+    };
+  }
+  if (item.status === "duplicate") {
+    return {
+      kind: "keep",
+      label: "建议保留",
+      reason: "多个来源的值一致且已安全去重，保留可延续现有行为。",
+    };
+  }
+  return {
+    kind: "keep",
+    label: "建议保留",
+    reason: "该项仅来自一份配置，保留可避免迁移时丢失现有行为；确认不再需要时再剔除。",
+  };
+}
+
+function renderRecommendation(item, docs = null) {
+  const recommendation = decisionRecommendation(item, docs);
+  ui.recommendationLabel.textContent = recommendation.label;
+  ui.recommendationLabel.className = `recommendation-tag ${recommendation.kind}`;
+  ui.recommendationReason.textContent = recommendation.reason;
+}
+
 function renderDecision(item) {
+  renderRecommendation(item);
   ui.decisionSelect.replaceChildren();
   const protectedItem = ["sensitive", "out-of-scope"].includes(item.status);
   if (protectedItem) {
@@ -253,6 +316,7 @@ async function loadDocs(refresh = false) {
     const query = new URLSearchParams({ target: item.target, path: item.path, refresh: refresh ? "1" : "0" });
     const docs = await api(`/api/docs?${query}`);
     if (currentItem()?.key !== key) return;
+    renderRecommendation(item, docs);
     ui.docsFreshness.textContent = docs.stale ? "离线缓存" : "Schema 缓存";
     ui.docsFreshness.className = `pill ${docs.stale ? "duplicate" : ""}`;
     const content = document.createDocumentFragment();
@@ -285,10 +349,6 @@ function selectItem(key) {
   const item = currentItem();
   if (item) {
     renderDetail(item);
-    ui.detail.scrollIntoView({
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-      block: "start",
-    });
     loadDocs(false);
   }
 }

@@ -143,6 +143,7 @@ vite.config.ts.timestamp-*
 .vite/
 .git-relay.conf
 .serena/
+.claude/settings.local.json
 
 # macOS metadata
 .DS_Store
