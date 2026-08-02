@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research"
+  short_description: "基于高可信一手来源调研问题，并将逐项引用的结论写入仓库"
+  default_prompt: "使用 $research 调研这个问题，并将带一手来源引用的结论写入仓库中的 Markdown 文件。"
