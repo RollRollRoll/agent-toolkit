@@ -1,4 +1,4 @@
 interface:
   display_name: "Git Commit & Push"
-  short_description: "安全检查改动，拆分原子提交，生成清晰说明并按确认推送代码"
-  default_prompt: "使用 $git-commit-push 检查当前改动，将其拆成可审查的原子提交并推送。"
+  short_description: "安全审查改动、语义解决 Git 冲突并创建原子提交和受控推送"
+  default_prompt: "使用 $git-commit-push 检查当前 Git 状态，按原始意图解决冲突或整理原子提交，并在确认后推送。"
