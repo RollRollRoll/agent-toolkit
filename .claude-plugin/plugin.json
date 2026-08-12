@@ -1,7 +1,7 @@
 {
   "name": "agent-toolkit",
-  "version": "0.17.0",
-  "description": "个人 agent 工具集：可复用中文 skills 与受控 SSH MCP",
+  "version": "0.18.0",
+  "description": "个人 agent 工具集：可复用中文开发工作流 skills",
   "author": {
     "name": "kgfan"
   },
@@ -12,8 +12,6 @@
     "skills",
     "codebase-analysis",
     "ideation",
-    "ssh",
-    "mcp",
     "chinese"
   ],
   "skills": [

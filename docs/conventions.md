@@ -21,7 +21,7 @@ Codex 作为补充平台，通过 `.codex-plugin/` 和 `.agents/plugins/` 发布
   与市场清单（`marketplace.json`）。
 - `.codex-plugin/`：Codex 插件清单。
 - `.agents/plugins/`：Codex 仓库级 marketplace 清单。
-- `.mcp.json`：两平台共用的根插件 MCP 启动配置。
+- `mcp/`：保留供手动使用的 MCP 配置；不在插件默认发现位置。
 - `skills/`：两平台共用的完整 Skill；辅助资料、脚本和测试放在对应 Skill 目录内。
 - `commands/`：自定义 command。
 - `hooks/`：hook 定义或说明。
@@ -113,8 +113,10 @@ updated_at: 2026-06-07
    - 同步递增 Claude plugin / marketplace 与 Codex plugin 版本；
    - 分别运行 `claude plugin validate . --strict` 和 Codex plugin / Skill 校验器。
 6. 如果 MCP 要随插件发布：
-   - 在根目录 `.mcp.json` 中登记 MCP server；
-   - 确认 `.codex-plugin/plugin.json` 的 `mcpServers` 指向根目录 `.mcp.json`；
+   - 当前仓库默认不随插件发布 MCP；配置放在 `mcp/` 下，仅供手动使用；
+   - 不要在插件根目录创建 `.mcp.json`，也不要在 Codex 插件清单中声明
+     `mcpServers`，否则 Claude Code 或 Codex 会在插件启用时加载 MCP；
+   - 如需恢复随插件发布，先明确评估双平台的自动加载行为；
    - 同步递增 Claude plugin / marketplace 与 Codex plugin 版本；
    - 分别运行双平台插件校验器。
 
