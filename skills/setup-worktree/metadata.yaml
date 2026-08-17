@@ -1,6 +1,7 @@
 id: setup-worktree
 name: Setup Worktree
 type: skill
+layer: composable
 description: 执行前锁定 expected base，建立并验证隔离 git 工作区
 tags:
   - execute
@@ -9,4 +10,4 @@ tags:
   - isolation
 status: draft
 created_at: 2026-06-22
-updated_at: 2026-07-17
+updated_at: 2026-08-17

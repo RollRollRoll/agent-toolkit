@@ -18,7 +18,7 @@
   "interface": {
     "displayName": "Agent Toolkit",
     "shortDescription": "中文 Agent 开发工作流与代码库调研工具集",
-    "longDescription": "覆盖想法打磨、行为规格、技术设计、任务拆分、开发执行、代码库调研与 Skill 盲测。",
+    "longDescription": "分两层：workflow 层覆盖想法打磨、行为规格、技术设计、任务拆分与开发执行；composable 层提供 TDD 红绿闭环、整体改动审查、工作区隔离与分支收尾等可复用能力单元。",
     "developerName": "kgfan",
     "category": "Productivity",
     "capabilities": [

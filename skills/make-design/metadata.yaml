@@ -1,6 +1,7 @@
 id: make-design
 name: Make Design
 type: skill
+layer: workflow
 description: 把确认过的行为规格翻译成可 review、可追溯的技术设计，只到技术决策层，不下沉到任务拆解
 tags:
   - plan
@@ -9,4 +10,4 @@ tags:
   - decision-records
 status: draft
 created_at: 2026-06-22
-updated_at: 2026-07-17
+updated_at: 2026-08-17

@@ -1,6 +1,7 @@
 id: git-commit-push
 name: Git Commit & Push
 type: skill
+layer: composable
 description: 语义解决进行中的 Git 冲突，安全拆分原子提交并在用户确认后推送
 tags:
   - git
@@ -12,4 +13,4 @@ tags:
   - workflow
 status: draft
 created_at: 2026-07-23
-updated_at: 2026-08-01
+updated_at: 2026-08-17

@@ -1,6 +1,7 @@
 id: grill-me
 name: Grill Me
 type: skill
+layer: standalone
 description: 仅供人类显式启动，逐项追问并压力测试想法、计划或设计，直到双方达成共同理解
 tags:
   - interview
@@ -11,4 +12,4 @@ tags:
   - user-invoked
 status: draft
 created_at: 2026-07-27
-updated_at: 2026-07-27
+updated_at: 2026-08-17

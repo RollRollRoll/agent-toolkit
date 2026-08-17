@@ -11,6 +11,42 @@ Claude Code 通过 `.claude-plugin/` 发布，Codex 通过 `.codex-plugin/` 和
 SSH MCP 配置仍保留在 `mcp/ssh-mcp.json`，仅供手动配置时使用。该文件不在
 Claude Code 和 Codex 的插件默认发现位置，也未被插件清单引用。
 
+## 架构：workflow 层 + composable 层
+
+Skill 分两层，职责与调用方向固定：
+
+- **workflow 层（Layered Workflow Orchestration）**：`refine-idea → write-spec → make-design →
+  split-task → execute-task` 这条开发链。每一棒守一道闸门、把产物交给下一棒，负责流程、闸门与
+  用户确认，**自己不定义具体能力判据**。
+- **composable 层（Composable Skills Architecture）**：单一职责、可被任何调用方复用的能力单元。
+  每个都在 `SKILL.md` 里声明**调用契约**（传入 / 取回 / 不做什么），判据住在自己这里，不被调用方复制。
+- **层外独立工具**：不参与这条链的工具型 skill（代码库调研、Skill 盲测、配置同步等），标为 `standalone`。
+
+```text
+workflow     refine-idea → write-spec → make-design → split-task → execute-task
+                                                                         │
+composable          ┌───────────────┬───────────────┴───┬───────────────┐
+              setup-worktree       tdd          review-changes     finish-branch
+```
+
+execute-task 的四个调用点：
+
+| 调用点 | composable skill | 传入 | 取回 |
+|---|---|---|---|
+| 阶段 1 需要隔离 / 并行 | `setup-worktree` | expected base、用途 | worktree 路径 + 已验证 HEAD |
+| 阶段 2 每个任务 | `tdd` | 简报、约定的 seam、验证方式、记录路径 | 证据齐否、改动文件、疑虑 |
+| 阶段 3 整体验收 | `review-changes` | BASE、design/spec/tasks、疑虑 | 分级 findings + 六关判定 |
+| 阶段 4 收尾 | `finish-branch` | 最终验证命令、本次开发范围、调用来源 | 收尾决策与已执行动作 |
+
+跨层约定：
+
+- **调用即交出判据定义权**：调用方不重述被调 skill 的规则，需要细节就去读那个 skill。
+- **调用不等于派 subagent**：默认在调用方自己的上下文里加载执行；需要 fresh 上下文时
+  （如 `review-changes` 的独立性要求）由调用方显式派发并定档。
+- **产物落盘目录由调用方决定**：composable skill 的脚本都接受可选输出目录，缺省落在自己的自忽略点目录
+  （`.tdd/`、`.review-changes/`）；被 execute-task 调用时统一落进 `.execute-task/`。
+- 每个 skill 的 `metadata.yaml` 用 `layer: workflow | composable | standalone` 标注归属。
+
 ## 安装（Claude Code）
 
 在 Claude Code 中执行：

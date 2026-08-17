@@ -10,10 +10,30 @@ description: 当要在开始一段开发、或并行多个任务前，建立隔�
 在开始一段开发、或并行多个任务前，**建立一个隔离的 git 工作区（worktree）**，让这段工作在
 独立目录、隔离 checkout（需要时再建立独立分支）上进行，不污染当前工作区、也便于多条开发线并行。
 
-这是 agent-toolkit 的**执行阶段支撑 skill**，通常由 execute-task 在执行前调用，也可被任何需要
-隔离工作区的场景单独复用。它只负责"建立隔离"——**清理与收尾交 finish-branch**（职责分离）。
+这是 agent-toolkit 的 **composable 层**能力单元，通常由 workflow 层的 execute-task（阶段 1 调度规划）
+在执行前调用，也可被任何需要隔离工作区的场景单独复用。它只负责"建立隔离"——
+**清理与收尾交 finish-branch**（职责分离）。
 
 > 一句话：要动手改代码、又不想弄乱当前工作区时，先在这里开一个干净、隔离的 worktree。
+
+## 调用契约
+
+**传入**
+
+- **expected base**（可选）：要求的起点 commit。不给就用当前本地 `HEAD`，不自行改成远端默认分支。
+- **用途 / 命名线索**：关联的任务或功能名，用于分支与 worktree 目录命名，便于后续辨认与清理。
+- **是否要独立分支**：只要隔离 checkout 还是要长期分支。
+
+**取回**
+
+- worktree 路径、HEAD 状态（分支名或 detached）、**已验证等于 expected base 的完整 commit ID**、平台。
+- 未通过验证或工作区有未提交改动 → 回 **BLOCKED**：报告实际值与期望值，交调用方 / 用户处理。
+
+**本 skill 不做**
+
+- 不自动 stash / 提交 / 丢弃当前工作区的未提交改动。
+- 不合并、不清理、不移除 worktree（那是 **finish-branch**）。
+- 不写业务代码、不跑测试。
 
 ## 何时用 / 何时不用
 
@@ -73,7 +93,8 @@ description: 当要在开始一段开发、或并行多个任务前，建立隔�
 ❌ 在非 git 仓库里硬建 worktree。
 ❌ 给小改动也强行开 worktree —— 不需要隔离就别隔离（YAGNI）。
 
-## 相关
+## 分层与调用方
 
-- 通常由 **execute-task**（阶段 1 调度规划）在需要隔离 / 并行时调用。
-- 收尾、合并、清理 worktree 见 **finish-branch**。
+- **composable 层**能力单元：通常由 workflow 层的 **execute-task**（阶段 1 调度规划）
+  在需要隔离 / 并行时调用，也可被用户直接触发。
+- 隔离建立后，实现交 **tdd**、审查交 **review-changes**、收尾与移除 worktree 交 **finish-branch**。
