@@ -2,8 +2,8 @@
 # 用途：execute-task 阶段 2 每个任务开工前，确认真实工作区干净并记录任务起点 HEAD。
 # 用法：scripts/task-baseline.sh <任务编号>
 # 行为：拒绝任何非忽略的暂存、未暂存或未跟踪改动；将 HEAD 写入
-#       .execute-task/task-N-base，供主 agent 在过闸门一时核对任务期间 HEAD 没有漂移
-#       （执行 subagent 不 commit，HEAD 变了说明范围已经不干净）。
+#       .execute-task/task-N-base，供过闸门一时核对任务期间 HEAD 没有漂移
+#       （红绿途中不该 commit，HEAD 变了说明范围已经不干净）。
 set -euo pipefail
 
 if [ $# -ne 1 ]; then

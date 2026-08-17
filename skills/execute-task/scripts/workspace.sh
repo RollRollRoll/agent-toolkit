@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# 用途：解析并确保 execute-task 交接文件的工作目录存在，打印其绝对路径。
+# 用途：解析并确保 execute-task 工作文件的目录存在，打印其绝对路径。
 # 它是目录约定的单一事实来源：task-brief.sh / task-baseline.sh / acceptance-diff.sh
 # 都经它取目录，防三处约定漂移。
-# 目录放工作树内（而非 .git/ 下）是因为 subagent 通常写不了 .git/；
+# 目录放工作树内（而非 .git/ 下）便于用户查看，也便于阶段 3 的 review subagent 读取；
 # 自忽略 .gitignore 保证它不进 git status、不被提交。
 # 用法：scripts/workspace.sh
 set -euo pipefail

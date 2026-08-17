@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# 用途：execute-task 派发执行前，从 tasks 文档机械抽取一个任务的全文生成简报基底——
-#       精确值（数字、签名、测试用例）逐字保真，不经主 agent 手抄；
-#       相关 design/spec 片段由主 agent 随后追加到同一文件。
+# 用途：execute-task 阶段 2 每个任务开工前，从 tasks 文档机械抽取该任务全文生成简报基底——
+#       精确值（数字、签名、测试用例）逐字保真，不经手抄；上下文被压缩后回来重读它，
+#       不靠记忆复述需求。相关 design/spec 片段与约定的 seam 随后追加到同一文件。
 # 用法：scripts/task-brief.sh <tasks文件> <任务编号>
 # 行为：抽取 `### Task N:` 标题段（code fence 内的假标题不算；遇到下一个 Task 标题、
 #       或非 Task 的一/二级标题即终止），写入 .execute-task/task-N-brief.md，

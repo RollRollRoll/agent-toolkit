@@ -1,9 +1,10 @@
-# 调度与编排 — 排序、并行、subagent 派发与 handoff、进度账本
+# 调度与编排 — 排序、并行、任务工作文件、进度账本
 
-> 用途：`execute-task` 招牌机制「核心二 + 调度」的操作细则。阶段 1 调度、阶段 2 派发执行时用。
+> 用途：`execute-task` 招牌机制「核心二 + 调度」的操作细则。阶段 1 调度、阶段 2 执行时用。
 >
-> **目标**：把任务清单按依赖排成可执行序列，能并行的并行、能恢复的恢复，主 agent 做编排而非糊代码。
-> 任务内只派执行 subagent（TDD 闭环见 [execution-loop.md](execution-loop.md)），review / fix 只在阶段 3。
+> **目标**：把任务清单按依赖排成可执行序列，能并行的并行、能恢复的恢复。
+> 任务内由**主 agent 自己**走 TDD 闭环（见 [execution-loop.md](execution-loop.md)），**不派任何 subagent**；
+> subagent 只出现在阶段 3 的整体验收 review / fix。
 
 ## 一 · 读 tasks 排执行顺序
 
@@ -28,43 +29,37 @@
 - **可选**：单任务串行，或整次开发已经处于合适且已验证基线的独立 worktree 时，不必重复建；别为隔离而隔离。
 - worktree 的移除交收尾的 **finish-branch**，执行前另取用户确认。
 
-## 四 · subagent 派发与 handoff
+## 四 · 任务工作文件（主 agent 自己执行，任务内不派 subagent）
 
-- **每任务只派一类 subagent（执行）**：fresh 上下文，只带这一个任务需要的信息；
-  **主 agent 做编排**：确认阶段 0 提交授权 → 记录干净基线 → 派执行 → 按闸门一核证据 →
-  checkbox 与代码一起 commit → ignored ledger → clean 校验 → 下一个；不自己埋头糊代码。
-  任务内**没有审查轮与修复轮**——review / fix 派发只发生在阶段 3 整体验收。
-  派发 prompt 照抄 [handoff-templates.md](handoff-templates.md)。
-- **文件 handoff，不粘正文**：大块产物写成文件、派发只传路径——粘进派发 prompt 的内容会常驻主 agent
-  上下文，每轮都被重读。每任务三份交接文件（放仓库根下临时目录 `.execute-task/`，由 `scripts/workspace.sh`
-  自动创建并自忽略、不提交；放工作树内是因为 subagent 通常写不了 `.git/` 下）：
+- **任务内没有任何 subagent**：执行、审查、修复都由主 agent 自己做。每任务的节奏是
+  确认阶段 0 提交授权 → 记录干净基线 → 自己走红 → 绿闭环并当场留证据 → 按闸门一核证据 →
+  checkbox 与代码一起 commit → ignored ledger → clean 校验 → 下一个。
+  **review / fix 派发只发生在阶段 3 整体验收**。
+- **工作文件落盘，不只留在上下文**：证据和需求都写成文件——主 agent 的上下文会被压缩，
+  压缩后留在对话里的红 → 绿输出就没了，落盘的还在；safe-resume、闸门一核对和阶段 3 的输入都靠它。
+  每任务三份文件（放仓库根下临时目录 `.execute-task/`，由 `scripts/workspace.sh` 自动创建并自忽略、不提交）：
   - **任务简报** `task-N-brief.md`：运行本 skill 目录下的 `scripts/task-brief.sh <tasks文件> <任务编号>`
-    机械抽取该任务全文（**不要手抄**，精确值逐字保真），再由主 agent 追加相关 design/spec 片段
+    机械抽取该任务全文（**不要手抄**，精确值逐字保真），再追加相关 design/spec 片段
     与**约定的 seam**（design / tasks 没指明就先与用户确认）。
-    它是需求的**唯一来源**——精确值（数字、签名、测试用例）只出现在这里，不重复粘进 prompt；
-  - **执行报告** `task-N-report.md`：执行 subagent 写详细报告——实现了什么、**每个行为的红 → 绿证据**
-    （红的命令与失败输出 + 为何预期失败、绿的命令与通过输出）、改动文件、问题与疑虑；闸门一读它核证据；
-  - **任务基线**：派执行 subagent 前运行 `scripts/task-baseline.sh <任务编号>`；脚本只在真实工作区无暂存、
+    它是需求的**唯一来源**——精确值（数字、签名、测试用例）以它为准，上下文被压缩后回来重读它，
+    不靠记忆复述需求；
+  - **执行记录** `task-N-record.md`：**边做边写**——实现了什么、**每个行为的红 → 绿证据**
+    （红的命令与失败输出 + 为何预期失败、绿的命令与通过输出）、改动文件、问题与疑虑。
+    闸门一读它核证据，阶段 3 的整体 review 也拿它当输入。
+    **必须当场追加**：每转一次红或绿就写一次；跑完一整轮再凭印象补写，写出来的是回忆不是证据；
+  - **任务基线**：开工前运行 `scripts/task-baseline.sh <任务编号>`；脚本只在真实工作区无暂存、
     未暂存、未跟踪改动时记录当前 HEAD。失败就处理现有改动，不能覆盖基线硬冲；提交前拿它核对 HEAD 未漂移。
-- **派发 prompt 只描述这一个任务**：一行任务定位（在整个项目里的位置）+ 简报路径（"先读它，它是你的需求"）+
-  约定的 seam + 前序任务已定的接口 / 决策（简报无法知道的）+ 报告文件路径与回执契约。
-  **不要**把前面任务的累积摘要粘进后面任务的派发。
-- **执行回执 = 状态 + 短摘要**（细节都在报告文件里，回执控制在十行内）：
-  状态 + commit 无（不 commit）+ 一行测试摘要 + 疑虑 + 报告路径。四种状态、各有处理：
-  - `DONE` → 按闸门一核三样证据（红 → 绿证据齐、主 agent 自己复跑验证命令绿、HEAD 未漂移且范围没越界）→ commit；
-  - `DONE_WITH_CONCERNS` → 先读疑虑：涉及正确性 / 范围的先处理再过闸门；结构观察项（如"这文件越来越大"）
-    记进账本留给阶段 3 的 architecture 轴，继续往下；
-  - `NEEDS_CONTEXT` → 补上缺的上下文**重派**；
-  - `BLOCKED` → 升级阶梯：补上下文重派 → 换更强模型（平台可选时）→ 拆小任务 → 退回上游 / 交用户——
-    **不许什么都不变原样重试**，也不许无视升级硬冲。
-- **证据不齐怎么办**：报告只有绿、没有红，或验证命令没实跑 → 退回同一执行 subagent 补齐（它有上下文）；
-  补不出（说明没真的先红）→ 记录在案并告知用户，**别默认它做了 TDD**、也别自己替它补一段事后测试当证据。
+- **一次只做一个任务**：手上同时只推进一个任务的红 → 绿，不把几个任务的改动混在一个工作区里跑——
+  混着做会让「范围没漂」这条判据失效，也拆不出原子提交。
+- **证据不齐怎么办**：记录里某个行为只有绿、没有红，或验证命令没实跑 → 说明它没走成 TDD。
+  把那个行为**重做一遍红 → 绿**（必要时 `git stash` 掉该行为的实现，让测试真的红一次）；
+  做不到就记录在案并告知用户，**别事后补一段测试当红证据**。
+- **卡住的升级阶梯**：某任务反复实现不过 / 需求歧义 / 外部依赖不可用 →
+  回读简报与 design/spec → 拆小任务 → 退回上游 / 交用户——**不许什么都不变原样重试**，也不许硬猜往下冲。
 - **阶段 3 的 review / fix 派发**：整体验收才派独立 review subagent（固定最强档）与 fix subagent，
-  模板见 [handoff-templates.md](handoff-templates.md) 第二、三节，机制见 [acceptance.md](acceptance.md)。
-- **平台**：派发前读取 [platform-agents.md](platform-agents.md)。Claude Code 保留 Task / Agent 工具路径；Codex 使用 subagent agent thread，并按角色选内置或自定义 agent。**subagent 不可用的环境**（无该能力）→
-  降级为主 agent **顺序执行**同一套闭环纪律（红 → 绿 TDD → 验证 → 证据核对 → commit），不卡死。
-- **模型按角色 / 复杂度定档**：派发前用平台的模型参数（如 Agent 工具的 `model`）显式指定 cheap / standard / most-capable，
-  不写等于任其继承主 agent 当前档位（通常最贵）；判据见 [model-selection.md](model-selection.md)。
+  fresh 上下文正是那道门的价值所在。模板见 [handoff-templates.md](handoff-templates.md) 第二、三节，
+  机制见 [acceptance.md](acceptance.md)，档位见 [model-selection.md](model-selection.md)，
+  平台参数见 [platform-agents.md](platform-agents.md)。
 
 ## 五 · 提交授权、进度账本与 safe-resume
 
@@ -73,7 +68,7 @@
   确定性集成顺序和具体 merge；未授权 merge 就不得并行开工。
 - **checkbox 回写**：任务过闸门一后，把 tasks.md 对应项改 `- [x]`，并与代码 / 测试进入同一个 atomic commit。
 - **ledger**：开工时先记**起点 commit**（`git rev-parse HEAD`——阶段 3 生成整体审查包的 BASE）；
-  ledger 放自忽略的 `.execute-task/`；每个任务提交成功后再记任务 + commit（便于追溯），
+  ledger 放自忽略的 `.execute-task/`；每个任务提交成功后再记任务 + commit + 执行记录路径（便于追溯），
   执行期留下的结构疑虑也记在这里，阶段 3 一并交给整体 review。
 - **任务间 clean gate**：写 ledger 后运行 `git status --porcelain=v1 --untracked-files=all`；有任何非忽略改动就停下排查，
   不为下一任务覆盖基线。
@@ -84,10 +79,10 @@
 
 - 执行顺序是按依赖拓扑排的、无环？
 - 默认按拓扑串行了吗？若并行，是否每任务独立 worktree、同一 expected base、集成无冲突且具体 merge 已获授权？wave 间是串行的吗？
-- 每任务派了 fresh 执行 subagent（或降级顺序执行）？主 agent 在编排而非糊代码？任务内没有多派 review / fix？
-- handoff 走的是文件（简报 / 报告传路径）而非粘贴正文？简报是 `task-brief.sh` 抽取的（没手抄）、含约定的 seam？
-  执行回执带了状态（DONE / BLOCKED…）且按状态处理了？
-- 过闸门一核了三样证据（红 → 绿齐、主 agent 复跑验证命令绿、HEAD 未漂移）？证据不齐时退回补齐而非默认它做了 TDD？
-- 每次派发都**显式指定了模型档位**，没有留空任其继承主 agent？
+- 任务内**一个 subagent 都没派**（执行 / 审查 / 修复都没有）？一次只推进了一个任务？
+- 简报是 `task-brief.sh` 抽取的（没手抄）、含约定的 seam？执行记录是**边做边当场写**的，不是事后追写、
+  也不是只留在对话上下文里？
+- 过闸门一核了三样证据（红 → 绿齐、收尾完整跑一次验证命令绿、HEAD 未漂移）？
+  证据不齐时把那个行为重做了红 → 绿，而非事后补测试冒充？
 - 每完成一个就回写了 checkbox + ledger？中断能 safe-resume？
 - 每个任务 commit 都在阶段 0 明确授权内，且包含代码 / 测试 / checkbox？提交后才写 ignored ledger，并确认工作区干净？
