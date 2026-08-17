@@ -1,6 +1,6 @@
 {
   "name": "agent-toolkit",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "description": "个人 agent 工具集：可复用中文开发工作流 skills",
   "author": {
     "name": "kgfan"
@@ -24,8 +24,10 @@
     "./skills/make-design",
     "./skills/refine-idea",
     "./skills/research",
+    "./skills/review-changes",
     "./skills/setup-worktree",
     "./skills/split-task",
+    "./skills/tdd",
     "./skills/test-skill",
     "./skills/write-spec",
     "./skills/writing-great-skills"
