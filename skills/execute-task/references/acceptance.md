@@ -2,16 +2,23 @@
 
 > 用途：`execute-task` 招牌机制「双验收闸门」+ 阶段 3/4 的操作细则。
 >
-> **两道门**：每任务验收门（闸门一，阶段 2 内）+ 整体验收门（闸门二，阶段 3）。
+> **两道门**：每任务证据门（闸门一，阶段 2 内，只核 TDD 证据与验证结果）+ 整体验收门（闸门二，阶段 3，
+> 唯一的审查与修复轮）。
 
-## 一 · 每任务验收门（闸门一）
+## 一 · 每任务验收门（闸门一：证据门，不是审查门）
 
-- 对齐 split-task 给的「验收标准 + 验证方式」，逐条核——**全绿才算完成**。
-- 审查由主 agent 派发的**独立 review subagent** 执行，结论按 Critical / Important / Minor 分级；
-  有 Critical / Important 则派**独立 fix subagent** 修复 → 复审——不自审自修。
-- **Critical / Important 清零才过闸门**，Minor 记录不阻塞；修复超轮次上限（默认 3 轮）仍不过 → 停下交用户判断。
-- **不过不 commit、不标 `[x]`**：验收不绿（含复审未过）的任务不许进账本。通过后先标 `[x]`，与已审代码 / 测试一起提交；提交成功后才写 ignored ledger。
-- 这是任务级"做完没做完"的客观判据，不靠"看起来写好了"。
+任务内**没有独立审查轮与修复轮**——质量由红 → 绿 TDD 本身承担，闸门一只核**可机械判定的证据**
+（细则见 [execution-loop.md](execution-loop.md) 第七节）：
+
+- **验收标准逐条对上** split-task 给的那份，不多不少。
+- **红 → 绿证据齐**：执行报告里每个行为都有实现前的失败输出（含"为何预期失败"）+ 实现后的通过输出。
+  只有绿没有红 → 退回同一执行 subagent 补齐；补不出就记录并告知用户，别默认它做了 TDD。
+- **验证方式实跑绿**：主 agent 自己复跑一次任务的验证命令（加 typecheck / 相关测试），输出里的告警也要看见。
+- **范围没漂**：HEAD 仍是 `task-baseline.sh` 记录的基线，改动落在任务涉及文件内。
+- **不齐不 commit、不标 `[x]`**：三样证据缺任何一样都不许进账本。齐了先标 `[x]`，与代码 / 测试一起提交；
+  提交成功后才写 ignored ledger。
+- 这是任务级"做完没做完"的客观判据，不靠"看起来写好了"，也不靠再派一个 agent 说"看过了"。
+- 执行期看到的结构问题记进账本，**留给闸门二的 architecture 轴**，不在任务内开审查轮。
 
 ## 二 · 整体五轴 review（闸门二）
 
@@ -20,11 +27,13 @@
 `scripts/acceptance-diff.sh <起点commit>`（起点 = 阶段 1
 记入账本的起点 commit）——脚本先拒绝任何非忽略 dirty 状态、确认 BASE 是 HEAD 的祖先，再生成整体审查包
 （commit 清单 + 变更统计 + BASE..HEAD 完整 binary diff，-U10）
-并打印路径，派发时传包路径（照抄 handoff-templates.md 第四节模板），不让 review subagent 自己爬库推导改动。
+并打印路径，派发时传包路径（照抄 handoff-templates.md 第二节模板），不让 review subagent 自己爬库推导改动。
 
-全部任务完成后，主 agent **派独立 review subagent** 对整条分支做五轴审查（吸收 agent-skills code-review-and-quality）；
-**这次派发固定用 most-capable（最强档）模型，不沿用 session 默认**——它是全链路唯一的架构级判断点，
-判据见 [model-selection.md](model-selection.md)。审出的 Critical / Important **派独立 fix subagent** 修复 → 复审（同样按轮次计，超限交用户），Minor 记录不阻塞：
+全部任务完成后，主 agent **派独立 review subagent** 对整条分支做五轴审查；
+**这次派发固定用 most-capable（最强档）模型，不沿用 session 默认**——任务级只有证据门、没有审查轮，
+这里是全链路**唯一**的架构级判断点，判据见 [model-selection.md](model-selection.md)。
+派发时把各任务执行报告里记下的结构疑虑一并交给它。审出的 Critical / Important **派独立 fix subagent**
+修复 → 复审（**按轮次计，默认 3 轮**；超限仍有 Critical / Important 就停下交用户判断），Minor 记录不阻塞：
 
 - **correctness（正确）**：行为对不对，边界 / 错误路径处理了吗，验收标准真满足吗。
 - **readability（可读）**：命名 / 结构清晰吗，后人能看懂吗。
@@ -32,10 +41,14 @@
 - **security（安全）**：输入校验、权限、敏感数据、注入面有没有问题。
 - **performance（性能）**：有没有明显热点 / N+1 / 不必要开销（按项目实际规模判断，别过早优化）。
 
+另核**测试本身**：验的是真行为还是实现细节 / mock、期望值有没有按代码的算法重算（同义反复）、
+边界是否覆盖——任务内没人审过测试质量，这里是唯一的关口。
+
 **阶段 3 的 fix 循环（commit-then-review）**：审出的 Critical / Important 派独立 fix subagent 修复后，
 主 agent **先 commit 再复审**——重跑 `scripts/acceptance-diff.sh <起点>`（轮次递增，HEAD 已前进，
-新包已含 fix），复审读一个新包。与任务级"不过不 commit"**有意不同**：任务级的 commit 是闸门记号；
+新包已含 fix），复审读一个新包。与任务级"证据不齐不 commit"**有意不同**：任务级的 commit 是闸门记号；
 阶段 3 面对的本来就是已 commit 的分支，闸门记号是"整体验收通过"状态本身，fix commit 只是普通代码演进。
+涉及行为的修复仍**先补失败测试再修到绿**，报告里留红 → 绿证据。
 这些 fix commit 也必须落在阶段 0 的明确批次授权内；超出授权范围就重新确认。
 
 ## 三 · 覆盖核对回扫
@@ -65,8 +78,10 @@
 
 ## 收尾自检
 
-- 每任务都过了验收门（独立 review subagent 审查、独立 fix subagent 修复）才 commit / 标 `[x]`？
-- 整体过了五轴 review（独立 review subagent，且**固定用了 most-capable 档位**）？审出的问题派独立 fix subagent 修了？
+- 每任务都过了闸门一的三样证据（红 → 绿齐、主 agent 复跑验证命令绿、HEAD 未漂移）才 commit / 标 `[x]`？
+  没有在任务内多开审查 / 修复轮，也没有拿"事后补的测试"当红证据？
+- 整体过了五轴 review（独立 review subagent，且**固定用了 most-capable 档位**）？连测试质量一起审了？
+  审出的问题派独立 fix subagent 修了？fix loop 按轮次计、超限停下交用户？
 - 整体 review 拿到的是 `acceptance-diff.sh` 生成的审查包（而非让它自己爬库）？fix 后复审用的是 commit 过再重新生成的新包？
 - 生成整体包前确认了工作区无非忽略改动、BASE 是 HEAD 祖先？阶段 3 fix commit 仍在用户授权内？
 - 整体验收包生成前清掉了本次开发的调试残留，并在清理改动后重新跑了覆盖测试？
