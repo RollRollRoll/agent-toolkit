@@ -31,4 +31,3 @@
 - `references/spec-template.md`：行为契约 spec 的落盘模板（含 delta 写法、能力覆盖与档位节）。
 - `references/coverage-probes.md`：双探针清单（边界 + 禁止），含怎么转成可验证项。
 - `references/coverage-map.md`：能力覆盖图（greenfield）——功能空间调研、能力维度定档（纳入 / 默认不做 / 后续版本 / 必须确认）、问题分级。
-- `docs/`：开发过程中的设计文档。

@@ -33,4 +33,3 @@
 - `references/task-template.md`：任务清单落盘模板（含 greenfield 全量与 brownfield delta）。
 - `references/split-probes.md`：拆分探针清单（11 个易漏任务维度），含每个维度问什么、怎么判级。
 - `references/slicing-method.md`：切片与定序方法——垂直切片、任务分级、依赖与并行、高风险前置、覆盖核对。
-- `docs/`：开发过程中的设计文档。

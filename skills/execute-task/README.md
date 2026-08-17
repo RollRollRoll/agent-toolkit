@@ -46,4 +46,3 @@ Claude Code 使用 Task / Agent 工具派发执行 subagent（阶段 3 另派 re
 - `scripts/task-brief.sh`：从 tasks 文档机械抽取单个任务全文生成简报基底，防手抄失真；design/spec 片段与约定的 seam 由主 agent 追加。
 - `scripts/task-baseline.sh`：每任务开工前确认真实工作区干净并记录 HEAD，供闸门一核对 HEAD 未漂移。
 - `scripts/acceptance-diff.sh`：拒绝 dirty 工作区后生成阶段 3 整体验收审查包（BASE..HEAD 的 commit 清单 + 变更统计 + 完整 diff）。
-- `docs/`：开发过程中的设计文档。

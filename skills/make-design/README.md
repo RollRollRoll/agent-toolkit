@@ -31,4 +31,3 @@
 - `references/design-template.md`：技术设计文档落盘模板（含 greenfield 全量与 brownfield delta）。
 - `references/decision-probes.md`：技术决策探针清单（11 个维度），含每个维度问什么、怎么判级。
 - `references/decision-method.md`：决策方法——方案对比、决策分级、轻量 ADR、需求覆盖核对、推断与假设标注。
-- `docs/`：开发过程中的设计文档。

@@ -30,4 +30,3 @@
 - `SKILL.md`：skill 主体（平台原生格式，含 frontmatter）。
 - `references/lenses.md`：阶段 2「照亮边界」用的思维透镜清单。
 - `references/concept-note.md`：阶段 4 落盘时用的概念单模板。
-- `docs/`：开发过程中的设计文档。

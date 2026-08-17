@@ -26,4 +26,3 @@
 
 - `SKILL.md`：skill 主体（平台原生格式，含 frontmatter）。
 - `references/`：调研清单、并行策略和三档输出模板。
-- `docs/plans/`、`docs/specs/`：开发过程中的实现计划与设计文档。

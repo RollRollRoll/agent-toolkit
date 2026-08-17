@@ -38,4 +38,3 @@ Codex 为 `.agents/skills/test-skill/`。不要只复制 `SKILL.md`，两套 run
 - `references/judging-criteria.md`：步骤判定和指令状态的唯一口径。
 - `references/report-template.md`：六节复盘报告模板。
 - `references/persona-template.md`：模拟用户剧本模板。
-- `docs/`：早期设计与假设验证记录；其中命令样例仅作历史证据，现行执行契约以 `SKILL.md` 和 runner 为准。

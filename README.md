@@ -58,7 +58,6 @@ agent-toolkit/
   commands/
   hooks/
   collections/
-  docs/
 ```
 
 ## 目录职责
@@ -71,7 +70,6 @@ agent-toolkit/
 - `commands/`：存放自定义 command。
 - `hooks/`：存放 hook 定义或说明。
 - `collections/`：手动记录资源组合关系。
-- `docs/`：存放维护规范和模板。
 
 ## 新增资源
 
@@ -84,11 +82,6 @@ agent-toolkit/
    - 确认 `.codex-plugin/plugin.json` 的 `skills` 指向根目录 `skills/`；
    - 同步递增 `.claude-plugin/plugin.json`、`.claude-plugin/marketplace.json`
      与 `.codex-plugin/plugin.json` 的版本。
-
-具体格式见：
-
-- `docs/conventions.md`
-- `docs/resource-template.md`
 
 ## 当前非目标
 
