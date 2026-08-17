@@ -1,7 +1,9 @@
 # Claude Code / Codex Subagent 映射
 
-本 skill **只在阶段 3 整体验收派 subagent**（review 与 fix）；阶段 2 每个任务由主 agent 自己执行，
-不涉及派发。派发前先确认当前平台并只使用对应一节。两个平台共用任务简报、执行记录和验收闸门，不共用工具参数。
+本 skill **只在阶段 3 整体验收派 subagent**（review 与 fix）；阶段 2 每个任务由主 agent 自己执行
+（调用 `tdd` 是加载纪律，不是派发）。派发前先确认当前平台并只使用对应一节。
+两个平台共用任务简报、执行记录和验收闸门，不共用工具参数。
+review subagent 一律**加载 `review-changes` skill** 执行，判据不因平台而变。
 
 ## Claude Code
 
@@ -31,6 +33,6 @@
 
 ## 共同失败处理
 
-- 平台没有 subagent 或模型参数能力时，明确记录降级原因，由主 agent 以 fresh 视角完整走一遍阶段 3 的五轴审查
-  （读 `acceptance-diff.sh` 生成的整体包，按 acceptance.md 的五轴 + 测试质量逐项判定），**不删掉那道门**。
+- 平台没有 subagent 或模型参数能力时，明确记录降级原因，由主 agent 以 fresh 视角完整走一遍
+  `review-changes` 的六关（生成审查包 → 五轴 + 测试质量逐项判定），**不删掉那道门**。
 - 不因平台差异删除任务基线、红 → 绿证据、用户提交授权或整体验收门。

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # 用途：解析并确保 execute-task 工作文件的目录存在，打印其绝对路径。
-# 它是目录约定的单一事实来源：task-brief.sh / task-baseline.sh / acceptance-diff.sh
-# 都经它取目录，防三处约定漂移。
+# 它是目录约定的单一事实来源：task-brief.sh / task-baseline.sh 都经它取目录，防两处约定漂移；
+# 被调用的 composable skill（tdd 的 tdd-record.sh、review-changes 的 review-package.sh）
+# 也把这个路径当作输出目录参数传入，让同一次执行的工作文件落在一处。
 # 目录放工作树内（而非 .git/ 下）便于用户查看，也便于阶段 3 的 review subagent 读取；
 # 自忽略 .gitignore 保证它不进 git status、不被提交。
 # 用法：scripts/workspace.sh

@@ -3,13 +3,13 @@
 > 用途：`execute-task` 阶段 2 的每任务工作文件规范，以及阶段 3 派发 subagent 时照抄填空的 prompt
 > （占位符 `[...]`）。机制见 [orchestration.md](orchestration.md) 第四节。
 >
-> **阶段 2 不派任何 subagent**——主 agent 自己走 TDD 闭环，第一节给的是它自己要维护的两份文件；
+> **阶段 2 不派任何 subagent**——主 agent 自己加载 `tdd` 走闭环，第一节给的是它开工前要备好的文件；
 > 派发模板（第二、三节）只用于阶段 3 整体验收。
 > **模型档位不是 prompt 正文的一部分**：阶段 3 派发前先按 [model-selection.md](model-selection.md) 定档，
 > 用平台的模型参数（如 Agent 工具的 `model`）指定，不要写进模板文本里、也不要留空。
 > 派发机制、权限继承和工作目录按 [platform-agents.md](platform-agents.md) 执行。
 
-## 一 · 每任务的三份工作文件（阶段 2，主 agent 自己维护）
+## 一 · 每任务的工作文件（阶段 2）
 
 临时工作目录 `.execute-task/`（仓库根下，含自忽略 `.gitignore`，不提交）由各脚本经
 `scripts/workspace.sh` 自动创建，不必手建。
@@ -20,77 +20,40 @@
 2. **任务简报** `.execute-task/task-N-brief.md`：运行 `scripts/task-brief.sh <tasks文件> <任务编号>`——
    它机械抽取该任务全文（验收标准、验证方式、涉及文件，精确值逐字保真）并打印路径，
    任务号不存在会报错；**不要手抄任务正文**。然后把相关 design/spec 片段和**约定的 seam**
-   （从 design / tasks 取；没指明就先与用户确认，理由见 [execution-loop.md](execution-loop.md) 第一节）
-   **追加**到同一文件——这半截需要判断力，脚本管不了。
-   它是需求的**唯一来源**：上下文被压缩后回来重读它，不靠记忆复述验收标准和精确值。
-3. **执行记录** `.execute-task/task-N-record.md`：**边做边写**，每转一次红或绿就追加一次。
-   闸门一读它核证据，阶段 3 的整体 review 拿它当输入。按下面的结构写：
+   （从 design / tasks 取；没指明就先与用户确认）**追加**到同一文件——这半截需要判断力，脚本管不了。
+   它是需求的**唯一来源**，也是交给 `tdd` 的主要输入。
+3. **执行记录** `.execute-task/task-N-record.md`：由 `tdd` 维护，不在这里定义格式。
+   调用 tdd 时传名称 `task-N` 与输出目录 `.execute-task/`，它会用自己的
+   `scripts/tdd-record.sh` 建好文件并边做边追加。闸门一读它核证据，阶段 3 的整体 review 拿它当输入。
 
-````markdown
-# 任务 N 执行记录：[任务名]
-
-## 行为 1：[一句话说清验的是什么行为]
-
-- 红：`[测试命令]`
-  ```
-  [失败输出，保留关键几行]
-  ```
-  为何预期失败：[行为缺失在哪——必须是行为缺失，不是语法 / import / 环境错]
-- 绿：`[同一条测试命令]`
-  ```
-  [通过输出]
-  ```
-
-## 行为 2：…
-
-## 收尾验证
-
-`[任务的验证方式命令 + typecheck]`
-```
-[完整输出，含告警]
-```
-
-## 改动文件
-
-- [路径]：[改了什么]
-
-## 疑虑
-
-- [看到但按规则没动的结构问题 —— 留给阶段 3 的 architecture 轴]
-````
-
-**跑完一整轮再凭印象补写的是回忆，不是证据**；只有绿没有红的行为，按闸门一的规则重做一遍红 → 绿。
+**调用 tdd 时传给它**（照它的调用契约）：简报路径、**约定的 seam**、任务的验证方式（加 typecheck）、
+记录名称与输出目录。**取回**：证据齐否、改动文件、疑虑、记录路径（或 BLOCKED）。
 
 ## 二 · 整体验收 review 派发模板（阶段 3）
 
-先跑本 skill 目录下的 `scripts/acceptance-diff.sh <起点commit>`（起点 = 阶段 1 记入账本的起点 commit）生成整体审查包，
-拿打印路径填 `[PACKAGE_FILE]`。五轴定义与覆盖回扫住在 acceptance.md，此处不重复。
-脚本若报告工作区 dirty 或 BASE 不是 HEAD 祖先，先处理并重新运行，不能让 reviewer 审一个漏掉未提交改动的包。
+派发前确认工作区无非忽略改动（否则 reviewer 的 `review-package.sh` 会拒绝生成包）。
+六关判据与回执格式住在 `review-changes`，此处不重复。
 
 ```text
-你来做整体验收 review：全部任务已完成，对整条开发线做五轴审查。
+你来做整体验收 review：全部任务已完成，对整条开发线做独立审查。
 这是全链路唯一的架构级判断点——任务级没有独立审查轮，问题要在这里被看见。
 
-## 审查范围
+## 怎么做
 
-整体审查包：[PACKAGE_FILE]（commit 清单 + 变更统计 + BASE..HEAD 完整 diff，-U10 上下文）
-读一次即可——上下文行就是改动后的文件。只有为核实一个能点名的具体风险才看包外代码，
-并在回执里写明查了什么。你只读不改：不动工作区、不动 git 状态。
+加载并按 `review-changes` skill 执行。BASE 起点 commit：[BASE_COMMIT]
+（用它自己的 scripts/review-package.sh 生成审查包，输出目录传 .execute-task/）。
 
-## 审什么
+## 参考输入
 
-按 acceptance.md「整体五轴 review」：correctness / readability / architecture / security / performance。
-另外核测试本身：验的是真行为还是实现细节 / mock，期望值有没有按代码算法重算（同义反复）。
-参考输入：tasks 文件 [TASKS_FILE]、design/spec [DESIGN_SPEC_PATHS]、
-执行期记下的结构疑虑 [CONCERNS：来自各任务执行记录 `.execute-task/task-*-record.md`；没有则删]。
+- tasks 文件：[TASKS_FILE]
+- design / spec：[DESIGN_SPEC_PATHS]
+- 执行期疑虑（architecture 关优先看这些点）：[CONCERNS：来自 ledger 与各任务
+  `.execute-task/task-*-record.md`；没有则删]
 
-## 回执格式
+## 边界
 
-每条 finding 带 file:line，按严重度分级：
-- Critical：行为错 / 违反验收标准
-- Important：不修不能信任——坏味道、回归风险、spec 之外的多余改动
-- Minor：雕琢项（记录不阻塞）
-先说做得好的（要具体），再列问题，最后按五轴各给一句判定。
+你只读不改：不动工作区、不动 git 状态、不修问题。
+回执按 review-changes 的回执格式：做得好的（要具体）+ 分级 findings（带 file:line）+ 六关各一句判定。
 ```
 
 ## 三 · fix subagent 派发模板（阶段 3 整体验收发现）
@@ -123,9 +86,9 @@
 修不了、或发现问题出在需求 / 设计层面 → 回执 BLOCKED 并说明，别硬改绕过。
 ```
 
-> 主 agent 收到 fix 回执后**先 commit 再复审**——重跑本 skill 目录下的
-> `scripts/acceptance-diff.sh <起点>` 生成新一轮包（机制与理由见 acceptance.md），
-> 复审读新包。fix commit 同样必须落在阶段 0 的授权批次内。
+> 主 agent 收到 fix 回执后**先 commit 再复审**——复审的 reviewer 重新生成一份新包
+> （机制与理由见 [acceptance.md](acceptance.md)），读新包而不是旧包。
+> fix commit 同样必须落在阶段 0 的授权批次内。
 
 ## 四 · 自查
 
@@ -134,14 +97,13 @@
 - 开工前 `task-baseline.sh` 确认了真实工作区干净并记录了 HEAD？
 - 简报是 `task-brief.sh` 生成的基底 + 追加片段（design/spec + 约定的 seam）？没有手抄任务正文？
   seam 来自 design / tasks，或已与用户确认？
-- 执行记录是**边做边当场写**的，每个行为都有红（含"为何预期失败"）+ 绿？不是事后追写、
-  也不是只留在对话上下文里？
+- 调用 tdd 时把简报路径、seam、验证方式、记录名称与输出目录都传齐了？
 - 任务内**一个 subagent 都没派**？
 - 按闸门一核了三样（红 → 绿证据齐、收尾完整跑一次验证命令绿、HEAD 未漂移）才 commit？
 
 **阶段 3（派发前）**
 
 - 用平台的模型参数**显式指定了本次派发的档位**（整体验收固定 most-capable），没有留空？
-- 派发传了 `acceptance-diff.sh` 生成的整体包路径，没让 reviewer 自己爬库？
-- 把各任务执行记录里的结构疑虑一并交给了 reviewer？
-- fix 后复审用的是 commit 过再重新生成的新包？
+- 派发 prompt 里写清了**加载 review-changes 执行**，并给了 BASE 与输出目录？
+- 把 ledger / 执行记录里的结构疑虑一并交给了 reviewer？
+- 工作区在派发前是干净的？fix 后复审用的是 commit 过再重新生成的新包？
