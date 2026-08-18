@@ -1,0 +1,14 @@
+id: re-explain
+name: Re-Explain
+type: skill
+layer: standalone
+description: 上一条回复没讲明白时，换一条路径用简明中文重讲，术语沿用项目既有说法，且必须比原文更短
+tags:
+  - productivity
+  - communication
+  - plain-language
+  - chinese
+  - user-invoked
+status: draft
+created_at: 2026-08-17
+updated_at: 2026-08-17
