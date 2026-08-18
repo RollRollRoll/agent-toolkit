@@ -1,10 +1,12 @@
 ---
 name: re-explain
-description: 上一条解释没有讲清楚。补充上下文，用更简单、明确的中文重新解释。
+description: 补充上下文，用更简单、明确的中文重新解释。
 disable-model-invocation: true
 ---
 
-我没理解你刚才讲的内容。
+# Re-Explain
+
+没理解你刚才讲的内容。
 
 请重新解释一次，并遵循以下要求：
 
