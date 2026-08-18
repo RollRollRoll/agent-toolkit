@@ -2,7 +2,7 @@ id: write-spec
 name: Write Spec
 type: skill
 layer: workflow
-description: 把边界清晰的想法钉成可验证的行为规格，只写行为与验收，不碰技术与任务
+description: 编写结构化开发规格文档
 tags:
   - spec
   - requirements

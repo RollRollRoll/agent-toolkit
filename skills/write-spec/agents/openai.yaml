@@ -1,4 +1,4 @@
 interface:
   display_name: "Write Spec"
-  short_description: "把边界清晰的想法钉成可验证的行为规格"
-  default_prompt: "使用 $write-spec 把这份需求钉成只讲行为与验收标准的规格文档。"
+  short_description: "编写结构化开发规格文档"
+  default_prompt: "使用 $write-spec 把这份需求编写成结构化的规格文档。"
