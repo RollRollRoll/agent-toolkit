@@ -147,3 +147,6 @@ vite.config.ts.timestamp-*
 
 # macOS metadata
 .DS_Store
+
+# skill 盲测报告（test-skill 产物，仅本地留存）
+skill-test-reports/
