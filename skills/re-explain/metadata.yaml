@@ -2,7 +2,7 @@ id: re-explain
 name: Re-Explain
 type: skill
 layer: standalone
-description: 上一条回复没讲明白时，换一条路径用简明中文重讲，术语沿用项目既有说法，且必须比原文更短
+description: 上一条解释没有讲清楚。补充上下文，用更简单、明确的中文重新解释。
 tags:
   - productivity
   - communication
