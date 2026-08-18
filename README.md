@@ -24,9 +24,11 @@ Skill 分两层，职责与调用方向固定：
 
 ```text
 workflow     refine-idea → write-spec → make-design → split-task → execute-task
-                                                                         │
-composable          ┌───────────────┬───────────────┴───┬───────────────┐
-              setup-worktree       tdd          review-changes     finish-branch
+                  │                                                      │
+                  │           ┌───────────────┬───────────────┴───┬───────────────┐
+composable     grilling  setup-worktree      tdd          review-changes     finish-branch
+                  ↑
+standalone     grill-me（人类专用入口）
 ```
 
 execute-task 的四个调用点：
@@ -37,6 +39,15 @@ execute-task 的四个调用点：
 | 阶段 2 每个任务 | `tdd` | 简报、约定的 seam、验证方式、记录路径 | 证据齐否、改动文件、疑虑 |
 | 阶段 3 整体验收 | `review-changes` | BASE、design/spec/tasks、疑虑 | 分级 findings + 六关判定 |
 | 阶段 4 收尾 | `finish-branch` | 最终验证命令、本次开发范围、调用来源 | 收尾决策与已执行动作 |
+
+refine-idea 的一个调用点：
+
+| 调用点 | composable skill | 传入 | 取回 |
+|---|---|---|---|
+| 阶段 2 照亮边界 | `grilling` | 阶段 1 钉死的根节点、范围＝只展开概念层、已定事实 | 做 / 不做两份清单、挂起项、被剪掉的分支 |
+
+`grilling` 同时是 standalone 入口 `grill-me` 的实现：同一套访谈机制，
+`grill-me` 传"不剪枝"（技术分支也问），`refine-idea` 传"只展开概念层"（技术分支剪给 make-design）。
 
 跨层约定：
 
