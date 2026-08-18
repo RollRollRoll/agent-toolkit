@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Changes"
+  short_description: "对 BASE..HEAD 做独立只读审查并输出分级 findings"
+  default_prompt: "使用 $review-changes 审一遍这段改动，按五轴加测试质量逐项判定，输出带 file:line 的分级 findings。"
