@@ -2,8 +2,9 @@ id: grill-me
 name: Grill Me
 type: skill
 layer: standalone
-description: 仅供人类显式启动，逐项追问并压力测试想法、计划或设计，直到双方达成共同理解
+description: 仅供人类显式启动，把计划或设计建成设计树，按轮次问完当前可问的全部问题，每题带推荐答案，直到分支穷尽
 tags:
+  - productivity
   - interview
   - decision-making
   - planning

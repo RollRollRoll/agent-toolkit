@@ -2,35 +2,48 @@
 
 ## 用途
 
-通过一次一个问题的高强度访谈，沿决策依赖逐项压力测试用户的想法、计划或设计，主动暴露隐藏假设、矛盾、取舍与失败风险，直到双方明确确认已达成共同理解。
+对一个计划、设计或决定做不留情面的访谈。把决策建成一棵**设计树**，按**轮次**推进：
+每轮把所有前置已定、当下就问得动的问题（frontier）一次问完，每题都附上你的推荐答案；
+用户回答后重算 frontier，问下一轮。直到设计树再无未访问的分支。
 
 ## 触发场景
 
-本 skill **只能由人类用户通过平台入口显式启动**：
+本 skill **只由人类用户显式启动**：
 
-- Claude Code：直接安装时使用 `/grill-me`；作为插件安装时使用带插件命名空间的命令。
-- Codex：使用 `$grill-me` 或对应的显式 skill 选择入口。
+- Claude Code：`/grill-me`（作为插件安装时使用带插件命名空间的命令）。
+- Codex：`$grill-me` 或对应的显式 skill 选择入口。
 
-普通自然语言提到“压力测试计划”不会触发本 skill。模型、其他 skill、agent、subagent、自动路由、CI、定时任务和自治循环均不得调用或复用它。
+`disable-model-invocation: true` 与 `allow_implicit_invocation: false` 使模型不会自行触发它。
 
 ## 核心行为
 
-- 一次只问一个问题，并等待回答后再决定下一条分支。
-- 每个问题都附推荐答案、理由和主要代价。
-- 能从环境查到的事实先自行查证，只把真正的决策交给用户。
-- 按依赖关系优先处理上游、高影响、难逆的决定。
-- 在用户明确确认共同理解前，不执行计划或自动进入其他工作流。
-- 不提供 `grilling` 配套 skill，也不作为其他 skill 的共享访谈原语。
+- **设计树 + 轮次**：每个决策分叉出挂在它下面的决策；依赖本轮未定问题的问题，留到后面的轮次。
+- **整轮批量提问**：一轮问完整个 frontier，编号 `❓ **Q1**`，每题跟一行 `➡️ 推荐答案`，然后等回答。
+- **事实自己查**：需要环境事实时派 subagent 去查，绝不问用户他不必回答的东西；
+  探查不阻塞本轮，只有它下游的问题等结果。
+- **决策交给用户**：逐条摆出来，等他定。
+- **frontier 空了才算完**：每个分支都访问过，没有东西被默默假设；用户确认达成共同理解前不采取行动。
 
 ## 与参考实现的差异
 
-设计参考 [mattpocock/skills](https://github.com/mattpocock/skills) 的 `grill-me` / `grilling` 工作流。上游当前把用户入口与可复用访谈原语拆为两个 skill；本仓库明确不采用该拆分，也不允许其他 skill 复用访谈能力。这里只提供单个、完整且仅限人类显式调用的 `grill-me`。
+移植自 [mattpocock/skills](https://github.com/mattpocock/skills) 的 `productivity/grill-me`
+与 `productivity/grilling`（MIT，见 `LICENSE.upstream`）。差异：
+
+- **两层合一**：上游把用户入口（`grill-me`，正文只有一句 `Call the Skill tool with "grilling"`）
+  与可复用访谈原语（`grilling`，模型可隐式触发）拆成两个 skill；本仓库只提供单个 `grill-me`，
+  正文即完整实现，并继承上游 `grill-me` 那层的禁隐式调用策略。因此本仓库没有 `grilling`，
+  也没有对应的 `grill-with-docs` 组合。
+- 全部改写为中文，问题格式的 `❓` / `➡️` 标记与上游一致。
+- 访谈机制（设计树、轮次、frontier、subagent 查事实且不阻塞、frontier 空即结束、确认前不行动）
+  与上游 `grilling` 逐条对齐，未增删规则。
 
 ## 使用方式
 
-将本目录复制到目标平台的 skill 目录（Claude Code：`.claude/skills/grill-me/`；Codex：`.agents/skills/grill-me/`）即可使用。Claude Code 通过 `disable-model-invocation: true` 禁止模型调用；Codex 通过 `policy.allow_implicit_invocation: false` 禁止隐式调用。正文还会检查调用来源并拒绝代理链路或自动化调用。
+将本目录复制到目标平台的 skill 目录（Claude Code：`.claude/skills/grill-me/`；
+Codex：`.agents/skills/grill-me/`）即可使用。
 
 ## 目录说明
 
 - `SKILL.md`：skill 主体（平台原生格式，含 frontmatter）。
-- `agents/openai.yaml`：Codex 的展示名称、简短描述、默认提示词与调用策略。
+- `agents/openai.yaml`：Codex 的展示名称、简短描述与调用策略。
+- `LICENSE.upstream`：上游 MIT 许可证副本。
