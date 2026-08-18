@@ -121,10 +121,14 @@ agent-toolkit/
 ## 新增资源
 
 1. 在对应的根目录 `<type>/<resource-id>/` 下创建资源目录。
-2. 添加 `README.md`、资源主体文件和 `metadata.yaml`。
-3. 如果资源属于某个组合，更新对应的 `collections/*.yaml`。
-4. 手动维护 `metadata.yaml` 的 `updated_at`。
-5. 如果 Skill 要随插件发布：
+2. 添加资源主体文件和 `metadata.yaml`；Skill 的主体文件是 `SKILL.md`，
+   辅助资料放 `references/`，脚本放 `scripts/`。资源目录内不再单独写 `README.md`，
+   说明以主体文件为唯一来源。
+3. Skill 的 `metadata.yaml` 用 `layer: workflow | composable | standalone` 标注层次；
+   composable 层还要在 `SKILL.md` 里写明调用契约（传入 / 取回 / 不做什么）。
+4. 如果资源属于某个组合，更新对应的 `collections/*.yaml`。
+5. 手动维护 `metadata.yaml` 的 `updated_at`。
+6. 如果 Skill 要随插件发布：
    - 更新 `.claude-plugin/plugin.json` 的 `skills` 数组；
    - 确认 `.codex-plugin/plugin.json` 的 `skills` 指向根目录 `skills/`；
    - 同步递增 `.claude-plugin/plugin.json`、`.claude-plugin/marketplace.json`
