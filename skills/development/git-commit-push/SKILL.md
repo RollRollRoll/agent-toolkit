@@ -3,7 +3,7 @@ name: git-commit-push
 description: 解决进行中的 merge / rebase / cherry-pick 冲突，或把已完成的改动拆成原子提交并在确认后推送。
 ---
 
-# Git Conflict Resolution, Commit & Push
+# Git Commit & Push — 冲突解决与提交推送 Skill
 
 ## 目标
 

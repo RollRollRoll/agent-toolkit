@@ -3,7 +3,7 @@ name: agent-config-sync
 description: 从现有配置抽取统一声明，并据此安全同步 Codex 与 Claude Code 的用户级配置。
 ---
 
-# Agent Config Sync
+# Agent Config Sync — 双平台配置同步
 
 只把 `agent-config.yaml` 视为事实来源。使用随 Skill 附带的确定性 CLI 生成配置，禁止直接拼接 TOML/JSON 后覆盖用户文件。
 
