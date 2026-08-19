@@ -1,0 +1,14 @@
+id: tdd
+name: TDD
+type: skill
+category: development
+description: 在约定 seam 上一次一个行为走红→绿→验证，并当场把命令与输出落盘成可核对的执行记录
+tags:
+  - execute
+  - tdd
+  - testing
+  - red-green
+  - composable
+status: draft
+created_at: 2026-08-17
+updated_at: 2026-08-18

@@ -1,0 +1,14 @@
+id: re-explain
+name: Re-Explain
+type: skill
+category: support
+description: 上一条解释没有讲清楚。补充上下文，用更简单、明确的中文重新解释。
+tags:
+  - productivity
+  - communication
+  - plain-language
+  - chinese
+  - user-invoked
+status: draft
+created_at: 2026-08-17
+updated_at: 2026-08-18

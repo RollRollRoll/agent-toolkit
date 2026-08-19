@@ -1,0 +1,13 @@
+id: plan
+name: Plan
+type: skill
+category: workflow
+description: 开发链第二棒：先调 write-spec 钉死行为契约并确认，再调 make-design 锁定技术决策并确认，各守一道门禁
+tags:
+  - plan
+  - spec
+  - design
+  - workflow
+status: draft
+created_at: 2026-08-18
+updated_at: 2026-08-18

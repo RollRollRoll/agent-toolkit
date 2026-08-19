@@ -60,7 +60,8 @@ composable    └─ refine-idea ─→ grilling ←─ grill-me（standalone，
   降级的是谁来做，不是做不做。
 - **产物落盘目录由调用方决定**：composable skill 的脚本都接受可选输出目录，缺省落在自己的自忽略点目录
   （`.tdd/`、`.review-changes/`）；被 `execute` 调用时统一落进 `.execute/`。
-- 每个 skill 的 `metadata.yaml` 用 `layer: workflow | composable | standalone` 标注归属。
+- 架构层次不在 `metadata.yaml` 里标注：workflow 层就是 `skills/workflow/` 下那四个，
+  composable 能力单元由 `SKILL.md` 里的「调用契约」章节体现。
 
 ## 安装（Claude Code）
 
@@ -102,10 +103,12 @@ agent-toolkit/
   mcp/
     ssh-mcp.json
   skills/
-    <skill-id>/
+    workflow/<skill-id>/
       SKILL.md
       references/
       scripts/
+    development/<skill-id>/
+    support/<skill-id>/
   commands/
   hooks/
   collections/
@@ -117,7 +120,13 @@ agent-toolkit/
 - `.codex-plugin/`：Codex 插件清单。
 - `.agents/plugins/`：Codex 仓库级 marketplace 清单。
 - `mcp/ssh-mcp.json`：保留的 SSH MCP 手动配置，不随两平台插件自动加载。
-- `skills/`：两平台共用的完整 Skill；辅助资料、脚本和测试均放在对应 Skill 目录内。
+- `skills/`：两平台共用的完整 Skill，**按使用场景**分三个目录——`workflow/`（开发链四棒）、
+  `development/`（服务软件开发的能力：概念、规格、设计、拆任务、TDD、审查、工作区与提交、
+  代码库调研）、`support/`（面向人的访谈与调研、agent 自身工程与通用小工具）；辅助资料、
+  脚本和测试均放在对应 Skill 目录内。目录归属与 `metadata.yaml` 的 `category` 字段一一对应。
+
+  > 目录分的是**场景**，架构分层是另一个正交维度：workflow 层就是 `workflow/` 那四个；
+  > 其余 skill 是不是 composable 能力单元，看它的 `SKILL.md` 里有没有「调用契约」章节。
 - `commands/`：存放自定义 command。
 - `hooks/`：存放 hook 定义或说明。
 - `collections/`：手动记录资源组合关系。
@@ -125,16 +134,21 @@ agent-toolkit/
 ## 新增资源
 
 1. 在对应的根目录 `<type>/<resource-id>/` 下创建资源目录。
+   Skill 要先定场景，放进 `skills/workflow|development|support/<skill-id>/`。
 2. 添加资源主体文件和 `metadata.yaml`；Skill 的主体文件是 `SKILL.md`，
    辅助资料放 `references/`，脚本放 `scripts/`。资源目录内不再单独写 `README.md`，
    说明以主体文件为唯一来源。
-3. Skill 的 `metadata.yaml` 用 `layer: workflow | composable | standalone` 标注层次；
-   composable 层还要在 `SKILL.md` 里写明调用契约（传入 / 取回 / 不做什么）。
+3. Skill 的 `metadata.yaml` 用 `category: workflow | development | support` 标注场景，
+   **必须与它所在的目录一致**——换分类等于换目录，两处一起改。
+   若它是 composable 能力单元（会被别的 skill 调用），还要在 `SKILL.md` 里写明调用契约
+   （传入 / 取回 / 不做什么）。
 4. 如果资源属于某个组合，更新对应的 `collections/*.yaml`。
 5. 手动维护 `metadata.yaml` 的 `updated_at`。
 6. 如果 Skill 要随插件发布：
-   - 更新 `.claude-plugin/plugin.json` 的 `skills` 数组；
-   - 确认 `.codex-plugin/plugin.json` 的 `skills` 指向根目录 `skills/`；
+   - 更新 `.claude-plugin/plugin.json` 的 `skills` 数组（路径含场景目录，
+     如 `./skills/development/tdd`）；
+   - 确认 `.codex-plugin/plugin.json` 的 `skills` 指向根目录 `skills/`
+     （它按目录扫描，新增 skill 无需改这一项）；
    - 同步递增 `.claude-plugin/plugin.json`、`.claude-plugin/marketplace.json`
      与 `.codex-plugin/plugin.json` 的版本。
 

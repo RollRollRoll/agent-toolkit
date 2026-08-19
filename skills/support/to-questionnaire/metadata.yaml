@@ -1,0 +1,14 @@
+id: to-questionnaire
+name: To Questionnaire
+type: skill
+category: support
+description: 把用户自己答不出来的事变成一份交给别人填的 Markdown 问卷，只访谈发给谁与要拿回什么
+tags:
+  - productivity
+  - questionnaire
+  - async
+  - knowledge-gathering
+  - user-invoked
+status: draft
+created_at: 2026-08-17
+updated_at: 2026-08-18
