@@ -1,6 +1,6 @@
 ---
 name: review-changes
-description: 当一段改动已经写完、要在收尾或合并前对它做一次独立审查时使用——如"审一遍这条分支、review 这次改动、这批代码有没有问题、帮我把关再合"。先把 BASE..HEAD 生成一份审查包一次读完，再按 correctness / readability / architecture / security / performance 五轴加测试质量逐项判定，输出带 file:line 的 Critical / Important / Minor 分级 findings。composable 层能力单元，通常由 execute 在整体验收时调用。不要用于：改动还没写完、只想跑测试、要的是动手修复而不是审查、评审需求或技术方案本身。
+description: 对一段已写完的改动做独立审查，按正确性、可读性、架构、安全、性能五轴判定并输出带 file:line 的分级 findings。
 ---
 
 # Review Changes — 整体改动审查 Skill（composable 层）

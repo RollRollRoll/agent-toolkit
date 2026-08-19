@@ -1,6 +1,6 @@
 ---
 name: git-commit-push
-description: 当用户明确要求“解决当前 merge / rebase / cherry-pick 冲突、提交代码、创建 commit、把改动分批提交并 push、推送当前分支”时使用。进行中的冲突要先识别 Git 操作和双方原始意图，逐 hunk 做语义合并并运行项目检查，再经用户确认继续操作；普通改动要检查敏感信息与异常差异，拆成可运行、可审查、可回滚的原子提交后确认提交和推送。不得自动发起或中止 merge / rebase / cherry-pick，不得强推或随意改写已发布历史。不要用于普通改动尚未完成或验证失败、只想查看 Git 状态，或要创建 PR 的场景。
+description: 解决进行中的 merge / rebase / cherry-pick 冲突，或把已完成的改动拆成原子提交并在确认后推送。
 ---
 
 # Git Conflict Resolution, Commit & Push

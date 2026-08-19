@@ -1,6 +1,6 @@
 ---
 name: re-explain
-description: 补充上下文，用更简单、明确的中文重新解释。
+description: 补充上下文，用更简单、明确的中文重新解释一遍。
 disable-model-invocation: true
 ---
 

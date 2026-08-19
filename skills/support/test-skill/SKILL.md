@@ -1,6 +1,6 @@
 ---
 name: test-skill
-description: 当用户想测试或复盘某个 skill 的实际执行效果时使用——如“测一下这个 skill”“看看 agent 是否按 skill 执行”“生成 skill 覆盖率或溯源报告”。在隔离沙箱中发起一次 headless 盲测，逐步骤溯源并产出中文复盘报告。不要用于编写新 skill、调试业务代码、代码审查，或复盘当前会话已经发生的执行。
+description: 在隔离沙箱中对某个 skill 发起 headless 盲测，产出逐步骤溯源的中文复盘报告。
 ---
 
 # Test Skill — skill 盲测复盘

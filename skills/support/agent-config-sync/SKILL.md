@@ -1,6 +1,6 @@
 ---
 name: agent-config-sync
-description: 从现有配置抽取统一声明，并且可以安全同步 Codex 与 Claude Code 用户配置。
+description: 从现有配置抽取统一声明，并据此安全同步 Codex 与 Claude Code 的用户级配置。
 ---
 
 # Agent Config Sync

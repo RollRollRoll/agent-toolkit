@@ -1,6 +1,6 @@
 ---
 name: write-spec
-description: 把一份边界已清晰的需求 / 概念，写成可被验证的行为规格：Requirement + MUST 配 Scenario（WHEN→THEN）、"不做什么"转成可验证的 MUST NOT、边界场景逐项覆盖、成功标准可执行。composable 层能力单元，产出行为契约本身，不做技术选型、不拆任务、不含 review 门禁。不要用于：概念还模糊、要的是技术方案、任务拆解、调试或代码评审。
+description: 把一份边界已清晰的需求或概念，写成可被验证的行为规格（Requirement + MUST + WHEN→THEN 场景）。
 ---
 
 # Write Spec — 行为规格 Skill（composable 层）

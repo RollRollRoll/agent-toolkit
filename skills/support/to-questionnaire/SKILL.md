@@ -1,6 +1,6 @@
 ---
 name: to-questionnaire
-description: 把一件用户自己答不出来的事，变成一份交给别人填的问卷（Markdown 文档），可异步发出也可开会一起填。只访谈"发送"本身——发给谁、要拿回什么——问题则对准收件人知道而用户不知道的那段缺口。
+description: 把一件用户自己答不出来的事，变成一份交给别人填的 Markdown 问卷。
 disable-model-invocation: true
 ---
 

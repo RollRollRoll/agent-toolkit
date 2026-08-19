@@ -1,6 +1,6 @@
 ---
 name: setup-worktree
-description: 当要在开始一段开发、或并行多个任务前，建立隔离的 git 工作区（worktree）以免污染当前工作区时使用——如"开个 worktree、隔离工作区、并行任务各自隔离"。通常由 execute 在执行前调用。先锁定 expected base，再选择能保证该基线的创建方式，并在创建后验证 HEAD。不要用于：不需要隔离的小改动、收尾/合并/清理（那是 finish-branch）、非 git 仓库。
+description: 在开发或并行任务开始前，基于确定基线建立并验证隔离的 git worktree 工作区。
 ---
 
 # Setup Worktree — 工作区隔离 Skill

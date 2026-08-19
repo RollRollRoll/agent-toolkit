@@ -1,6 +1,6 @@
 ---
 name: make-design
-description: 把一份已确认的行为规格转化为可追溯的技术设计：逐项扫决策探针圈出该决策的点，重大且难逆的给候选方案 + trade-off + 推荐 + 理由锁成 Decision，常规的直接推荐，最后逐条对回 spec 做需求覆盖核对。composable 层能力单元，产出技术设计本身，不拆任务、不写代码、不含 review 门禁。不要用于：行为契约还没定、任务拆解或实现计划、调试或代码评审。
+description: 把一份已确认的行为规格转化成可追溯的技术设计，重大决策附候选方案、trade-off 与推荐理由。
 ---
 
 # Make Design — 技术方案 Skill（composable 层）
