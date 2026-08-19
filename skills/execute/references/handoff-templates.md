@@ -1,6 +1,6 @@
 # 任务工作文件与阶段 3 派发模板
 
-> 用途：`execute-task` 阶段 2 的每任务工作文件规范，以及阶段 3 派发 subagent 时照抄填空的 prompt
+> 用途：`execute` 阶段 2 的每任务工作文件规范，以及阶段 3 派发 subagent 时照抄填空的 prompt
 > （占位符 `[...]`）。机制见 [orchestration.md](orchestration.md) 第四节。
 >
 > **阶段 2 不派任何 subagent**——主 agent 自己加载 `tdd` 走闭环，第一节给的是它开工前要备好的文件；
@@ -11,19 +11,19 @@
 
 ## 一 · 每任务的工作文件（阶段 2）
 
-临时工作目录 `.execute-task/`（仓库根下，含自忽略 `.gitignore`，不提交）由各脚本经
+临时工作目录 `.execute/`（仓库根下，含自忽略 `.gitignore`，不提交）由各脚本经
 `scripts/workspace.sh` 自动创建，不必手建。
 
 1. **任务基线**：开工前运行本 skill 目录下的 `scripts/task-baseline.sh <任务编号>`。
    它要求真实工作区没有暂存、未暂存或未跟踪改动，并记录当前 HEAD；
    失败就先处理现有改动，**不要覆盖基线或带脏开工**。提交前拿它核对 HEAD 未漂移。
-2. **任务简报** `.execute-task/task-N-brief.md`：运行 `scripts/task-brief.sh <tasks文件> <任务编号>`——
+2. **任务简报** `.execute/task-N-brief.md`：运行 `scripts/task-brief.sh <tasks文件> <任务编号>`——
    它机械抽取该任务全文（验收标准、验证方式、涉及文件，精确值逐字保真）并打印路径，
    任务号不存在会报错；**不要手抄任务正文**。然后把相关 design/spec 片段和**约定的 seam**
    （从 design / tasks 取；没指明就先与用户确认）**追加**到同一文件——这半截需要判断力，脚本管不了。
    它是需求的**唯一来源**，也是交给 `tdd` 的主要输入。
-3. **执行记录** `.execute-task/task-N-record.md`：由 `tdd` 维护，不在这里定义格式。
-   调用 tdd 时传名称 `task-N` 与输出目录 `.execute-task/`，它会用自己的
+3. **执行记录** `.execute/task-N-record.md`：由 `tdd` 维护，不在这里定义格式。
+   调用 tdd 时传名称 `task-N` 与输出目录 `.execute/`，它会用自己的
    `scripts/tdd-record.sh` 建好文件并边做边追加。闸门一读它核证据，阶段 3 的整体 review 拿它当输入。
 
 **调用 tdd 时传给它**（照它的调用契约）：简报路径、**约定的 seam**、任务的验证方式（加 typecheck）、
@@ -41,14 +41,14 @@
 ## 怎么做
 
 加载并按 `review-changes` skill 执行。BASE 起点 commit：[BASE_COMMIT]
-（用它自己的 scripts/review-package.sh 生成审查包，输出目录传 .execute-task/）。
+（用它自己的 scripts/review-package.sh 生成审查包，输出目录传 .execute/）。
 
 ## 参考输入
 
 - tasks 文件：[TASKS_FILE]
 - design / spec：[DESIGN_SPEC_PATHS]
 - 执行期疑虑（architecture 关优先看这些点）：[CONCERNS：来自 ledger 与各任务
-  `.execute-task/task-*-record.md`；没有则删]
+  `.execute/task-*-record.md`；没有则删]
 
 ## 边界
 
@@ -78,7 +78,7 @@
 
 ## 回执格式
 
-把修复报告写进 [FIX_REPORT_FILE]（约定为 `.execute-task/acceptance-fix-<轮次>.md`）：
+把修复报告写进 [FIX_REPORT_FILE]（约定为 `.execute/acceptance-fix-<轮次>.md`）：
 - 每条发现怎么修的
 - 复验的测试命令与输出（涉及行为的附红 → 绿证据）
 

@@ -4,7 +4,7 @@
 # 用法：scripts/review-package.sh <BASE> [输出目录]
 #       BASE：本段改动的起点 commit，HEAD 固定为当前。
 #       输出目录：可选。缺省用仓库根下自忽略的 .review-changes/；
-#                调用方要落进自己的工作目录时传第二个参数（execute-task 传 .execute-task/）。
+#                调用方要落进自己的工作目录时传第二个参数（execute 传 .execute/）。
 # 行为：先拒绝任何非忽略的工作区改动、校验 BASE 是 HEAD 祖先，再按轮次自动递增命名
 #       （review-R1.diff、R2…）写入三段内容，把路径打印到 stdout。
 #       修复提交后重新运行即得含修复的新一轮包。

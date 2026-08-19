@@ -1,4 +1,0 @@
-interface:
-  display_name: "Execute Task"
-  short_description: "把确认过的任务清单逐个落地成实现、测试与提交"
-  default_prompt: "使用 $execute-task 按任务清单逐个推进：每个任务走红绿闭环并凭证据过门，完成后整体验收。"

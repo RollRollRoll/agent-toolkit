@@ -1,7 +1,7 @@
 id: split-task
 name: Split Task
 type: skill
-layer: workflow
+layer: composable
 description: 把确认过的技术设计拆成可独立验收、带依赖与验证的开发任务清单，只到任务拆分层，不下沉到逐行实现
 tags:
   - plan

@@ -1,7 +1,7 @@
 id: refine-idea
 name: Refine Idea
 type: skill
-layer: workflow
+layer: composable
 description: 把模糊的想法打磨成边界清晰的可执行概念，锁定做什么与不做什么
 tags:
   - ideation

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 用途：解析并确保 execute-task 工作文件的目录存在，打印其绝对路径。
+# 用途：解析并确保 execute 工作文件的目录存在，打印其绝对路径。
 # 它是目录约定的单一事实来源：task-brief.sh / task-baseline.sh 都经它取目录，防两处约定漂移；
 # 被调用的 composable skill（tdd 的 tdd-record.sh、review-changes 的 review-package.sh）
 # 也把这个路径当作输出目录参数传入，让同一次执行的工作文件落在一处。
@@ -13,7 +13,7 @@ repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || {
   exit 1
 }
 
-work_dir="$repo_root/.execute-task"
+work_dir="$repo_root/.execute"
 mkdir -p "$work_dir"
 [ -f "$work_dir/.gitignore" ] || printf '*\n' > "$work_dir/.gitignore"
 echo "$work_dir"

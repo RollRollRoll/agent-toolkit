@@ -1,6 +1,6 @@
 ---
 name: review-changes
-description: 当一段改动已经写完、要在收尾或合并前对它做一次独立审查时使用——如"审一遍这条分支、review 这次改动、这批代码有没有问题、帮我把关再合"。先把 BASE..HEAD 生成一份审查包一次读完，再按 correctness / readability / architecture / security / performance 五轴加测试质量逐项判定，输出带 file:line 的 Critical / Important / Minor 分级 findings。composable 层能力单元，通常由 execute-task 在整体验收时调用。不要用于：改动还没写完、只想跑测试、要的是动手修复而不是审查、评审需求或技术方案本身。
+description: 当一段改动已经写完、要在收尾或合并前对它做一次独立审查时使用——如"审一遍这条分支、review 这次改动、这批代码有没有问题、帮我把关再合"。先把 BASE..HEAD 生成一份审查包一次读完，再按 correctness / readability / architecture / security / performance 五轴加测试质量逐项判定，输出带 file:line 的 Critical / Important / Minor 分级 findings。composable 层能力单元，通常由 execute 在整体验收时调用。不要用于：改动还没写完、只想跑测试、要的是动手修复而不是审查、评审需求或技术方案本身。
 ---
 
 # Review Changes — 整体改动审查 Skill（composable 层）
@@ -33,8 +33,8 @@ description: 当一段改动已经写完、要在收尾或合并前对它做一�
 
 - 不改代码、不 commit、不动 git 状态、不跑修复。
 - 不做**系统性覆盖核对回扫**（design 每个组件 / spec 每条 MUST 是否都有落点）——
-  那要上游产物与任务清单，是调用方（execute-task）的闸门。
-- 不评审需求或技术方案本身：方案有问题就作为 finding 报上去，让调用方退回 **make-design / write-spec**，
+  那要上游产物与任务清单，是调用方（execute）的闸门。
+- 不评审需求或技术方案本身：方案有问题就作为 finding 报上去，让调用方退回 **plan**，
   不在这里重做设计。
 
 **独立性要求（调用方保证）**
@@ -114,7 +114,7 @@ description: 当一段改动已经写完、要在收尾或合并前对它做一�
 
 ## 分层与调用方
 
-- **composable 层**能力单元：通常由 workflow 层的 **execute-task**（阶段 3 整体验收）调用，
+- **composable 层**能力单元：通常由 workflow 层的 **execute**（阶段 3 整体验收）调用，
   也可被用户直接触发（"审一遍这条分支再合"）。
 - 调用方负责**独立性与档位**（fresh subagent + 最强档）、**修复轮次**与**覆盖核对回扫**；
   本 skill 只负责审得准、报得清。

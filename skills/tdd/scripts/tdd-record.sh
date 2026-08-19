@@ -3,7 +3,7 @@
 # 用法：scripts/tdd-record.sh <名称> [输出目录]
 #       名称：记录标识（如 login-validation、task-2），生成 <名称>-record.md。
 #       输出目录：可选。缺省用仓库根下自忽略的 .tdd/（不在 git 仓库则用当前目录）。
-#                调用方要落进自己的工作目录时传第二个参数（execute-task 传 .execute-task/）。
+#                调用方要落进自己的工作目录时传第二个参数（execute 传 .execute/）。
 # 行为：创建目录（点目录自动写自忽略 .gitignore）、按 references/record-format.md 的结构建文件，
 #       **文件已存在则不覆盖**（支持中断后续做），最后把路径打印到 stdout。
 set -euo pipefail

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Task"
+  short_description: "把确认过的技术设计拆成可独立验收的开发任务清单"
+  default_prompt: "使用 $task 把这份技术设计拆成带依赖与验证方式的开发任务清单并确认。"

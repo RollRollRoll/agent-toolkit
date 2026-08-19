@@ -15,47 +15,51 @@ Claude Code 和 Codex 的插件默认发现位置，也未被插件清单引用�
 
 Skill 分两层，职责与调用方向固定：
 
-- **workflow 层（Layered Workflow Orchestration）**：`refine-idea → write-spec → make-design →
-  split-task → execute-task` 这条开发链。每一棒守一道闸门、把产物交给下一棒，负责流程、闸门与
-  用户确认，**自己不定义具体能力判据**。
+- **workflow 层（Layered Workflow Orchestration）**：`idea → plan → task → execute` 这条开发链。
+  每一棒**只做编排、闸门与用户确认**，把具体能力交给 composable 层，**自己不定义能力判据**。
+  产物交给下一棒，过门后不自动往下。
 - **composable 层（Composable Skills Architecture）**：单一职责、可被任何调用方复用的能力单元。
   每个都在 `SKILL.md` 里声明**调用契约**（传入 / 取回 / 不做什么），判据住在自己这里，不被调用方复制。
+  它们**只产内容、不判定放行**——review 门禁归 workflow 层。
 - **层外独立工具**：不参与这条链的工具型 skill（代码库调研、Skill 盲测、配置同步等），标为 `standalone`。
 
 ```text
-workflow     refine-idea → write-spec → make-design → split-task → execute-task
-                  │                                                      │
-                  │           ┌───────────────┬───────────────┴───┬───────────────┐
-composable     grilling  setup-worktree      tdd          review-changes     finish-branch
-                  ↑
-standalone     grill-me（人类专用入口）
+workflow    idea  →  plan  →  task  →  execute
+              │        │        │         │
+              │        │        │         └─ setup-worktree · tdd · review-changes · finish-branch
+              │        │        └─ split-task
+              │        └─ write-spec · make-design
+composable    └─ refine-idea ─→ grilling ←─ grill-me（standalone，人类专用入口）
 ```
 
-execute-task 的四个调用点：
+各棒的调用点：
 
-| 调用点 | composable skill | 传入 | 取回 |
-|---|---|---|---|
-| 阶段 1 需要隔离 / 并行 | `setup-worktree` | expected base、用途 | worktree 路径 + 已验证 HEAD |
-| 阶段 2 每个任务 | `tdd` | 简报、约定的 seam、验证方式、记录路径 | 证据齐否、改动文件、疑虑 |
-| 阶段 3 整体验收 | `review-changes` | BASE、design/spec/tasks、疑虑 | 分级 findings + 六关判定 |
-| 阶段 4 收尾 | `finish-branch` | 最终验证命令、本次开发范围、调用来源 | 收尾决策与已执行动作 |
+| workflow | 调用点 | composable skill | 传入 | 取回 |
+|---|---|---|---|---|
+| `idea` | 阶段 1 打磨概念 | `refine-idea` | 原始想法、已知约束、是否落盘 | 六行概念复述、被剪分支、挂起项 |
+| `plan` | 阶段 1 写行为规格 | `write-spec` | 需求依据、落盘位置、调研决策、范围提示 | spec 路径、自检结论、待解问题 |
+| `plan` | 阶段 3 定技术方案 | `make-design` | 已确认的 spec、约束与偏好 | design 路径、需拍板的点、推断假设 |
+| `task` | 阶段 1 拆任务 | `split-task` | 已确认的 design、spec、切片偏好 | tasks 路径、需拍板的点、推断假设 |
+| `execute` | 阶段 1 需要隔离 / 并行 | `setup-worktree` | expected base、用途 | worktree 路径 + 已验证 HEAD |
+| `execute` | 阶段 2 每个任务 | `tdd` | 简报、约定的 seam、验证方式、记录路径 | 证据齐否、改动文件、疑虑 |
+| `execute` | 阶段 3 整体验收 | `review-changes` | BASE、design/spec/tasks、疑虑 | 分级 findings + 六关判定 |
+| `execute` | 阶段 4 收尾 | `finish-branch` | 最终验证命令、本次开发范围、调用来源 | 收尾决策与已执行动作 |
 
-refine-idea 的一个调用点：
-
-| 调用点 | composable skill | 传入 | 取回 |
-|---|---|---|---|
-| 阶段 2 照亮边界 | `grilling` | 阶段 1 钉死的根节点、范围＝只展开概念层、已定事实 | 做 / 不做两份清单、挂起项、被剪掉的分支 |
-
-`grilling` 同时是 standalone 入口 `grill-me` 的实现：同一套访谈机制，
-`grill-me` 传"不剪枝"（技术分支也问），`refine-idea` 传"只展开概念层"（技术分支剪给 make-design）。
+`refine-idea` 自己还有一个调用点：阶段 2 调 `grilling` 照亮概念层边界（传"只展开概念层"，
+技术分支剪出去）。`grilling` 同时是 standalone 入口 `grill-me` 的实现：同一套访谈机制，
+`grill-me` 传"不剪枝"（技术分支也问）。
 
 跨层约定：
 
 - **调用即交出判据定义权**：调用方不重述被调 skill 的规则，需要细节就去读那个 skill。
+- **门禁归 workflow 层**：composable skill 产出内容并交回，"过没过、要不要往下"由 workflow 层判定；
+  它们对缺前置的处理是回 **BLOCKED**，不是自己补上游的活。
 - **调用不等于派 subagent**：默认在调用方自己的上下文里加载执行；需要 fresh 上下文时
   （如 `review-changes` 的独立性要求）由调用方显式派发并定档。
+- **被调 skill 不可用时闸门判据不变**：由调用方按同一套判据自己走一遍并说明降级原因——
+  降级的是谁来做，不是做不做。
 - **产物落盘目录由调用方决定**：composable skill 的脚本都接受可选输出目录，缺省落在自己的自忽略点目录
-  （`.tdd/`、`.review-changes/`）；被 execute-task 调用时统一落进 `.execute-task/`。
+  （`.tdd/`、`.review-changes/`）；被 `execute` 调用时统一落进 `.execute/`。
 - 每个 skill 的 `metadata.yaml` 用 `layer: workflow | composable | standalone` 标注归属。
 
 ## 安装（Claude Code）

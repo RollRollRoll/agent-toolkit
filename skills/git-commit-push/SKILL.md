@@ -35,7 +35,7 @@ description: 当用户明确要求“解决当前 merge / rebase / cherry-pick �
 - 不发起或中止 merge / rebase / cherry-pick；不强推、不改写已发布历史；不创建 PR、不清理工作树。
 - 不自动 stash、丢弃或覆盖用户改动；不在未确认前执行 commit / push / continue。
 
-**与 execute-task 的边界**：execute-task 每任务的"代码 + 测试 + checkbox 原子提交"是它的闸门动作，
+**与 execute 的边界**：execute 每任务的"代码 + 测试 + checkbox 原子提交"是它的闸门动作，
 由它自己完成，不走本 skill。本 skill 用于独立的分批提交、推送，以及进行中的冲突解决。
 
 ## 工作流

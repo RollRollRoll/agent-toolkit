@@ -1,6 +1,6 @@
 ---
 name: setup-worktree
-description: 当要在开始一段开发、或并行多个任务前，建立隔离的 git 工作区（worktree）以免污染当前工作区时使用——如"开个 worktree、隔离工作区、并行任务各自隔离"。通常由 execute-task 在执行前调用。先锁定 expected base，再选择能保证该基线的创建方式，并在创建后验证 HEAD。不要用于：不需要隔离的小改动、收尾/合并/清理（那是 finish-branch）、非 git 仓库。
+description: 当要在开始一段开发、或并行多个任务前，建立隔离的 git 工作区（worktree）以免污染当前工作区时使用——如"开个 worktree、隔离工作区、并行任务各自隔离"。通常由 execute 在执行前调用。先锁定 expected base，再选择能保证该基线的创建方式，并在创建后验证 HEAD。不要用于：不需要隔离的小改动、收尾/合并/清理（那是 finish-branch）、非 git 仓库。
 ---
 
 # Setup Worktree — 工作区隔离 Skill
@@ -10,7 +10,7 @@ description: 当要在开始一段开发、或并行多个任务前，建立隔�
 在开始一段开发、或并行多个任务前，**建立一个隔离的 git 工作区（worktree）**，让这段工作在
 独立目录、隔离 checkout（需要时再建立独立分支）上进行，不污染当前工作区、也便于多条开发线并行。
 
-这是 agent-toolkit 的 **composable 层**能力单元，通常由 workflow 层的 execute-task（阶段 1 调度规划）
+这是 agent-toolkit 的 **composable 层**能力单元，通常由 workflow 层的 execute（阶段 1 调度规划）
 在执行前调用，也可被任何需要隔离工作区的场景单独复用。它只负责"建立隔离"——
 **清理与收尾交 finish-branch**（职责分离）。
 
@@ -40,7 +40,7 @@ description: 当要在开始一段开发、或并行多个任务前，建立隔�
 **适用**：
 
 - 开始一段开发，想把它隔离到干净工作区（不与当前未提交改动混在一起）。
-- execute-task 要并行执行多个任务，每个任务需要各自隔离、互不踩文件。
+- execute 要并行执行多个任务，每个任务需要各自隔离、互不踩文件。
 - 想同时维护多条开发线（多个 worktree）。
 
 **不适用**：
@@ -57,7 +57,7 @@ description: 当要在开始一段开发、或并行多个任务前，建立隔�
    - 当前有无未提交改动（含未跟踪文件）？有 → **停止创建并让用户先处理**。不得自动 stash、提交、丢弃，也不得假设新 worktree 会携带这些改动。
 2. **锁定 expected base**：
    - 调用方明确给出基线时，以调用方给出的 commit 为准。
-   - 未给出时，用 `git rev-parse HEAD` 记录当前本地 `HEAD` 的完整 commit ID；execute-task 默认使用这个本地 `HEAD`，不要自行改成远端默认分支。
+   - 未给出时，用 `git rev-parse HEAD` 记录当前本地 `HEAD` 的完整 commit ID；execute 默认使用这个本地 `HEAD`，不要自行改成远端默认分支。
    - 并行任务必须各自记录 expected base；同一批任务若要求同源，所有 worktree 使用同一个 commit ID。
 3. **按平台选择能保证 expected base 的创建方式**：
    - 只有在平台原生工具**能保证从 expected base 创建**时才使用它；无法确认语义时，统一退回显式命令：`git worktree add -b <分支名> <路径> <expected-base>`。
@@ -95,6 +95,6 @@ description: 当要在开始一段开发、或并行多个任务前，建立隔�
 
 ## 分层与调用方
 
-- **composable 层**能力单元：通常由 workflow 层的 **execute-task**（阶段 1 调度规划）
+- **composable 层**能力单元：通常由 workflow 层的 **execute**（阶段 1 调度规划）
   在需要隔离 / 并行时调用，也可被用户直接触发。
 - 隔离建立后，实现交 **tdd**、审查交 **review-changes**、收尾与移除 worktree 交 **finish-branch**。

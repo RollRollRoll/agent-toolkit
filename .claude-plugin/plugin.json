@@ -1,6 +1,6 @@
 {
   "name": "agent-toolkit",
-  "version": "0.24.0",
+  "version": "0.25.0",
   "description": "个人 agent 工具集：可复用中文开发工作流 skills",
   "author": {
     "name": "kgfan"
@@ -17,18 +17,21 @@
   "skills": [
     "./skills/agent-config-sync",
     "./skills/codebase-analyzer",
-    "./skills/execute-task",
+    "./skills/execute",
     "./skills/finish-branch",
     "./skills/git-commit-push",
     "./skills/grill-me",
     "./skills/grilling",
+    "./skills/idea",
     "./skills/make-design",
+    "./skills/plan",
     "./skills/re-explain",
     "./skills/refine-idea",
     "./skills/research",
     "./skills/review-changes",
     "./skills/setup-worktree",
     "./skills/split-task",
+    "./skills/task",
     "./skills/tdd",
     "./skills/test-skill",
     "./skills/to-questionnaire",

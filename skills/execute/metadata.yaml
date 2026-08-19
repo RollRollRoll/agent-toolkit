@@ -1,5 +1,5 @@
-id: execute-task
-name: Execute Task
+id: execute
+name: Execute
 type: skill
 layer: workflow
 description: 把确认过的任务清单编排成实现+测试+提交：每任务调 tdd 走红绿闭环并凭证据过门，进度可恢复，整体调 review-changes 验收

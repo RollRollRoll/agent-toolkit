@@ -1,7 +1,7 @@
 id: write-spec
 name: Write Spec
 type: skill
-layer: workflow
+layer: composable
 description: 编写结构化开发规格文档
 tags:
   - spec
