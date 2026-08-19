@@ -3,7 +3,7 @@ name: finish-branch
 description: 一段开发完成后给当前分支或 worktree 收尾：清理调试代码、跑最终测试，再由用户拍板合并、保留、开 PR 还是丢弃。
 ---
 
-# Finish Branch — 开发收尾 Skill
+# Finish Branch — 开发收尾
 
 ## 你的任务
 

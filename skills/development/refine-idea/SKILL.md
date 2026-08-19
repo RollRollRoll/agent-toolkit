@@ -3,7 +3,7 @@ name: refine-idea
 description: 通过协作对话，把一个还没想透的想法打磨成边界清晰、可执行的概念。
 ---
 
-# Refine Idea — 概念打磨 Skill
+# Refine Idea — 概念打磨
 
 ## 你的任务
 

@@ -3,7 +3,7 @@ name: setup-worktree
 description: 在开发或并行任务开始前，基于确定基线建立并验证隔离的 git worktree 工作区。
 ---
 
-# Setup Worktree — 工作区隔离 Skill
+# Setup Worktree — 工作区隔离
 
 ## 你的任务
 
