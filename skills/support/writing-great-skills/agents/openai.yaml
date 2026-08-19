@@ -1,6 +1,0 @@
-interface:
-  display_name: "Writing Great Skills"
-  short_description: "用可预测性、信息层级与剪枝原则编写和审查高质量 Skill"
-  default_prompt: "使用 $writing-great-skills 审查并改进这个 Skill 的调用方式、结构和指令质量。"
-policy:
-  allow_implicit_invocation: false
