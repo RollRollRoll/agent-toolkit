@@ -18,7 +18,7 @@
   "interface": {
     "displayName": "Agent Toolkit",
     "shortDescription": "中文 Agent 开发工作流与代码库调研工具集",
-    "longDescription": "分两层：workflow 层是 idea → plan → task → execute 这条开发链，各守一道闸门与用户确认；composable 层提供概念打磨、行为规格、技术设计、任务拆分、TDD 红绿闭环、整体改动审查、工作区隔离与分支收尾等可复用能力单元。",
+    "longDescription": "包含 idea → plan → task → execute 这条开发链，各守一道闸门与用户确认；以及概念打磨、行为规格、技术设计、任务拆分、TDD 红绿闭环、整体改动审查、工作区隔离与分支收尾等可复用能力单元。",
     "developerName": "kgfan",
     "category": "Productivity",
     "capabilities": [

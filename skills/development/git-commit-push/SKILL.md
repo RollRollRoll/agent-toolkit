@@ -16,7 +16,7 @@ description: 解决进行中的 merge / rebase / cherry-pick 冲突，或把已�
 
 ## 调用契约
 
-这是 agent-toolkit 的 **composable 层**能力单元，可由用户直接触发，也可被其他 skill 调用。
+这是 agent-toolkit 的一个能力单元，可由用户直接触发，也可被其他 skill 调用。
 
 **传入**
 

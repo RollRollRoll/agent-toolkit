@@ -3,7 +3,7 @@ name: review-changes
 description: 对一段已写完的改动做独立审查，按正确性、可读性、架构、安全、性能五轴判定并输出带 file:line 的分级 findings。
 ---
 
-# Review Changes — 整体改动审查 Skill（composable 层）
+# Review Changes — 整体改动审查 Skill
 
 ## 你的任务
 
@@ -112,9 +112,9 @@ description: 对一段已写完的改动做独立审查，按正确性、可读�
 ❌ 只回一句"看起来没问题" —— 六关每关都要有可解释的判定。
 ❌ 看了包外代码却不在回执里写明查了什么。
 
-## 分层与调用方
+## 调用方
 
-- **composable 层**能力单元：通常由 workflow 层的 **execute**（阶段 3 整体验收）调用，
+- 通常由 **execute**（阶段 3 整体验收）调用，
   也可被用户直接触发（"审一遍这条分支再合"）。
 - 调用方负责**独立性与档位**（fresh subagent + 最强档）、**修复轮次**与**覆盖核对回扫**；
   本 skill 只负责审得准、报得清。

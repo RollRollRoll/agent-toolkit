@@ -3,12 +3,12 @@ name: execute
 description: 把一份已确认的开发任务清单逐个落地成实现、测试与提交，并经验收确认真的做完。
 ---
 
-# Execute — 执行编排 Skill（workflow 层）
+# Execute — 执行编排（第 4 棒）
 
 ## 你的任务
 
 把一份**已确认的任务清单**（理想情况下来自 task），**编排**成实现 + 测试 + 提交，
-并经验收确认"真的做完了"。你不亲手定义怎么写测试、怎么审代码——那些交给 composable 层；
+并经验收确认"真的做完了"。你不亲手定义怎么写测试、怎么审代码——那些交给被调用的 skill；
 你钉死的是**编排层的四件事**：
 
 1. **按依赖 / wave 调度** —— 用任务清单的依赖与并行视图排执行顺序，可并行的并行、高风险的先做，
@@ -23,29 +23,28 @@ description: 把一份已确认的开发任务清单逐个落地成实现、测�
 （先红后绿、命令实跑、范围不漂），不是再加一层"另一个 agent 看过了"的主观确认。
 
 **这是本链唯一真正写代码的 skill**：前面 idea / plan / task 都止于文档，到 execute 才落地实现。
-但**守层不变**：不拆任务（那是 task）、不定技术决策与行为契约（那是 plan）；
+但**分工不变**：不拆任务（那是 task）、不定技术决策与行为契约（那是 plan）；
 发现上游有重大错误，退回上游修，不在执行里硬改。
 
 > 一句话：把"拆好、可验收的任务清单"，**按依赖顺序逐个编排成通过验收的代码**——
 > 每个任务调 tdd 走一个红 → 绿闭环并凭证据过门，进度记在可恢复账本里，
 > 最后调 review-changes 做一次整体审查并逐条对回 design / spec。
 
-## 分层与调用
+## 能力调用
 
-本 skill 是 **workflow 层**的最后一棒。workflow 层是
-`idea → plan → task → execute` 这条链，各守一道闸门、
-把产物交给下一棒。执行期需要的**具体能力**一律调用 **composable 层**：
+本 skill 是 `idea → plan → task → execute` 这条开发链的最后一棒。链上每一棒各守一道闸门、
+把产物交给下一棒。执行期需要的**具体能力**一律调用下面这些 skill：
 
-| 调用点 | composable skill | 传入 | 取回 |
+| 调用点 | skill | 传入 | 取回 |
 |---|---|---|---|
 | 阶段 1 需要隔离 / 并行 | **setup-worktree** | expected base、用途 | worktree 路径 + 已验证的 HEAD |
 | 阶段 2 每个任务 | **tdd** | 任务简报路径、**约定的 seam**、验证方式、记录路径（`.execute/`，名称 `task-N`） | 证据齐否、改动文件、疑虑、记录路径 |
 | 阶段 3 整体验收 | **review-changes** | BASE 起点 commit、design/spec/tasks 路径、各任务疑虑 | 分级 findings（带 `file:line`）+ 六关判定 |
 | 阶段 4 收尾 | **finish-branch** | 最终验证命令、本次开发范围、调用来源（本 skill） | 收尾决策与已执行的动作 |
 
-三条跨层约定：
+三条调用约定：
 
-- **调用即交出该层的判据定义权**：不在本 skill 里重述 tdd 的循环规则、也不重述 review-changes 的审查判据——
+- **调用即交出判据定义权**：不在本 skill 里重述 tdd 的循环规则、也不重述 review-changes 的审查判据——
   需要细节时读那个 skill，别在这里维护第二份。
 - **调用 tdd 不是派 subagent**：阶段 2 由主 agent 自己加载 tdd 的执行纪律走完闭环，任务内**不派任何 subagent**。
   全流程唯一的 subagent 派发点是阶段 3（review 与 fix），fresh 上下文正是那道门的价值。
@@ -164,7 +163,7 @@ description: 把一份已确认的开发任务清单逐个落地成实现、测�
 **达标即停**：全部任务过闸门一、整体过闸门二（六关 + 覆盖回扫 + 全绿）、收尾决策交付给用户——
 执行就完成了，别为"再优化一下"无限改。
 
-### 跨阶段 · 上游纠错与守层
+### 跨阶段 · 上游纠错与分工边界
 
 执行中发现 design / spec / tasks 有误时，分级处理：
 
@@ -183,10 +182,10 @@ description: 把一份已确认的开发任务清单逐个落地成实现、测�
 - **产物是代码**（实现 + 测试 + 一串原子提交 + 回写的 tasks.md），不是文档。
 - **收尾交 finish-branch**：执行完调用 finish-branch 决定合并 / 本地保留 / PR / 丢弃，破坏性操作由用户拍板。
 - brownfield：执行只动 tasks 涉及的范围；迁移 / 回滚任务按 tasks 里标的来做。
-- 调用的 composable skill（**tdd / review-changes / setup-worktree / finish-branch**）见上文「分层与调用」表——
+- 调用的 skill（**tdd / review-changes / setup-worktree / finish-branch**）见上文「能力调用」表——
   它们的判据住在各自的 SKILL.md，需要细节直接读那一份。本 skill 自己的参考：
   [orchestration.md](references/orchestration.md)（依赖 / wave 排序、并行与 worktree 隔离、任务工作文件、
-  进度账本与 safe-resume）、[acceptance.md](references/acceptance.md)（双闸门核对、fix 循环、覆盖回扫、守层、收尾）、
+  进度账本与 safe-resume）、[acceptance.md](references/acceptance.md)（双闸门核对、fix 循环、覆盖回扫、分工边界、收尾）、
   [handoff-templates.md](references/handoff-templates.md)（任务简报、阶段 3 派发 prompt 与派发前自查）、
   [model-selection.md](references/model-selection.md)（阶段 3 档位判据）、
   [platform-agents.md](references/platform-agents.md)（Claude Code / Codex 的 subagent 派发与并行工作目录，派发前读）。
