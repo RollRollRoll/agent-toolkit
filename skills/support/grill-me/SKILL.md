@@ -1,6 +1,6 @@
 ---
 name: grill-me
-description: 用连续追问打磨一个计划、设计或决定。
+description: 追问一个计划、设计或决定，用连续提问把它打磨清楚。
 disable-model-invocation: true
 ---
 

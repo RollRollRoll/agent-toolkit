@@ -1,4 +1,4 @@
 interface:
   display_name: "Finish Branch"
-  short_description: "开发完成后预检、清理残留并由我授权收尾分支"
+  short_description: "收尾当前分支：预检状态、清理残留，再由我授权处置。"
   default_prompt: "使用 $finish-branch 给当前分支收尾：先预检状态、清掉调试残留并跑最终验证，再让我决定合并、保留还是丢弃。"

@@ -1,6 +1,6 @@
 ---
 name: write-spec
-description: 把一份边界已清晰的需求或概念，写成可被验证的行为规格（Requirement + MUST + WHEN→THEN 场景）。
+description: 编写可被验证的行为规格，把边界已清晰的需求或概念落成 Requirement + MUST + WHEN→THEN 场景。
 ---
 
 # Write Spec — 行为规格

@@ -1,4 +1,4 @@
 interface:
   display_name: "TDD"
-  short_description: "在约定 seam 上一次一个行为走红→绿→验证"
+  short_description: "落地一个行为改动，在约定 seam 上走红→绿→验证。"
   default_prompt: "使用 $tdd 用测试先行的方式落地这个行为，一次一个行为走红→绿→验证，并把命令与输出落盘成执行记录。"

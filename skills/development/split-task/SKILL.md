@@ -1,6 +1,6 @@
 ---
 name: split-task
-description: 把一份已确认的技术设计拆成可独立验收、带依赖与验证方式的开发任务清单。
+description: 拆分已确认的技术设计，产出可独立验收、带依赖与验证方式的开发任务清单。
 ---
 
 # Split Task — 任务拆分

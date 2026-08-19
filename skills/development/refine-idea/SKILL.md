@@ -1,6 +1,6 @@
 ---
 name: refine-idea
-description: 通过协作对话，把一个还没想透的想法打磨成边界清晰、可执行的概念。
+description: 打磨一个还没想透的想法，通过协作对话收敛成边界清晰、可执行的概念。
 ---
 
 # Refine Idea — 概念打磨

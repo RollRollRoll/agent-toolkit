@@ -1,5 +1,5 @@
 interface:
   display_name: "Grill Me"
-  short_description: "按轮次盘问，打磨计划与设计"
+  short_description: "盘问计划与设计，按轮次逐层打磨。"
 policy:
   allow_implicit_invocation: false

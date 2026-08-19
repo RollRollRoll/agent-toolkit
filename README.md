@@ -140,6 +140,11 @@ agent-toolkit/
 3. `SKILL.md` 的 frontmatter 写清 `name`（与目录名一致）和 `description`
    （决定模型认不认得出该用它）。若它会被别的 skill 调用，
    正文还要写明调用契约（传入 / 取回 / 不做什么）。
+   `description` 统一用「动词描述能力」模版（Action + Object）：
+   动词开头、紧跟宾语、一句话说清做什么、句号收尾，
+   不用介词或时间状语开场（对 / 把 / 用 / 在…时 / 从 / 通过），
+   也不加「开发链第 X 棒」一类标签前缀。
+   `agents/openai.yaml` 的 `short_description` 同样遵守这条模版。
 4. 如果资源属于某个组合，更新对应的 `collections/*.yaml`。
 5. 如果 Skill 要随插件发布：
    - 更新 `.claude-plugin/plugin.json` 的 `skills` 数组（路径含场景目录，

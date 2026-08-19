@@ -1,6 +1,6 @@
 ---
 name: grilling
-description: 对用户的计划、决策或想法持续深入追问，做一次彻底的压力测试。
+description: 追问用户的计划、决策或想法，做一次持续深入的压力测试。
 ---
 
 # Grilling — 决策树式连续追问

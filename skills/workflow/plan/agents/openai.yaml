@@ -1,4 +1,4 @@
 interface:
   display_name: "Plan"
-  short_description: "编码前把行为规格与技术方案都定下来并确认"
+  short_description: "产出行为规格与技术方案，编码前逐道确认。"
   default_prompt: "使用 $plan 先把行为规格写清楚并确认，再据此定技术方案并确认。"

@@ -1,6 +1,6 @@
 ---
 name: make-design
-description: 把一份已确认的行为规格转化成可追溯的技术设计，重大决策附候选方案、trade-off 与推荐理由。
+description: 转化已确认的行为规格为可追溯的技术设计，重大决策附候选方案、trade-off 与推荐理由。
 ---
 
 # Make Design — 技术方案

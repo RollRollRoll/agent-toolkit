@@ -1,6 +1,6 @@
 ---
 name: test-skill
-description: 在隔离沙箱中对某个 skill 发起 headless 盲测，产出逐步骤溯源的中文复盘报告。
+description: 盲测某个 skill，在隔离沙箱中发起 headless 运行并产出逐步骤溯源的中文复盘报告。
 ---
 
 # Test Skill — skill 盲测复盘

@@ -1,6 +1,6 @@
 ---
 name: codebase-analyzer
-description: 对一个陌生的项目或代码库做全面调研，产出一份说明它做什么、怎么实现的结构化中文报告。
+description: 调研一个陌生的项目或代码库，产出说明它做什么、怎么实现的结构化中文报告。
 ---
 
 # Codebase Analyzer — 项目调研

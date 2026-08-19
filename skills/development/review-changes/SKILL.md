@@ -1,6 +1,6 @@
 ---
 name: review-changes
-description: 对一段已写完的改动做独立审查，按正确性、可读性、架构、安全、性能五轴判定并输出带 file:line 的分级 findings。
+description: 审查一段已写完的改动，按正确性、可读性、架构、安全、性能五轴判定并输出带 file:line 的分级 findings。
 ---
 
 # Review Changes — 整体改动审查

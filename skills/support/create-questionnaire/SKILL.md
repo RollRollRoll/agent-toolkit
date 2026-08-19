@@ -1,6 +1,6 @@
 ---
 name: create-questionnaire
-description: 把一件用户自己答不出来的事，做成一份交给知情人填的 Markdown 问卷。
+description: 生成一份交给知情人填写的 Markdown 问卷，覆盖用户自己答不出来的事。
 disable-model-invocation: true
 ---
 

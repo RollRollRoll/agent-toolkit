@@ -1,3 +1,3 @@
 interface:
   display_name: "Grilling"
-  short_description: "按轮次压力测试思路，一轮问完当前问得动的问题"
+  short_description: "追问计划、决策或想法，按轮次做压力测试。"

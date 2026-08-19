@@ -1,4 +1,4 @@
 interface:
   display_name: "Setup Worktree"
-  short_description: "锁定 expected base 并建立、验证隔离 git 工作区"
+  short_description: "锁定 expected base 并建立、验证隔离 git 工作区。"
   default_prompt: "使用 $setup-worktree 为这次开发建立隔离工作区，先锁定基线再创建并验证 HEAD。"

@@ -1,6 +1,6 @@
 ---
 name: setup-worktree
-description: 在开发或并行任务开始前，基于确定基线建立并验证隔离的 git worktree 工作区。
+description: 建立并验证隔离的 git worktree 工作区，基线在创建前锁定。
 ---
 
 # Setup Worktree — 工作区隔离

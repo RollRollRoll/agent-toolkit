@@ -1,4 +1,4 @@
 interface:
   display_name: "Idea"
-  short_description: "把模糊想法打磨成边界清晰、经确认的概念"
+  short_description: "打磨模糊想法为边界清晰、经确认的概念。"
   default_prompt: "使用 $idea 把这个想法理清楚：挖真实意图、问穷尽边界，最后给出可确认的概念。"
