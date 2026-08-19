@@ -1,6 +1,6 @@
 ---
 name: agent-config-sync
-description: 从一份或多份现有配置抽取可审阅的 agent-config.yaml，并跨 Windows、Linux、macOS 与 WSL 声明式同步 Codex ~/.codex/config.toml 和 Claude Code ~/.claude/settings.json。用于导入、去重、解决冲突、剔除配置项、初始化、检测、校验、渲染、预览差异、应用、检查状态或诊断；不用于凭据、登录状态、项目级配置、~/.claude.json、skills、agents、hooks 或 MCP 配置。
+description: 从现有配置抽取统一声明，并且可以安全同步 Codex 与 Claude Code 用户配置。
 ---
 
 # Agent Config Sync

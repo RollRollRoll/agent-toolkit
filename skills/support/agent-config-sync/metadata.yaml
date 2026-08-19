@@ -2,7 +2,7 @@ id: agent-config-sync
 name: Agent Config Sync
 type: skill
 category: support
-description: 从现有配置抽取统一声明，通过本地界面审阅并安全同步 Codex 与 Claude Code 用户配置
+description: 从现有配置抽取统一声明，并且可以安全同步 Codex 与 Claude Code 用户配置。
 tags:
   - codex
   - claude-code
