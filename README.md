@@ -120,14 +120,11 @@ agent-toolkit/
 - `.codex-plugin/`：Codex 插件清单。
 - `.agents/plugins/`：Codex 仓库级 marketplace 清单。
 - `mcp/ssh-mcp.json`：保留的 SSH MCP 手动配置，不随两平台插件自动加载。
-- `skills/`：两平台共用的完整 Skill，**按使用场景**分三个目录——`workflow/`（开发链四棒）、
-  `development/`（服务软件开发的能力：概念、规格、设计、拆任务、TDD、审查、工作区与提交、
-  代码库调研）、`support/`（面向人的访谈与调研、agent 自身工程与通用小工具）；辅助资料、
-  脚本和测试均放在对应 Skill 目录内。**目录就是分类的唯一记录**，Skill 目录内不再单独写
-  `metadata.yaml`。
-
-  > 目录分的是**场景**，架构分层是另一个正交维度：workflow 层就是 `workflow/` 那四个；
-  > 其余 skill 是不是 composable 能力单元，看它的 `SKILL.md` 里有没有「调用契约」章节。
+- `skills/`：两平台共用的完整 Skill，**按使用场景**分 `workflow/`、`development/`、`support/`
+  三个目录，各自的分类判据、成员清单与边界见
+  [`skills/workflow/README.md`](skills/workflow/README.md)、
+  [`skills/development/README.md`](skills/development/README.md)、
+  [`skills/support/README.md`](skills/support/README.md)。
 - `commands/`：存放自定义 command。
 - `hooks/`：存放 hook 定义或说明。
 - `collections/`：手动记录资源组合关系。
