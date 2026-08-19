@@ -1,0 +1,6 @@
+interface:
+  display_name: "Create Questionnaire"
+  short_description: "把答不出来的问题前置成一份别人来填的问卷"
+  default_prompt: "使用 $create-questionnaire 把这件我一个人定不了的事，做成一份可以发出去让对方填的问卷。"
+policy:
+  allow_implicit_invocation: false

@@ -16,7 +16,7 @@
 |---|---|---|---|
 | `grilling` | 面向人 | 被调用 | 对计划、决策或想法持续深入追问，做一次彻底的压力测试 |
 | `grill-me` | 面向人 | 仅人类（`disable-model-invocation`） | `grilling` 的 standalone 入口，传"不剪枝"（技术分支也问） |
-| `to-questionnaire` | 面向人 | 仅人类 | 把用户自己答不出来的事变成一份交给别人填的 Markdown 问卷 |
+| `create-questionnaire` | 面向人 | 仅人类 | 把用户自己答不出来的事，做成一份交给知情人填的 Markdown 问卷 |
 | `re-explain` | 通用小工具 | 仅人类 | 补充上下文，用更简单、明确的中文重新解释一遍 |
 | `agent-config-sync` | agent 自身工程 | 用户直呼 | 从现有配置抽取统一声明，据此安全同步 Codex 与 Claude Code 的用户级配置 |
 | `test-skill` | agent 自身工程 | 用户直呼 | 在隔离沙箱中对某个 skill 发起 headless 盲测，产出逐步骤溯源的复盘报告 |
