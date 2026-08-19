@@ -3,7 +3,7 @@ name: grilling
 description: 对用户的计划、决策或想法持续深入追问，做一次彻底的压力测试。
 ---
 
-# Grilling
+# Grilling — 决策树式连续追问
 
 持续深入地访谈用户，直到双方形成共同理解。
 

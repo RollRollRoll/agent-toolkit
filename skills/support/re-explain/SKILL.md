@@ -4,7 +4,7 @@ description: 补充上下文，用更简单、明确的中文重新解释一遍�
 disable-model-invocation: true
 ---
 
-# Re-Explain
+# Re-Explain — 简明中文重述
 
 没理解你刚才讲的内容。
 
