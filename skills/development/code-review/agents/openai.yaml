@@ -1,0 +1,4 @@
+interface:
+  display_name: "Code Review"
+  short_description: "审查一段 diff 的编码标准与规格忠实度两轴。"
+  default_prompt: "使用 $code-review 审查从某个固定点到 HEAD 的改动，标准与规格两轴分开报。"
