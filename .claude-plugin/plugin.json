@@ -1,6 +1,6 @@
 {
   "name": "agent-toolkit",
-  "version": "0.32.0",
+  "version": "0.33.0",
   "description": "个人 agent 工具集：可复用中文开发工作流 skills",
   "author": {
     "name": "kgfan"
@@ -21,6 +21,7 @@
     "./skills/workflow/task",
     "./skills/development/codebase-analyzer",
     "./skills/development/codebase-design",
+    "./skills/development/domain-modeling",
     "./skills/development/finish-branch",
     "./skills/development/git-commit-push",
     "./skills/development/make-design",

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Domain Modeling"
+  short_description: "打磨项目的领域语言，落成 CONTEXT.md 与 ADR。"
+  default_prompt: "使用 $domain-modeling 打磨这个项目的领域术语，并把定下来的说法写进 CONTEXT.md。"
