@@ -5,7 +5,7 @@ description: 抽取现有配置为统一声明，并据此安全同步 Codex 与
 
 # Agent Config Sync — 双平台配置同步
 
-只把 `agent-config.yaml` 视为事实来源。使用随 Skill 附带的确定性 CLI 生成配置，禁止直接拼接 TOML/JSON 后覆盖用户文件。
+只把 `agent-config.yaml` 视为事实来源。使用随 Skill 附带的确定性 CLI 生成配置，禁止直接拼接 TOML / JSON 后覆盖用户文件。
 
 ## 定位 CLI
 
@@ -25,11 +25,13 @@ python3 scripts/aiconfig.py
 2. 对用户明确提供的每个文件运行 `aiconfig import inspect --source <target>=<path>`，同一目标可重复传入。
 3. 读取生成的 `.agent-config/import-plan.yaml`，说明自动去重项、冲突、敏感字段和越界字段。
 4. 用户选择前端时运行 `aiconfig ui`，把页面作为主要审阅与决策入口；提供带会话令牌的本地地址，只有用户明确要求自动打开浏览器时才使用 `--open`。页面可用时不要同时通过对话逐项提问。
-5. 用户拒绝前端，或 UI 启动失败、页面不可访问、当前环境无法操作页面时，说明降级原因并改用问答：逐项展示冲突候选，让用户明确选择 `take`、`union`、`set` 或 `exclude`。不要自行选择来源或合并不同数组。
+5. 用户拒绝前端，或 UI 启动失败、页面不可访问、当前环境无法操作页面时，说明降级原因并改用问答：逐项展示冲突候选，让用户明确选择 `take`、`union`、
+   `set` 或 `exclude`。不要自行选择来源或合并不同数组。
 6. 将页面或问答中的决定写入计划后运行 `aiconfig import generate`，或由本地界面生成。未解决冲突时停止。
 7. 运行 `aiconfig validate` 和 `aiconfig plan`，确认生成声明的效果。
 
-`import inspect` 只归并同一目标的多份配置，不推导多机器 overlay。Codex 与 Claude Code 配置始终分别处理。详细计划格式和决策规则见 [导入现有配置](references/importing.md)。
+`import inspect` 只归并同一目标的多份配置，不推导多机器 overlay。Codex 与 Claude Code 配置始终分别处理。
+详细计划格式和决策规则见 [导入现有配置](references/importing.md)。
 
 只读分析时：
 
@@ -46,7 +48,7 @@ python3 scripts/aiconfig.py
 4. 运行 `aiconfig status [codex|claude]`。
 5. 报告变更文件和备份路径。
 
-不要仅因用户要求“检查、比较、分析”而执行 `apply`。目标文件有上次应用后的本地修改时，不要自行增加 `--force`；解释冲突并等待用户明确授权。
+不要仅因用户要求"检查、比较、分析"而执行 `apply`。目标文件有上次应用后的本地修改时，不要自行增加 `--force`；解释冲突并等待用户明确授权。
 
 ## 常用任务
 
@@ -55,10 +57,10 @@ python3 scripts/aiconfig.py
 - 根据确认计划生成声明：`aiconfig import generate`
 - 可视化审阅导入计划：`aiconfig ui [--open]`
 - 查看环境：`aiconfig detect` 或 `aiconfig detect --json`
-- 校验全部/单个目标：`aiconfig validate [codex|claude]`
+- 校验全部 / 单个目标：`aiconfig validate [codex|claude]`
 - 渲染到 `.agent-config/generated/`：`aiconfig render [codex|claude]`
 - 预览匹配和差异：`aiconfig plan [codex|claude]`
-- 应用全部/单个目标：`aiconfig apply [codex|claude]`
+- 应用全部 / 单个目标：`aiconfig apply [codex|claude]`
 - 检查同步状态：`aiconfig status [codex|claude]`
 
 ## 配置边界

@@ -20,7 +20,7 @@
 - 实际轮数 / 时长：<N 轮，约 M 分钟>
 - 执行边界：<Claude：tools + allowed_tools；Codex：sandbox_mode + approval_policy>
 - 设置 / 扩展隔离：<Claude：setting_sources + strict MCP；Codex：isolated_home + ignore_user_config/rules + web_search；托管策略影响>
-- 异常事件：<超时/权限拒绝/报错，无则写"无">
+- 异常事件：<超时 / 权限拒绝 / 报错，无则写"无">
 
 ## 2. 步骤溯源表
 

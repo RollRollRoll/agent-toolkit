@@ -10,7 +10,7 @@
 - `MERGE_TYPE_CONFLICT`：不要在对象、数组之间隐式切换类型。
 - `INVALID_ARRAY_OPERATION`：只对数组使用 `$append` / `$prepend`。
 - `CLAUDE_FIELD_OUT_OF_SCOPE`：从 `settings.json` 声明中删除范围外字段。
-- `IMPORT_SOURCE_NOT_FOUND` / `IMPORT_SOURCE_INVALID`：检查来源路径、目标前缀以及 TOML/JSON 语法。
+- `IMPORT_SOURCE_NOT_FOUND` / `IMPORT_SOURCE_INVALID`：检查来源路径、目标前缀以及 TOML / JSON 语法。
 - `IMPORT_PLAN_NOT_FOUND` / `IMPORT_PLAN_INVALID`：重新运行 `import inspect`，或修复计划结构和 JSON Pointer。
 - `IMPORT_PLAN_EXISTS` / `IMPORT_OUTPUT_EXISTS`：先审阅已有文件；明确同意覆盖后才使用 `--force`。
 - `IMPORT_CONFLICT_UNRESOLVED`：为每个冲突选择 `take`、`union`、`set` 或 `exclude`。

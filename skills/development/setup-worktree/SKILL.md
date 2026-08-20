@@ -59,10 +59,16 @@ description: 建立并验证隔离的 git worktree 工作区，基线在创建�
    - 未给出时，用 `git rev-parse HEAD` 记录当前本地 `HEAD` 的完整 commit ID；默认以这个本地 `HEAD` 为基线，不要自行改成远端默认分支。
    - 并行任务必须各自记录 expected base；同一批任务若要求同源，所有 worktree 使用同一个 commit ID。
 3. **按平台选择能保证 expected base 的创建方式**：
-   - 只有在平台原生工具**能保证从 expected base 创建**时才使用它；无法确认语义时，统一退回显式命令：`git worktree add -b <分支名> <路径> <expected-base>`。
-   - **Claude Code**：保留 `worktree.baseRef` 语义。默认值 `fresh` 从 `origin` 默认分支创建，`head` 才从本地 `HEAD` 创建；该设置同时影响 `--worktree`、`EnterWorktree` 和 subagent isolation。expected base 是本地 `HEAD` 时，不能把默认 `fresh` 当成等价语义，也不得擅自修改用户设置。
-   - **Codex App**：托管 Worktree 从新任务里选定分支的 `HEAD` 创建，默认处于 detached HEAD；创建前让用户在 composer 选择 `Worktree` 与起始分支，或在已有任务中使用 Handoff。只有选定分支的 `HEAD` 等于 expected base 时才使用该路径；创建后再用真实 commit ID 核验，不因 UI 显示的分支名跳过验证。需要长期分支时，验证后再使用 “Create branch here”，不要把默认 detached HEAD 误报成独立分支。
-   - **Codex CLI / IDE**：不假设存在 Codex App 的托管 Worktree/Handoff；需要隔离时使用显式 `git worktree add`。Codex App 的 `.worktreeinclude` 只用于复制 Git 已忽略且确实需要的本地文件，不得借它搬运普通未提交改动，也不得未经用户同意加入凭据文件。
+   - 只有在平台原生工具**能保证从 expected base 创建**时才使用它；无法确认语义时，统一退回显式命令：
+     `git worktree add -b <分支名> <路径> <expected-base>`。
+   - **Claude Code**：保留 `worktree.baseRef` 语义。默认值 `fresh` 从 `origin` 默认分支创建，`head` 才从本地 `HEAD` 创建；
+     该设置同时影响 `--worktree`、`EnterWorktree` 和 subagent isolation。expected base 是本地 `HEAD` 时，
+     不能把默认 `fresh` 当成等价语义，也不得擅自修改用户设置。
+   - **Codex App**：托管 Worktree 从新任务里选定分支的 `HEAD` 创建，默认处于 detached HEAD；
+     创建前让用户在 composer 选择 `Worktree` 与起始分支，或在已有任务中使用 Handoff。只有选定分支的 `HEAD` 等于 expected base 时才使用该路径；
+     创建后再用真实 commit ID 核验，不因 UI 显示的分支名跳过验证。需要长期分支时，验证后再使用 `Create branch here`，不要把默认 detached HEAD 误报成独立分支。
+   - **Codex CLI / IDE**：不假设存在 Codex App 的托管 Worktree/Handoff；需要隔离时使用显式 `git worktree add`。
+     Codex App 的 `.worktreeinclude` 只用于复制 Git 已忽略且确实需要的本地文件，不得借它搬运普通未提交改动，也不得未经用户同意加入凭据文件。
    - 记下 **平台、worktree 路径、HEAD 状态（detached 或分支名）与 expected base**，供后续验证与清理。
 4. **创建后验证，未通过不得开工**：
    - 在新 worktree 中执行 `git rev-parse HEAD`，结果必须与 expected base 的 commit ID 完全一致。
@@ -75,7 +81,8 @@ description: 建立并验证隔离的 git worktree 工作区，基线在创建�
 
 - **检测优先**：已在 worktree 就别再嵌套建——先查，再决定建不建。
 - **基线语义优先**：平台原生与手工命令只是实现手段；是否准确落在 expected base 才是选择依据。
-- **平台分支不混用**：Claude Code 的 `EnterWorktree/worktree.baseRef`、Codex App 的 Worktree/Handoff、Codex CLI 的显式 Git 命令分别处理，不用一个平台的参数解释另一个平台。
+- **平台分支不混用**：Claude Code 的 `EnterWorktree/worktree.baseRef`、Codex App 的 Worktree/Handoff、
+  Codex CLI 的显式 Git 命令分别处理，不用一个平台的参数解释另一个平台。
 - **命名可追溯**：分支 / worktree 路径用关联任务 / 功能的名字，便于后续辨认与清理。
 - **不搬运脏改动**：不自动 stash、提交或复制当前工作区的未提交改动。
 - **不在这里清理**：worktree 用完的移除 / 合并交回调用方；移除工作树前必须取得用户明确确认。

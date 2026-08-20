@@ -5,11 +5,12 @@ description: 盲测某个 skill，在隔离沙箱中发起 headless 运行并产
 
 # Test Skill — skill 盲测复盘
 
-## 任务
+## 目标
 
 在隔离沙箱中驱动一次多轮 headless 会话。被测进程只看到自然的用户任务，不知道自己正在被测试。运行结束后，把每个语义步骤与目标 `SKILL.md` 的指令逐项对齐，产出可复核的中文报告。
 
-先按 [platform-runners.md](references/platform-runners.md) 选择 Claude Code 或 Codex runner，再用同一个 runner 完成该次盲测的全部轮次。不要自行拼接 `claude -p` 或 `codex exec`；运行器负责超时、会话 ID、逐轮状态、JSONL、stderr、参数传递和唯一报告路径。
+先按 [platform-runners.md](references/platform-runners.md) 选择 Claude Code 或 Codex runner，
+再用同一个 runner 完成该次盲测的全部轮次。不要自行拼接 `claude -p` 或 `codex exec`；运行器负责超时、会话 ID、逐轮状态、JSONL、stderr、参数传递和唯一报告路径。
 
 ## 流程
 

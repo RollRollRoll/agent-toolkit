@@ -76,7 +76,7 @@ Critical / Important **派独立 fix subagent** 修复 → 复审（**按轮次�
 ## 五 · 收尾（调用 finish-branch）
 
 - **整体验收通过后，调用 `finish-branch` 做收尾**：它会先清理本次开发的调试残留并重跑最终测试，再检测
-  repo/worktree 状态，给出合并到主干 / 本地保留 / 创建 PR / 丢弃选项。
+  repo / worktree 状态，给出合并到主干 / 本地保留 / 创建 PR / 丢弃选项。
 - **清理改了代码 → 整体验收失效**：finish-branch 的清理若产生代码改动，阶段 3 的六关判定与全绿结果
   一并作废，必须回阶段 3 重做整体验收，重审通过后再回到收尾。
 - **危险操作 gate**：commit 必须已有阶段 0 明确授权；合并 / PR / push / 丢弃 / 移除 worktree **不自动做**，

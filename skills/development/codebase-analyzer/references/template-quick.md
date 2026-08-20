@@ -1,7 +1,8 @@
 # 项目调研报告模板 · 快速概览档
 
 > **这是「快速概览」档的骨架**，对应 SKILL "输出深度"里最轻的一档——目标是让读者**1 分钟、半屏内**抓住"这是什么、怎么搭的、最核心一条路怎么走"。
-> 适用：用户说"快速看看 / 简单了解 / 大概是啥"。需要更详细请改用 [template-standard.md](template-standard.md) 或 [template-deep.md](template-deep.md)。
+> 适用：用户说"快速看看 / 简单了解 / 大概是啥"。
+> 需要更详细请改用 [template-standard.md](template-standard.md) 或 [template-deep.md](template-deep.md)。
 >
 > **铁律**：
 > - 全文控制在**半屏到一屏**，不要展开成长报告。
@@ -28,7 +29,7 @@
 
 ## 目录地图（精简）
 
-```
+```text
 {{根目录}}/
 ├── {{dir1}}/   # {{职责}}
 ├── {{dir2}}/   # {{职责}}

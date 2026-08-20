@@ -2,20 +2,25 @@
 
 > 在第 1 步自顶向下扫读后，**先判断项目属于哪一类**，再按对应小节追加专项分析。
 > 判断类型同样要看证据（依赖清单、入口、目录结构），**不要凭项目名或 README 猜**。
-> 一个项目可能同时命中多类（如 "Web 服务 + 运维 CLI"），命中几类就追加几类，并各自说明判断依据。
-> 本清单是在所选档报告模板（[template-standard.md](template-standard.md) / [template-deep.md](template-deep.md)，对应"项目类型专项分析"章节）之上的"加餐"，通用章节照常写。快速概览档一般省略专项分析。
+> 一个项目可能同时命中多类（如"Web 服务 + 运维 CLI"），命中几类就追加几类，并各自说明判断依据。
+> 本清单是在所选档报告模板（[template-standard.md](template-standard.md) / [template-deep.md](template-deep.md)，
+> 对应"项目类型专项分析"章节）之上的"加餐"，通用章节照常写。快速概览档一般省略专项分析。
 
 ---
 
 ## 如何先判断类型（看证据，不看名字）
 
-- **CLI 项目**：依赖含 `argparse`/`click`/`cobra`/`commander`/`yargs`；`package.json` 的 `bin` 字段 / `pyproject.toml` 的 `[project.scripts]` / `cmd/` 目录。
+- **CLI 项目**：依赖含 `argparse`/`click`/`cobra`/`commander`/`yargs`；
+  `package.json` 的 `bin` 字段 / `pyproject.toml` 的 `[project.scripts]` / `cmd/` 目录。
 - **Web 服务**：依赖含 `express`/`fastapi`/`flask`/`spring-boot`/`gin`/`nest`；有路由注册 / controller；启动时监听端口。
-- **Library / SDK**：以"被别人 import"为目的，无独立长驻入口；`package.json` 有 `main`/`exports` 而无 `bin`；发布到 npm / PyPI / crates / Maven。
+- **Library / SDK**：以"被别人 import"为目的，无独立长驻入口；`package.json` 有 `main`/`exports` 而无 `bin`；
+  发布到 npm / PyPI / crates / Maven。
 - **Agent 项目**：依赖含 `langchain`/`langgraph`/`autogen`/`crewai` 或某家 LLM SDK；代码里有 prompt 模板、tool 注册、agent 循环。
-- **MCP Server**：依赖含 `@modelcontextprotocol/sdk` 或 `mcp`；声明 tools/resources/prompts；走 stdio / SSE / HTTP transport。
+- **MCP Server**：依赖含 `@modelcontextprotocol/sdk` 或 `mcp`；声明 tools/resources/prompts；
+  走 stdio / SSE / HTTP transport。
 - **DevTool / Workflow 工具**：本身面向开发者，用来生成代码 / 文档、编排流程、对接 Git/CI/Issue。
-- **Agent 编程工具插件 / 扩展**：有 `SKILL.md`，并命中 Claude Code 的 `.claude/` / `.claude-plugin/`，或 Codex 的 `.agents/` / `.codex/` / `.codex-plugin/` / `AGENTS.md` 等平台信号。
+- **Agent 编程工具插件 / 扩展**：有 `SKILL.md`，并命中 Claude Code 的 `.claude/` / `.claude-plugin/`，
+  或 Codex 的 `.agents/` / `.codex/` / `.codex-plugin/` / `AGENTS.md` 等平台信号。
 
 > 判不出明确类型也没关系——写明"未匹配到专项类型"，只产出通用报告即可，不要硬套。
 
@@ -38,7 +43,8 @@
 
 ## c. Library / SDK
 
-- **对外 API / public interface**：公开导出在哪（`index.ts` / `__init__.py` / `mod.rs` 的 re-export）？哪些是 public、哪些是 internal？
+- **对外 API / public interface**：公开导出在哪（`index.ts` / `__init__.py` / `mod.rs` 的 re-export）？
+  哪些是 public、哪些是 internal？
 - **示例用法**：README / `examples/` / 文档里给的最小可用示例是什么？
 - **版本兼容性**：如何做语义化版本？有无 deprecation 标记、breaking change 记录（CHANGELOG）？支持的运行时 / 语言版本范围？
 - **扩展方式**：使用者怎么扩展（插件 / 回调 / 子类化 / 配置注入）？扩展点在哪定义？
@@ -96,19 +102,22 @@
 
 ### 判断依据（看证据，不看名字）
 - **共同信号**：`SKILL.md`、references / scripts、MCP 配置、hooks、subagent / custom agent 定义。
-- **Claude Code**：`.claude/`、`.claude/skills/`、`.claude/commands/`、`CLAUDE.md`、`settings.json` / `settings.local.json`、`.claude-plugin/plugin.json` / `marketplace.json`、`agents/`。
-- **Codex**：`.agents/skills/`、`.agents/plugins/marketplace.json`、`AGENTS.md` / `AGENTS.override.md`、`.codex/config.toml`、`.codex/agents/*.toml`、`.codex/hooks.json` 或配置内 hooks、`.codex-plugin/plugin.json`。
+- **Claude Code**：`.claude/`、`.claude/skills/`、`.claude/commands/`、`CLAUDE.md`、
+  `settings.json` / `settings.local.json`、`.claude-plugin/plugin.json` / `marketplace.json`、`agents/`。
+- **Codex**：`.agents/skills/`、`.agents/plugins/marketplace.json`、`AGENTS.md` / `AGENTS.override.md`、
+  `.codex/config.toml`、`.codex/agents/*.toml`、`.codex/hooks.json` 或配置内 hooks、`.codex-plugin/plugin.json`。
 - 同一仓库可同时支持两平台；逐项说明哪些文件共用、哪些是薄适配层、哪些行为只在某个平台成立，不把同名概念视为参数完全兼容。
 
 ### 逐条画像模板（每个 skill / command / hook / subagent / custom agent 统一画像）
 - **是什么 + 触发条件**：skill 的 `description` / command 的调用方式 / hook 的匹配时机与事件 / subagent 或 custom agent 的角色定位
-- **平台与发现路径**：Claude Code、Codex 或双平台；由哪个清单、目录或配置发现，是否存在薄适配入口。
+- **平台与发现路径**：Claude Code、Codex 或双平台；由哪个清单、目录或配置发现，是否存在薄适配入口
 - **输入输出 / 副作用**：吃什么、产出什么、有无写文件 / 改代码 / 执行命令等副作用
 - **内部关键逻辑**：带 `path:line`，引用了哪些 references / 脚本 / 模板
 - **依赖与协作**：调用谁、被谁调用
 
 ### 整体装配图
-> 这些扩展件如何"**技术编排**"成一个整体——哪个入口触发哪个 skill、hook 在什么时机插入、subagent 被谁调起、Claude/Codex 清单如何指向共享主体。**技术视角**，区别于 f 类场景全景的用户视角。
+> 这些扩展件如何"**技术编排**"成一个整体——哪个入口触发哪个 skill、hook 在什么时机插入、subagent 被谁调起、Claude Code / Codex 清单如何指向共享主体。
+> **技术视角**，区别于 f 类场景全景的用户视角。
 
 ### 条目多时：并行解读
 > 条目较多、一次性解读会撑满上下文时，按 [parallel-strategy.md](parallel-strategy.md) 的「按扩展条目并行」节派子 agent 分批解读。

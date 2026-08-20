@@ -39,7 +39,7 @@ description: 落地一份已确认的开发任务清单，逐个做成实现、�
 |---|---|---|---|
 | 阶段 1 需要隔离 / 并行 | **setup-worktree** | expected base、用途 | worktree 路径 + 已验证的 HEAD |
 | 阶段 2 每个任务 | **tdd** | 任务简报路径、**约定的 seam**、验证方式、记录路径（`.execute/`，名称 `task-N`） | 证据齐否、改动文件、疑虑、记录路径 |
-| 阶段 3 整体验收 | **review-changes** | BASE 起点 commit、design/spec/tasks 路径、各任务疑虑 | 分级 findings（带 `file:line`）+ 六关判定 |
+| 阶段 3 整体验收 | **review-changes** | BASE 起点 commit、design / spec / tasks 路径、各任务疑虑 | 分级 findings（带 `file:line`）+ 六关判定 |
 | 阶段 4 收尾 | **finish-branch** | 最终验证命令、本次开发范围、调用来源（本 skill） | 收尾决策与已执行的动作 |
 
 三条调用约定：
@@ -113,7 +113,7 @@ description: 落地一份已确认的开发任务清单，逐个做成实现、�
 
 1. 运行 `scripts/task-baseline.sh <任务编号>`：真实工作区必须干净，并记录当前 HEAD；
    失败就停下处理，不能带着上个任务或用户的改动开工。
-2. 备好任务简报（`scripts/task-brief.sh` 抽取 + 追加 design/spec 片段与**约定的 seam**）。
+2. 备好任务简报（`scripts/task-brief.sh` 抽取 + 追加 design / spec 片段与**约定的 seam**）。
 3. **调用 tdd**，按其调用契约传入：简报路径、seam、验证方式、记录参数（名称 `task-N`、
    输出目录 `.execute/`）。任务内**不派任何 subagent**——主 agent 自己走完这个闭环。
    **记录落文件，不只留在上下文**：上下文一旦被压缩，留在对话里的证据就没了，落盘的还在；safe-resume 也靠它。
@@ -155,7 +155,7 @@ description: 落地一份已确认的开发任务清单，逐个做成实现、�
 
 ### 阶段 4 · 收尾
 
-1. **调用 `finish-branch` 做收尾**：先清理本次开发的调试残留并重跑最终测试，再检测 repo/worktree 状态，
+1. **调用 `finish-branch` 做收尾**：先清理本次开发的调试残留并重跑最终测试，再检测 repo / worktree 状态，
    给出合并到主干 / 本地保留 / 创建 PR / 丢弃选项。提交、合并、push、删除和移除 worktree 分别由用户授权，
    不把一种选择扩张成其他动作的许可。
 2. **收尾清理改了代码 → 回阶段 3 重做整体验收**：清理产生的任何代码改动都会让阶段 3 的结论失效，
