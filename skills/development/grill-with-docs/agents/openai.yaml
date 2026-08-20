@@ -1,0 +1,5 @@
+interface:
+  display_name: "Grill with Docs"
+  short_description: "拷问一个设计并把它的文档写出来。"
+policy:
+  allow_implicit_invocation: false

@@ -24,6 +24,7 @@
 | `wayfinder` | 一块工作大到一次会话装不下，路还裹在雾里 | 把它绘成 issue tracker 上的决策工单地图，一次解一张直到路清晰 |
 | `refine-idea` | 想法还模糊，要先想清楚做什么 / 不做什么 | 通过协作对话把没想透的想法打磨成边界清晰的概念 |
 | `write-spec` | 需求边界已清楚，要钉死系统该有什么行为 | 把已清晰的需求写成可验证的行为规格（Requirement + MUST + WHEN→THEN） |
+| `grill-with-docs` | 想让人把某个计划或设计追问到底，同时留下文档 | 同时加载 `grilling` 与 `domain-modeling`：边拷问边落 ADR 与术语表 |
 | `make-design` | 行为已定，编码前要把技术决策定下来 | 把行为规格转化成可追溯的技术设计，重大决策附候选方案与 trade-off |
 | `codebase-design` | 要设计或改进某个模块的接口，判 seam 该放哪、能不能深化 | 提供深模块设计词汇与判据：接口深浅、seam 位置、深化路径、多版接口对比 |
 | `domain-modeling` | 术语在打架，或要把定下来的说法与决策记下来 | 打磨项目领域语言，术语当场写进 `CONTEXT.md`，难逆且反直觉的决策留成 ADR |
