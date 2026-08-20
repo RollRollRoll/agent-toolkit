@@ -3,7 +3,7 @@
 > 用途：`make-design` 阶段 2 起草、阶段 4 落盘时用本模板。
 > 默认写到仓库既有 design 位置；无既有约定时默认 `docs/design/<YYYY-MM-DD>-<主题>-design.md`。
 >
-> **铁律**：只到**技术决策层**——不下沉 task-by-task 步骤与验证命令（那是 writing-plans）。
+> **铁律**：只到**技术决策层**——不下沉 task-by-task 步骤与验证命令（那是 split-task）。
 > 每个重大决策都要可追溯（候选 + 取舍 + 推荐 + 理由）；spec 每条 MUST / MUST NOT 都要有设计落点。
 >
 > **brownfield 用 delta**：聚焦改动 + 对现有系统影响，不重述整套既有架构。

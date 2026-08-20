@@ -222,9 +222,9 @@ T3 路由响应；T4 的 seam design 没写 → 与用户确认为"在 `list_exp
 > 〔T1 / T3 / T4 同构。T3 后到 checkpoint：开页面看列表 + 空态 + owner 空。〕
 
 **阶段 3**：扫 diff 无调试残留、工作区干净。全套 `pytest` 绿。**调用 review-changes**（独立 subagent、最强档）：
-传 BASE `a1b2c3d`、tasks/design/spec 路径、两条结构疑虑；回六关判定——architecture 把"取数拆 helper"
+传 BASE `a1b2c3d`、tasks / design / spec 路径、两条结构疑虑；回六关判定——architecture 把"取数拆 helper"
 判为 Minor 不阻塞，其余无 Critical / Important。**覆盖核对回扫（自己做）**：对回覆盖核对表，
-experiments 表(T1) / `list_experiments`(T2) / 路由+模板(T3) / 三条 MUST NOT(T4) 全部实现且有覆盖，不落空。
+experiments 表（T1）/ `list_experiments`（T2）/ 路由 + 模板（T3）/ 三条 MUST NOT（T4） 全部实现且有覆盖，不落空。
 
 **阶段 4**：调用 **finish-branch**，它给出收尾选项：
 

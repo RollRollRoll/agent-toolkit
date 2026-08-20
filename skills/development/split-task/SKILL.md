@@ -192,7 +192,7 @@ brownfield delta，只列实验清单相关任务。现状认知信任 design。
 
 > ### Task 2: 实验查询与校验 `list_experiments()`
 > - 切片：数据查询层（DB → 纯函数，可独立测）
-> - 涉及文件：`models.py`(改)、`tests/test_models.py`(新)
+> - 涉及文件：`models.py`（改）、`tests/test_models.py`（新）
 > - 依赖：T1（建 experiments 表）；可并行：否；高风险：否
 > - 验收标准：非法 status 标记数据异常（不静默显示）；空集合返回 `[]` 不报错；
 >   created_at 相同按 id 稳定排序；owner 为空不抛错
@@ -205,9 +205,9 @@ brownfield delta，只列实验清单相关任务。现状认知信任 design。
 > **依赖与并行视图**：T1 → T2 → T3 → T4（线性，无可并行）；
 > checkpoint：T2 后跑一次 `pytest`（数据层绿），T3 后开页面 + 路由 smoke。
 >
-> **覆盖核对表**：design 数据模型→T1；`list_experiments()`→T2；`GET /experiments` + 模板→T3；
-> spec Req 只读展示→T3；Req 状态约束→T1(CHECK)+T2(查询层)；Req 稳定排序→T2；
-> spec 三条 MUST NOT→T4；design 测试策略→T2+T3 的验证方式。
+> **覆盖核对表**：design 数据模型 → T1；`list_experiments()` → T2；`GET /experiments` + 模板 → T3；
+> spec Req 只读展示 → T3；Req 状态约束 → T1（CHECK）+ T2（查询层）；Req 稳定排序 → T2；
+> spec 三条 MUST NOT → T4；design 测试策略 → T2 + T3 的验证方式。
 
 **阶段 3 · 自检**：每个任务都有验收 + 验证 ✓；探针每维表态（含"不适用 / 延后"）✓；
 design 组件与 spec 每条在覆盖核对表都有落点、无镀金 ✓；依赖无环 ✓；任务大小 S/M ✓。

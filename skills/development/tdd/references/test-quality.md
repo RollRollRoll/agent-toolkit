@@ -30,7 +30,7 @@ expect(calculateTotal(items)).toBe(items.reduce((a, i) => a + i.price, 0))   ❌
 expect(calculateTotal(items)).toBe(15)                                       ✅
 ```
 
-按同样方式手推出来的快照、常量断言等于它自己，都属于同一类。
+按同样方式手推出来的快照、断言常量等于它自己，都属于同一类。
 
 **识别信号**：把实现改成任意等价写法，测试永远绿；把实现改错，测试**也**跟着一起错——
 它按构造必然通过，永远不可能与代码不一致。
