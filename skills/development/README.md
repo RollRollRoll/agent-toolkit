@@ -21,6 +21,7 @@
 
 | skill | 典型触发场景 | 职责 |
 |---|---|---|
+| `setup-env` | 第一次在某个仓库用这套 skill 之前 | 配好 issue tracker 与领域文档布局，写进 `docs/agents/` 与 `CLAUDE.md` |
 | `wayfinder` | 一块工作大到一次会话装不下，路还裹在雾里 | 把它绘成 issue tracker 上的决策工单地图，一次解一张直到路清晰 |
 | `refine-idea` | 想法还模糊，要先想清楚做什么 / 不做什么 | 通过协作对话把没想透的想法打磨成边界清晰的概念 |
 | `write-spec` | 需求边界已清楚，要钉死系统该有什么行为 | 把已清晰的需求写成可验证的行为规格（Requirement + MUST + WHEN→THEN） |
