@@ -113,18 +113,16 @@ description: 编写可被验证的行为规格，把边界已清晰的需求或�
   > 检验：把 Scenario 交给一个不懂业务的人，他能照着判断"通过 / 不通过"吗？不能，就还没写清。
 
   brownfield 用 delta 标注。
-- **不做什么（MUST NOT）**：概念里每条"不做什么"都转成负向需求，**每条配可验证检查**——
-  写不出"怎么检查它没发生"的，说明边界还太虚，没转化完。
+- **不做什么（MUST NOT）——禁止探针**：概念里每条"不做什么"都转成负向需求，**每条配可验证检查**——
+  写不出"怎么检查它没发生"的，说明边界还太虚，没转化完。验证**优先写用户可观察的行为**
+  （无某入口 / 不返回某数据 / 无某可见能力）；代码 / 依赖 / 文档级检查（无某路由、无引入某库、
+  帮助文本不写某承诺）**只作辅助**，不能是一条 MUST NOT 的唯一验证方式。
 - **边界场景覆盖**（索引）：只写"要做什么"会漏掉一半真实需求——漏在边界上。用边界探针
   （边界值 / 空值 / 排序 / 并发 / 幂等 / 精度 / 编码 / 超时与失败）逐项自问"这条适用吗"，
   适用的写成 Scenario；本节只做覆盖核对，行为只写在 Scenario 里，不重复。
 - **能力覆盖与档位**（greenfield）：把 Coverage Map 以精简表落盘，让 review 一眼看到
   哪些做 / 不做 / 为什么；纳入项对应到 Requirement。
 - **成功标准**：可执行的检查，对应阶段 0 摸到的"测试怎么跑"。
-
-两个探针的逐项清单、以及"怎么把每一项转成可验证的 Scenario / MUST NOT"（含"MUST NOT 的验证
-优先写用户可观察行为、代码级检查只作辅助"这条规则），见
-[references/coverage-probes.md](references/coverage-probes.md)——起草时逐项扫。
 
 **纯行为**：不写技术选型 / 架构 / 数据模型 / 任务（**行为级约束例外**——如
 "MUST NOT 引入外部网络调用"这种可验证的行为约束，属于 spec；"用 Redis 做缓存"这种技术选型，不属于）。
@@ -156,7 +154,6 @@ description: 编写可被验证的行为规格，把边界已清晰的需求或�
 - **brownfield** 用 delta，只写这次改了什么。
 - 规模极大 / 多能力时，**可提议**拆成 per-capability 多文件，但这是 scale-up，不是默认。
 - 参考：[spec-template.md](references/spec-template.md)（落盘模板，含 delta 写法与写完自查）、
-  [coverage-probes.md](references/coverage-probes.md)（双探针逐项清单）、
   [coverage-map.md](references/coverage-map.md)（greenfield 能力覆盖图与定档）。
 
 ## 反例（不要这样做）
