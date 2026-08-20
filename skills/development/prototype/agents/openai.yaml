@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prototype"
+  short_description: "做一次性原型来回答某个设计问题。"
+  default_prompt: "使用 $prototype 做一个一次性原型来回答这个设计问题：先判断是逻辑分支还是界面分支。"
