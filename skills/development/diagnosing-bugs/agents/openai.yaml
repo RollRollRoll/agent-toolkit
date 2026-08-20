@@ -1,0 +1,4 @@
+interface:
+  display_name: "Diagnosing Bugs"
+  short_description: "诊断难缠的 bug 与性能回退。"
+  default_prompt: "使用 $diagnosing-bugs 诊断这个 bug：先造一条能变红的反馈回路，再复现、最小化并定位原因。"
