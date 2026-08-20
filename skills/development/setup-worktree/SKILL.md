@@ -91,8 +91,3 @@ description: 建立并验证隔离的 git worktree 工作区，基线在创建�
 ❌ 在这里做合并 / 删除 worktree / 清理 —— 越界，本 skill 只建立隔离。
 ❌ 在非 git 仓库里硬建 worktree。
 ❌ 给小改动也强行开 worktree —— 不需要隔离就别隔离（YAGNI）。
-
-## 调用方
-
-- 可被其他 skill 调用，也可被用户直接触发（"开个 worktree 隔离一下"）。
-- 隔离建立之后的实现、审查、收尾与移除 worktree 都在本 skill 之外，由调用方衔接。

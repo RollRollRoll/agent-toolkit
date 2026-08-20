@@ -133,12 +133,3 @@ seam 与验证方式**开工前必须都有**。调用方没给 seam → 现在�
 ❌ 一次性写完整功能、堆到几百行才跑一次测试。
 ❌ 自己 commit / 改 tasks checkbox / 动 git 状态 —— 那是调用方的闸门动作。
 ❌ 卡住了反复原样重试、空转，不交回 BLOCKED。
-
-## 调用方
-
-- 可被其他 skill 调用，也可被用户直接触发（"用 TDD 把这个改动做掉"）。
-- 调用是**加载执行纪律，不是派 subagent**：调用方在自己的上下文里走完本闭环。
-- seam 与验收标准由调用方给出；整体审查、提交、进度回写与收尾都在本 skill 之外，归调用方。
-- 参考：[test-quality.md](references/test-quality.md)（好测试判据、三个反模式、mock 边界、期望值来源）、
-  [record-format.md](references/record-format.md)（执行记录结构与写法，照抄填空）、
-  `scripts/tdd-record.sh`（建工作目录与记录文件，已存在不覆盖）。
