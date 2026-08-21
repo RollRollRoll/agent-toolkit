@@ -1,0 +1,5 @@
+interface:
+  display_name: "Triage"
+  short_description: "让 issue 走过 triage 角色的状态机。"
+policy:
+  allow_implicit_invocation: false
