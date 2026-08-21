@@ -36,7 +36,7 @@ id 和 URL 不会消失：**名字包着它的链接**，但它们**藏在名字
 **一个决定只活在一个地方——它自己的工单里**，所以地图**从不复述它，只给它一句话要点并链过去**。
 
 **地图、它的子工单、阻塞关系与前沿查询在物理上住在哪，取决于具体的 tracker。**
-issue tracker 应该已经提供给你了；如果没有，让用户去跑 `/setup-matt-pocock-skills`。
+issue tracker 应该已经提供给你了；如果没有，让用户去跑 `/setup-env`。
 查阅那份 tracker 文档的 "Wayfinding operations" 一节，看**这个**仓库怎么表达这些东西。
 **如果根本没有提供 tracker，默认用本地 markdown tracker。**
 
