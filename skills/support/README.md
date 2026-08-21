@@ -18,6 +18,7 @@
 | `grill-me` | 面向人 | 仅人类（`disable-model-invocation`） | `grilling` 的 standalone 入口，传"不剪枝"（技术分支也问） |
 | `create-questionnaire` | 面向人 | 仅人类 | 把用户自己答不出来的事，做成一份交给知情人填的 Markdown 问卷 |
 | `re-explain` | 通用小工具 | 仅人类 | 补充上下文，用更简单、明确的中文重新解释一遍 |
+| `teach` | 通用小工具 | 仅人类 | 把当前目录当有状态的教学工作区，跨会话产出自包含 HTML 课与参照文档 |
 | `agent-config-sync` | agent 自身工程 | 用户直呼 | 从现有配置抽取统一声明，据此安全同步 Codex 与 Claude Code 的用户级配置 |
 | `test-skill` | agent 自身工程 | 用户直呼 | 在隔离沙箱中对某个 skill 发起 headless 盲测，产出逐步骤溯源的复盘报告 |
 | `handoff` | agent 自身工程 | 仅人类 | 把当前对话压成交接文档，存进系统临时目录供新 agent 接手 |
