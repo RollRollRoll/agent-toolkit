@@ -1,6 +1,6 @@
 {
   "name": "agent-toolkit",
-  "version": "0.44.0",
+  "version": "0.45.0",
   "description": "个人 agent 工具集：可复用中文开发工作流 skills",
   "author": {
     "name": "kgfan"
@@ -38,6 +38,7 @@
     "./skills/development/split-task",
     "./skills/development/tdd",
     "./skills/development/to-spec",
+    "./skills/development/to-tickets",
     "./skills/development/triage",
     "./skills/development/wayfinder",
     "./skills/development/wizard",
