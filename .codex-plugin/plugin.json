@@ -1,6 +1,6 @@
 {
   "name": "agent-toolkit",
-  "version": "0.50.0",
+  "version": "0.51.0",
   "description": "个人 agent 工具集：可复用中文开发工作流 skills",
   "author": {
     "name": "kgfan"
@@ -18,7 +18,7 @@
   "interface": {
     "displayName": "Agent Toolkit",
     "shortDescription": "中文 Agent 开发工作流与代码库调研工具集",
-    "longDescription": "包含 idea → plan → task → execute 这条开发链，各守一道闸门与用户确认；以及概念打磨、行为规格、技术设计、任务拆分、TDD 红绿闭环、整体改动审查、工作区隔离与分支收尾等可复用能力单元。",
+    "longDescription": "包含概念打磨、行为规格、技术设计、任务拆分、TDD 红绿闭环、整体改动审查、工作区隔离与分支收尾等可复用能力单元，以及代码库调研、一手来源调研、Skill 盲测与配置同步等独立工具。",
     "developerName": "kgfan",
     "category": "Productivity",
     "capabilities": [
@@ -28,7 +28,7 @@
     "defaultPrompt": [
       "调研当前代码库并给我一份结构化中文报告。",
       "把这个想法逐步推进成规格、设计与开发任务。",
-      "按已确认的任务清单执行实现并完成验收。"
+      "照这份 spec 把功能实现出来并提交。"
     ]
   }
 }
