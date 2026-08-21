@@ -1,5 +1,5 @@
 interface:
   display_name: "Setup Env"
-  short_description: "给仓库配置 issue tracker 与领域文档布局。"
+  short_description: "给仓库配置 issue tracker、triage 标签与领域文档布局。"
 policy:
   allow_implicit_invocation: false

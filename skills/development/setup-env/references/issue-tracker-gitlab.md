@@ -16,10 +16,22 @@
   所以先用 `glab issue note <number> --message "..."` 把说明发出去，再关。
 - **Merge request**：**GitLab 把 PR 叫 "merge request"。** 用 `glab mr create`、`glab mr view`、
   `glab mr note` 等等——形状和 `gh pr ...` 一样，把 `pr` 换成 `mr`、
-  把 `comment`/`--body` 换成 `note`/`--message`。看 diff 用 `glab mr diff <number>`。
-  **和 GitHub 不同，GitLab 的 issue 与 MR 分开编号**，所以 `#42` 在知道说的是哪个面之后就没有歧义。
+  把 `comment`/`--body` 换成 `note`/`--message`。
 
 仓库从 `git remote -v` 推断；在克隆目录里跑时 `glab` 会自己搞定。
+
+## MR 作为 triage 入口
+
+**MR 作为需求入口：否。** *（这个仓库要是把外部 merge request 当作需求提报，就改成「是」；`triage` 读这个 flag。）*
+
+改成「是」之后，MR 走**和 issue 一样的标签与状态**，用 `glab mr` 那套对应命令：
+
+- **读 MR**：`glab mr view <number> --comments`，看 diff 用 `glab mr diff <number>`。
+- **列出待 triage 的外部 MR**：`glab mr list -F json`，然后**只留作者不是项目成员 / owner 的那些**
+  （贡献者提的 MR，而不是维护者自己在推进的活）。
+- **评论 / 打标签 / 关闭**：`glab mr note`、`glab mr update --label`/`--unlabel`、`glab mr close`。
+
+**和 GitHub 不同，GitLab 的 issue 与 MR 分开编号**，所以 `#42` 在知道说的是哪个面之后就没有歧义。
 
 ## 当某个 skill 说"发布到 issue tracker"时
 

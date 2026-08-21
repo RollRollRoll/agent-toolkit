@@ -1,6 +1,6 @@
 ---
 name: setup-env
-description: 给这个仓库配置这套 skill 所假定的环境：issue tracker 与领域文档布局。第一次使用其他 skill 之前跑一次。
+description: 给这个仓库配置这套 skill 所假定的环境：issue tracker、triage 标签词汇与领域文档布局。第一次使用其他 skill 之前跑一次。
 disable-model-invocation: true
 ---
 
@@ -9,6 +9,7 @@ disable-model-invocation: true
 把这套 skill 所假定的**按仓库配置**搭起来：
 
 - **Issue tracker**：issue 住在哪（默认 GitHub；本地 markdown 也开箱支持）
+- **Triage 标签**：五个标准 triage 角色所用的那几个标签字符串
 - **领域文档**：`CONTEXT.md` 和 ADR 住在哪，以及读它们的消费规则
 
 **这是一个 prompt 驱动的 skill，不是一个确定性脚本。** 先探索、把发现摆出来、和用户确认，然后再写。
@@ -25,6 +26,9 @@ disable-model-invocation: true
 - `docs/adr/` 以及任何 `src/*/docs/adr/` 目录
 - `docs/agents/`：这个 skill 之前的产出是不是已经在了？
 - `.scratch/`：说明这个仓库已经在用本地 markdown 的 issue 约定了
+- **你手上有没有 skill 要用 triage 标签词汇？**（`to-spec` 会打 `ready-for-agent`；
+  或者你装了一个 `triage` skill——旁边有个 `triage` 目录，或者它在你可用的 skill 列表里。）
+  **这决定 B 节跑不跑。**
 - **monorepo 信号**：`pnpm-workspace.yaml`、`package.json` 里的 `workspaces` 字段，
   或者一个填了内容、各自带 `src/` 的 `packages/*`。
   **这些只在真正的大型多包仓库里才有**；没有就是单上下文，**绝大多数仓库都是这种**。
@@ -34,11 +38,11 @@ disable-model-invocation: true
 **总结有什么、缺什么。** 然后按顺序过下面几节。**一节，一个回答，再下一节。**
 
 **每一节都先给出推荐答案**，让用户一个字就能接受它。**只有在这个选择确实会分叉时才给一句解释**；
-探索已经把它定死的那一节（比如没有 monorepo 时的 B 节）**直接跳过**。
+探索已经把它定死的那一节**直接跳过**（没有任何 skill 要用标签时的 B 节、没有 monorepo 时的 C 节）。
 
 **A 节：Issue tracker。**
 
-> 解释：这里说的 "issue tracker" 就是这个仓库的 issue 住的地方。`wayfinder`、`code-review`
+> 解释：这里说的 "issue tracker" 就是这个仓库的 issue 住的地方。`wayfinder`、`code-review`、`to-spec`、`to-tickets`、`triage`
 > 这些 skill 要从它读、往它写。它们需要知道是该调 `gh issue create`、
 > 该在 `.scratch/` 下写个 markdown 文件，还是走你描述的别的流程。
 > **挑你实际用来跟踪这个仓库工作的地方。**
@@ -52,9 +56,24 @@ disable-model-invocation: true
   （适合单人项目或没有远端的仓库）
 - **其他**（Jira、Linear 等）：请用户用一段话描述这套流程，skill 会把它作为自由文本记下来
 
-把选择记进 `docs/agents/issue-tracker.md`。
+把选择记进 `docs/agents/issue-tracker.md`。GitHub 与 GitLab 的模板都带一个
+「PR 作为需求入口」的 flag，**默认是关的**。**保持关着，也不要提起它**：
+想把外部 PR 纳进 triage 队列的用户，以后自己在那份文件里把它翻开就行。
 
-**B 节：领域文档。** 默认**单上下文**（仓库根一份 `CONTEXT.md` + `docs/adr/`）。
+**B 节：Triage 标签词汇。** 如果**没有任何 skill 会用这套标签**（探索已经告诉你了），
+**整节跳过**——没人消费的标签不用配。
+
+有消费方时，**只问一个问题**：
+
+> 要保留默认的 triage 标签吗？（推荐：**要**）
+
+默认就是那五个标准角色，每个标签字符串**与角色同名**：`needs-triage`、`needs-info`、
+`ready-for-agent`、`ready-for-human`、`wontfix`。回答**要**就照原样写。
+只有当用户说不要时——通常是因为**他的 tracker 已经在用别的名字**（比如用 `bug:triage`
+表示 `needs-triage`）——才去收集这些覆盖值，好让打标签的 skill
+**用已有的标签，而不是造出一批重复的**。
+
+**C 节：领域文档。** 默认**单上下文**（仓库根一份 `CONTEXT.md` + `docs/adr/`）。
 **这适合绝大多数仓库，不用问就这么写。**
 
 **只有当探索发现了 monorepo 信号时**，才提供**多上下文**方案
@@ -65,7 +84,8 @@ disable-model-invocation: true
 把草稿拿给用户看：
 
 - 要加进 `CLAUDE.md` / `AGENTS.md`（选哪个见第 4 步）的那段 `## Agent skills` 块
-- `docs/agents/issue-tracker.md` 与 `docs/agents/domain.md` 的内容
+- `docs/agents/issue-tracker.md`、`docs/agents/domain.md` 与 `docs/agents/triage-labels.md`
+  的内容（最后这份**只在 B 节跑过时**才有）
 
 **让他先改，再写。**
 
@@ -91,16 +111,24 @@ disable-model-invocation: true
 
 [一句话说明 issue 跟踪在哪]。见 `docs/agents/issue-tracker.md`。
 
+### Triage labels
+
+[一句话说明标签词汇]。见 `docs/agents/triage-labels.md`。
+
 ### Domain docs
 
 [一句话说明布局："single-context" 还是 "multi-context"]。见 `docs/agents/domain.md`。
 ```
+
+`### Triage labels` 子块与 `docs/agents/triage-labels.md`，**只在 B 节跑过时**才写；
+B 节没跑就两个都省掉。
 
 然后用这个 skill 目录下的种子模板作为起点，写出那些文档文件：
 
 - [references/issue-tracker-github.md](references/issue-tracker-github.md)：GitHub issue tracker
 - [references/issue-tracker-gitlab.md](references/issue-tracker-gitlab.md)：GitLab issue tracker
 - [references/issue-tracker-local.md](references/issue-tracker-local.md)：本地 markdown issue tracker
+- [references/triage-labels.md](references/triage-labels.md)：标签映射（**只在 B 节跑过时**）
 - [references/domain.md](references/domain.md)：领域文档的消费规则 + 布局
 
 选了"其他" issue tracker 时，**照用户的描述从零写** `docs/agents/issue-tracker.md`。

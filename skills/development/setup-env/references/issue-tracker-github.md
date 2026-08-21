@@ -12,11 +12,24 @@
 - **评论**：`gh issue comment <number> --body "..."`
 - **加 / 去 label**：`gh issue edit <number> --add-label "..."` / `--remove-label "..."`
 - **关闭**：`gh issue close <number> --comment "..."`
-- **PR**：用 `gh pr view <number> --comments` 读、`gh pr diff <number>` 看 diff。
-  **GitHub 的 issue 和 PR 共用一个编号空间**，所以光一个 `#42` 可能是两者之一：
-  先 `gh pr view 42`，不行再退回 `gh issue view 42`。
 
 仓库从 `git remote -v` 推断；在克隆目录里跑时 `gh` 会自己搞定。
+
+## PR 作为 triage 入口
+
+**PR 作为需求入口：否。** *（这个仓库要是把外部 PR 当作需求提报，就改成「是」；`triage` 读这个 flag。）*
+
+改成「是」之后，PR 走**和 issue 一样的标签与状态**，用 `gh pr` 那套对应命令：
+
+- **读 PR**：`gh pr view <number> --comments`，看 diff 用 `gh pr diff <number>`。
+- **列出待 triage 的外部 PR**：
+  `gh pr list --state open --json number,title,body,labels,author,authorAssociation,comments`，
+  然后**只留** `authorAssociation` 是 `CONTRIBUTOR`、`FIRST_TIME_CONTRIBUTOR` 或 `NONE` 的
+  （丢掉 `OWNER`/`MEMBER`/`COLLABORATOR`）。
+- **评论 / 打标签 / 关闭**：`gh pr comment`、`gh pr edit --add-label`/`--remove-label`、`gh pr close`。
+
+**GitHub 的 issue 和 PR 共用一个编号空间**，所以光一个 `#42` 可能是两者之一：
+先 `gh pr view 42`，不行再退回 `gh issue view 42`。
 
 ## 当某个 skill 说"发布到 issue tracker"时
 

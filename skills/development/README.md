@@ -21,7 +21,7 @@
 
 | skill | 典型触发场景 | 职责 |
 |---|---|---|
-| `setup-env` | 第一次在某个仓库用这套 skill 之前 | 配好 issue tracker 与领域文档布局，写进 `docs/agents/` 与 `CLAUDE.md` |
+| `setup-env` | 第一次在某个仓库用这套 skill 之前 | 配好 issue tracker、triage 标签与领域文档布局，写进 `docs/agents/` 与 `CLAUDE.md` |
 | `triage` | issue / 外部 PR 堆着，要判它们各自该走向哪 | 让它们走过 triage 角色状态机：分类、验证、必要时拷问，落成 agent brief 或 `.out-of-scope/` 记录 |
 | `wayfinder` | 一块工作大到一次会话装不下，路还裹在雾里 | 把它绘成 issue tracker 上的决策工单地图，一次解一张直到路清晰 |
 | `refine-idea` | 想法还模糊，要先想清楚做什么 / 不做什么 | 通过协作对话把没想透的想法打磨成边界清晰的概念 |
