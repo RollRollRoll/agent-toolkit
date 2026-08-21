@@ -36,7 +36,7 @@ refine-idea → write-spec → make-design → split-task → implement → revi
 | `grill-me` | 人类入口薄壳 | `grilling` | "不剪枝"（技术分支也问） | 同一套访谈产出 |
 | `implement` | 每段行为改动 | `tdd` | 简报、约定的 seam、验证方式 | 证据齐否、改动文件、疑虑 |
 | `implement` | 收尾审查 | `code-review` | 改动范围、spec / 工单 | 双轴审查结果 |
-| `grill-with-docs` | 边追问边落文档 | `grilling` + `domain-modeling` | 计划或设计、落盘位置 | 追问结论 + ADR / 术语表 |
+| `grill-with-docs` | 供 `to-spec` 的上游访谈 | `grilling` + `domain-modeling` | 想法或计划、分层顺序与覆盖清单义务 | 足以出 spec 的共识 + ADR / 术语表 |
 
 调用约定：
 

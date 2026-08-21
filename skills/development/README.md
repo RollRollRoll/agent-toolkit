@@ -26,8 +26,8 @@
 | `wayfinder` | 一块工作大到一次会话装不下，路还裹在雾里 | 把它绘成 issue tracker 上的决策工单地图，一次解一张直到路清晰 |
 | `refine-idea` | 想法还模糊，要先想清楚做什么 / 不做什么 | 通过协作对话把没想透的想法打磨成边界清晰的概念 |
 | `write-spec` | 需求边界已清楚，要钉死系统该有什么行为 | 把已清晰的需求写成可验证的行为规格（Requirement + MUST + WHEN→THEN） |
+| `grill-with-docs` | 有个想法要从头聊透，聊完直接交给 `to-spec` 出 spec | 组合 `grilling` 与 `domain-modeling`，按覆盖清单把问题与范围、行为、技术决策逐层钉死，边聊边落 ADR 与术语表 |
 | `to-spec` | 一场讨论已经把要做什么聊清楚了，要直接固化成 spec | 不访谈，把当前对话综合成 spec（含 seam 决策）发布到 issue tracker 并打 `ready-for-agent` |
-| `grill-with-docs` | 想让人把某个计划或设计追问到底，同时留下文档 | 同时加载 `grilling` 与 `domain-modeling`：边拷问边落 ADR 与术语表 |
 | `improve-codebase-architecture` | 想系统地找出代码库里值得深化的地方 | 扫出深化机会做成可视化 HTML 报告，再就选中的那个拷问到底 |
 | `make-design` | 行为已定，编码前要把技术决策定下来 | 把行为规格转化成可追溯的技术设计，重大决策附候选方案与 trade-off |
 | `codebase-design` | 要设计或改进某个模块的接口，判 seam 该放哪、能不能深化 | 提供深模块设计词汇与判据：接口深浅、seam 位置、深化路径、多版接口对比 |

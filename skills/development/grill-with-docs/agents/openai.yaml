@@ -1,5 +1,5 @@
 interface:
   display_name: "Grill with Docs"
-  short_description: "拷问一个设计并把它的文档写出来。"
+  short_description: "把一个想法拷问成足以直接出 spec 的完整共识，边聊边落 ADR 与术语表。"
 policy:
   allow_implicit_invocation: false
