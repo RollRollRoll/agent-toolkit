@@ -1,0 +1,5 @@
+interface:
+  display_name: "Implement"
+  short_description: "照 spec 或工单把活做出来。"
+policy:
+  allow_implicit_invocation: false

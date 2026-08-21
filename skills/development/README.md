@@ -36,6 +36,7 @@
 | `to-tickets` | 计划 / spec 定了，要把它变成 tracker 上带阻塞边的工单 | 拆成曳光弹式纵向切片，每张声明阻塞边，按依赖顺序发到 tracker 并打 `ready-for-agent` |
 | `prototype` | 某个设计问题想不清楚，要用一次性代码验一验 | 逻辑分支做可分享的单 HTML 演示，界面分支在一条路由上出几个根本不同的变体 |
 | `setup-worktree` | 动手前要隔离工作区，或多条开发线并行 | 基于确定基线建立并验证隔离的 git worktree |
+| `implement` | 手上已有 spec 或工单，要直接把它做出来 | 照 spec / 工单实现：尽量用 `tdd` 在约定 seam 上做，收尾跑 `code-review`，再提交到当前分支 |
 | `tdd` | 要用测试先行的方式落地一段行为改动 | 红 → 绿循环的参照：什么算好测试、seam 定在哪、反模式、循环规则 |
 | `diagnosing-bugs` | 有个难缠的 bug 或性能回退要定位 | 先造出能变红的紧回路，再复现、最小化、排假设、埋点，修完留回归测试 |
 | `review-changes` | 一段改动写完了，收尾 / 合并前要独立审一遍 | 对已写完的改动做独立审查，输出带 `file:line` 的分级 findings |
