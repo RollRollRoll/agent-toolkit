@@ -21,6 +21,7 @@
 | `agent-config-sync` | agent 自身工程 | 用户直呼 | 从现有配置抽取统一声明，据此安全同步 Codex 与 Claude Code 的用户级配置 |
 | `test-skill` | agent 自身工程 | 用户直呼 | 在隔离沙箱中对某个 skill 发起 headless 盲测，产出逐步骤溯源的复盘报告 |
 | `handoff` | agent 自身工程 | 仅人类 | 把当前对话压成交接文档，存进系统临时目录供新 agent 接手 |
+| `writing-for-agents` | agent 自身工程 | 模型可触发 | 写给 agent 读的文档的参照：上下文指针、两种负担、信息层级、完成判据、引导词、修剪 |
 
 ## 一个目录内的两种入口
 
