@@ -1,0 +1,5 @@
+interface:
+  display_name: "Handoff"
+  short_description: "把一场对话压成一份交接文档。"
+policy:
+  allow_implicit_invocation: false
