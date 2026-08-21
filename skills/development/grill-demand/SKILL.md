@@ -1,17 +1,17 @@
 ---
-name: grill-with-docs
+name: grill-demand
 description: 一场不留情面的访谈，把一个想法从问题与范围、行为到技术决策逐层钉死，边聊边落 ADR 与术语表；聊完的对话足以让 to-spec 直接产出完整 spec。
 disable-model-invocation: true
 ---
 
-# Grill with Docs — 拷问出一份够写 spec 的共识
+# Grill Demand — 拷问出一份够写 spec 的共识
 
 ## 定位
 
 本 skill 是 `to-spec` 的**上游访谈**：`to-spec` 不访谈用户、只综合已聊内容和代码库，
 所以**凡是代码库里查不到、又没在对话里定下来的东西，都会变成 spec 里的洞**。
-本 skill 的职责就是保证聊完之后没有这种洞。它接管了原先 `refine-idea → write-spec → make-design`
-三段访谈各自钉死的问题——真实意图与范围、行为契约、技术决策——在一场访谈里逐层钉死。
+本 skill 的职责就是保证聊完之后没有这种洞——把真实意图与范围、行为契约、技术决策，
+在一场访谈里逐层钉死。
 
 先调两次 Skill 工具把机制装进来，两边的规则都住在各自的 skill 里，不在这里重述：
 

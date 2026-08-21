@@ -23,8 +23,8 @@ Skill 都是**单一职责、可被任何调用方复用的能力单元**，没�
 一段开发的自然顺序（**只是阅读次序，不是调用约束**）：
 
 ```text
-refine-idea → write-spec → make-design → split-task → implement → review-changes → finish-branch
-     │                                                    │
+grill-demand → to-spec → split-task → implement → review-changes → finish-branch
+     │                                │
      └─ grilling ←─ grill-me（standalone，人类专用入口）     └─ tdd · code-review
 ```
 
@@ -32,11 +32,10 @@ refine-idea → write-spec → make-design → split-task → implement → revi
 
 | 调用方 | 调用点 | 被调 skill | 传入 | 取回 |
 |---|---|---|---|---|
-| `refine-idea` | 阶段 2 照亮概念层边界 | `grilling` | "只展开概念层"（技术分支剪出去） | 被照亮的边界与挂起项 |
 | `grill-me` | 人类入口薄壳 | `grilling` | "不剪枝"（技术分支也问） | 同一套访谈产出 |
 | `implement` | 每段行为改动 | `tdd` | 简报、约定的 seam、验证方式 | 证据齐否、改动文件、疑虑 |
 | `implement` | 收尾审查 | `code-review` | 改动范围、spec / 工单 | 双轴审查结果 |
-| `grill-with-docs` | 供 `to-spec` 的上游访谈 | `grilling` + `domain-modeling` | 想法或计划、分层顺序与覆盖清单义务 | 足以出 spec 的共识 + ADR / 术语表 |
+| `grill-demand` | 供 `to-spec` 的上游访谈 | `grilling` + `domain-modeling` | 想法或计划、分层顺序与覆盖清单义务 | 足以出 spec 的共识 + ADR / 术语表 |
 
 调用约定：
 

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Refine Idea"
-  short_description: "打磨模糊想法为边界清晰的可执行概念。"
-  default_prompt: "使用 $refine-idea 把我这个想法问清楚，挖出真实意图并锁定做什么与不做什么。"

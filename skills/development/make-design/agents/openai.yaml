@@ -1,4 +1,0 @@
-interface:
-  display_name: "Make Design"
-  short_description: "转化确认过的行为规格为可 review 的技术设计。"
-  default_prompt: "使用 $make-design 基于确认过的行为规格，把技术问题问清楚、比较方案并锁定技术决策。"

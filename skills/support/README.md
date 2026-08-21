@@ -31,7 +31,7 @@
 - **带 `disable-model-invocation: true`**：只给人用的入口，模型不会自己触发，
   用户敲 `/<name>` 才进来。
 - **不带的**：模型可以按 `description` 自行判断触发，或被别的 skill 当能力单元调用
-  （`grilling` 就被 `../development/refine-idea` 调）。
+  （`grilling` 就被 `../development/grill-demand` 调）。
 
 `grilling` / `grill-me` 是这套设计的样板：**实现住在可被调用的那个，人类入口是薄壳**，
 同一套访谈机制，只有"剪不剪技术分支"这一个参数不同。
@@ -43,7 +43,7 @@
 | 场景 | 归属 | 为什么 |
 |---|---|---|
 | 追问用户的技术方案 | `support/grilling` | 对象是用户的思路 |
-| 把想清楚的方案写成规格 | `development/write-spec` | 产出进仓库、成为代码依据 |
+| 把聊清楚的方案固化成 spec | `development/to-spec` | 产出发到 issue tracker、成为代码依据 |
 | 审查一段改动 | `development/review-changes` | 对象是代码 |
 | 盲测一个 skill 执行得对不对 | `support/test-skill` | 对象是 agent 自己的资源 |
 

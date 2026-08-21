@@ -11,7 +11,7 @@
   多上下文仓库里，还要看 `src/<context>/docs/adr/` 下**该上下文范围内**的决定。
 
 **这些文件如果不存在，就静默继续。** 不要提示它们缺失，也不要一上来就建议创建。
-`domain-modeling` skill（经由 `grill-with-docs` 与 `improve-codebase-architecture` 到达）
+`domain-modeling` skill（经由 `grill-demand` 与 `improve-codebase-architecture` 到达）
 **会在术语或决定真的定下来时按需创建它们。**
 
 ## 文件结构

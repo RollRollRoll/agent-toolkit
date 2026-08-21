@@ -24,12 +24,9 @@
 | `setup-env` | 第一次在某个仓库用这套 skill 之前 | 配好 issue tracker、triage 标签与领域文档布局，写进 `docs/agents/` 与 `CLAUDE.md` |
 | `triage` | issue / 外部 PR 堆着，要判它们各自该走向哪 | 让它们走过 triage 角色状态机：分类、验证、必要时拷问，落成 agent brief 或 `.out-of-scope/` 记录 |
 | `wayfinder` | 一块工作大到一次会话装不下，路还裹在雾里 | 把它绘成 issue tracker 上的决策工单地图，一次解一张直到路清晰 |
-| `refine-idea` | 想法还模糊，要先想清楚做什么 / 不做什么 | 通过协作对话把没想透的想法打磨成边界清晰的概念 |
-| `write-spec` | 需求边界已清楚，要钉死系统该有什么行为 | 把已清晰的需求写成可验证的行为规格（Requirement + MUST + WHEN→THEN） |
-| `grill-with-docs` | 有个想法要从头聊透，聊完直接交给 `to-spec` 出 spec | 组合 `grilling` 与 `domain-modeling`，按覆盖清单把问题与范围、行为、技术决策逐层钉死，边聊边落 ADR 与术语表 |
+| `grill-demand` | 有个想法要从头聊透，聊完直接交给 `to-spec` 出 spec | 组合 `grilling` 与 `domain-modeling`，按覆盖清单把问题与范围、行为、技术决策逐层钉死，边聊边落 ADR 与术语表 |
 | `to-spec` | 一场讨论已经把要做什么聊清楚了，要直接固化成 spec | 不访谈，把当前对话综合成 spec（含 seam 决策）发布到 issue tracker 并打 `ready-for-agent` |
 | `improve-codebase-architecture` | 想系统地找出代码库里值得深化的地方 | 扫出深化机会做成可视化 HTML 报告，再就选中的那个拷问到底 |
-| `make-design` | 行为已定，编码前要把技术决策定下来 | 把行为规格转化成可追溯的技术设计，重大决策附候选方案与 trade-off |
 | `codebase-design` | 要设计或改进某个模块的接口，判 seam 该放哪、能不能深化 | 提供深模块设计词汇与判据：接口深浅、seam 位置、深化路径、多版接口对比 |
 | `domain-modeling` | 术语在打架，或要把定下来的说法与决策记下来 | 打磨项目领域语言，术语当场写进 `CONTEXT.md`，难逆且反直觉的决策留成 ADR |
 | `split-task` | 技术方案已定，要拆成能逐个验收的任务 | 把技术设计拆成可独立验收、带依赖与验证方式的任务清单 |
@@ -47,7 +44,7 @@
 | `research` | 编码前要把某个技术事实核准，并留下可复查的依据 | 派后台 agent 查一手来源，把带逐项引用的结论落成仓库里的单个 Markdown |
 | `wizard` | 有些步骤只有人能做：开服务、拿密钥、点第三方控制台 | 生成一个交互式 bash 向导，逐阶段带人走完，并把捕获到的值写进 `.env` / GitHub secret |
 
-`refine-idea` 自己也是调用方：阶段 2 调 `../support/grilling`，传"只展开概念层"。
+`grill-demand` 自己也是调用方：加载 `../support/grilling` 与 `domain-modeling`，判据住在被调 skill 里。
 
 ## 和 `../support/` 的边界
 
