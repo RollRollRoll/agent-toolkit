@@ -23,7 +23,7 @@ Skill 都是**单一职责、可被任何调用方复用的能力单元**，没�
 一段开发的自然顺序（**只是阅读次序，不是调用约束**）：
 
 ```text
-grill-demand → to-spec → split-task → implement → review-changes → finish-branch
+grill-demand → to-spec → to-tickets → implement → finish-branch
      │                                │
      └─ grilling ←─ grill-me（standalone，人类专用入口）     └─ tdd · code-review
 ```
@@ -43,11 +43,11 @@ grill-demand → to-spec → split-task → implement → review-changes → fin
 - **门禁归调用方**：被调 skill 产出内容并交回，"过没过、要不要往下"由调用方判定；
   它们对缺前置的处理是回 **BLOCKED**，不是自己补上游的活。
 - **调用不等于派 subagent**：默认在调用方自己的上下文里加载执行；需要 fresh 上下文时
-  （如 `review-changes` 的独立性要求）由调用方显式派发并定档。
+  由调用方显式派发并定档。
 - **被调 skill 不可用时判据不变**：由调用方按同一套判据自己走一遍并说明降级原因——
   降级的是谁来做，不是做不做。
 - **产物落盘目录由调用方决定**：被调 skill 的脚本都接受可选输出目录，缺省落在自己的自忽略点目录
-  （`.tdd/`、`.review-changes/`）。
+  （如 `.tdd/`）。
 - 这套结构没有单独的声明文件：一个 skill 能不能被别的 skill 调用，
   由 `SKILL.md` 里的「调用契约」章节体现。
 
