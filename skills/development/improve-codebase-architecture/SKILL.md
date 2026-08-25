@@ -1,6 +1,6 @@
 ---
 name: improve-codebase-architecture
-description: 扫一遍代码库找出深化机会，做成可视化的 HTML 报告呈现，然后就你挑中的那一个拷问下去。
+description: 扫描代码库中的架构深化机会，生成可视化 HTML 报告，再对用户选中的改进点做深入分析。
 disable-model-invocation: true
 ---
 
@@ -32,7 +32,7 @@ disable-model-invocation: true
 
 **先读**项目的领域术语表（`CONTEXT.md`）和你要动的那块区域里的 ADR。
 
-然后**派一个 subagent 去走一遍代码库**。**不要照着死板的启发式走**；有机地探索，
+然后派一个 subagent 调研代码库。启发式只用于辅助判断，应结合项目结构和实际证据灵活探索，
 **把你感到摩擦的地方记下来**：
 
 - 哪里"搞懂一个概念"需要在**一堆小模块之间来回跳**？
@@ -84,7 +84,7 @@ disable-model-invocation: true
 
 **现在还不要提接口方案。** 文件写完之后，问用户：**「这些里面你想探哪一个？」**
 
-### 3. 拷问循环
+### 3. 深入分析
 
 用户挑定一个候选项之后，调 Skill 工具的 `grilling`，**带着他走一遍决策树**：
 约束、依赖、深化后模块的形状、seam 后面放什么、**哪些测试能活下来**。

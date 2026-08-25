@@ -1,4 +1,4 @@
 interface:
   display_name: "Test Skill"
-  short_description: "盲测目标 skill，发起 headless 运行并产出复盘报告。"
-  default_prompt: "使用 $test-skill 对这个 skill 发起一次隔离沙箱盲测，逐步骤溯源并产出中文复盘报告。"
+  short_description: "在隔离沙箱中盲测 skill，并产出可追溯的复盘报告。"
+  default_prompt: "使用 $test-skill 在隔离沙箱中盲测这个 skill，逐步追溯执行依据并产出中文复盘报告。"

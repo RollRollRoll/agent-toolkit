@@ -1,6 +1,6 @@
 ---
 name: test-skill
-description: 盲测某个 skill，在隔离沙箱中发起 headless 运行并产出逐步骤溯源的中文复盘报告。
+description: 在隔离沙箱中盲测目标 skill，通过 headless 运行收集证据，并产出可逐步追溯的中文复盘报告。
 ---
 
 # Test Skill — skill 盲测复盘
@@ -27,7 +27,7 @@ description: 盲测某个 skill，在隔离沙箱中发起 headless 运行并产
 ### 阶段 0 · 定位与 CLI 预检
 
 1. 定位目标 `SKILL.md`。支持仓库 id、文件路径和已安装 skill 名；存在多个候选时请用户指认，不要猜测。
-2. 记下三个绝对路径：本 skill 目录、发起测试时的项目目录、会话 scratchpad。后续每次工具调用都直接使用绝对路径；不要依赖 shell 变量、当前目录或上一次 Bash 调用的状态。
+2. 记下三个绝对路径：这个 skill 目录、发起测试时的项目目录、会话 scratchpad。后续每次工具调用都直接使用绝对路径；不要依赖 shell 变量、当前目录或上一次 Bash 调用的状态。
 3. 完整读取 [platform-runners.md](references/platform-runners.md)，按用户指定平台选择 runner；用户未指定时，
    以当前宿主和目标安装来源为判断依据，仍无法判断才询问。只执行该平台的 `doctor` 预检，不发起模型调用。预检失败即停，不切换到另一平台，也不删除隔离参数降级运行。
 

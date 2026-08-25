@@ -1,5 +1,5 @@
 interface:
   display_name: "Triage"
-  short_description: "让 issue 走过 triage 角色的状态机。"
+  short_description: "按 triage 状态机分类、验证并补齐 issue 或 PR。"
 policy:
   allow_implicit_invocation: false

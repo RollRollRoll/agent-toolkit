@@ -1,5 +1,5 @@
 interface:
   display_name: "Implement"
-  short_description: "照 spec 或工单把活做出来。"
+  short_description: "按照 spec 或工单完成实现与验证。"
 policy:
   allow_implicit_invocation: false

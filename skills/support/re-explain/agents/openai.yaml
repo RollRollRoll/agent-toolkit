@@ -1,6 +1,6 @@
 interface:
   display_name: "Re-Explain"
-  short_description: "重新解释刚才那段没听懂的内容。"
-  default_prompt: "使用 $re-explain 把刚才说的重新解释一下。"
+  short_description: "用更简单、明确的中文重新解释已有内容。"
+  default_prompt: "使用 $re-explain 补齐必要上下文，用更简单、明确的中文重新解释刚才的内容。"
 policy:
   allow_implicit_invocation: false

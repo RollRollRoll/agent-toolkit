@@ -1,11 +1,11 @@
 ---
 name: to-spec
-description: 把当前这场对话变成一份 spec 并发布到项目的 issue tracker：不做访谈，只把你们已经聊过的东西综合起来。
+description: 将当前对话整理成 spec 并发布到项目的 issue tracker；只综合已有讨论，不再补做需求访谈。
 disable-model-invocation: true
 ---
 
-本 skill 拿**当前的对话上下文**和你对代码库的理解，产出一份 spec。
-**不要访谈用户**，只把你已经知道的东西综合起来。
+这个 skill 根据当前对话和已经获得的代码库信息产出 spec。
+它只整理已有内容，不再发起需求访谈。
 
 issue tracker 与 triage 标签词汇应该已经提供给你了。如果没有，让用户去跑 `setup-env`。
 

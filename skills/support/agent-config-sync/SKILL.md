@@ -1,15 +1,15 @@
 ---
 name: agent-config-sync
-description: 抽取现有配置为统一声明，并据此安全同步 Codex 与 Claude Code 的用户级配置。
+description: 将现有配置提取为统一声明，并据此安全同步 Codex 和 Claude Code 的用户级配置。
 ---
 
 # Agent Config Sync — 双平台配置同步
 
-只把 `agent-config.yaml` 视为事实来源。使用随 Skill 附带的确定性 CLI 生成配置，禁止直接拼接 TOML / JSON 后覆盖用户文件。
+以 `agent-config.yaml` 作为唯一事实来源。使用 skill 附带的确定性 CLI 生成配置，不直接拼接 TOML 或 JSON 覆盖用户文件。
 
 ## 定位 CLI
 
-优先运行已安装的 `aiconfig`。若命令不可用，运行本 Skill 目录中的：
+优先运行已安装的 `aiconfig`。若命令不可用，运行当前 skill 目录中的：
 
 ```bash
 python3 scripts/aiconfig.py

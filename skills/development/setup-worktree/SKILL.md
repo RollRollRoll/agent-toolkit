@@ -1,6 +1,6 @@
 ---
 name: setup-worktree
-description: 建立并验证隔离的 git worktree 工作区，基线在创建前锁定。
+description: 创建并验证隔离的 Git worktree，在创建前明确锁定基线提交。
 ---
 
 # Setup Worktree — 工作区隔离
@@ -10,10 +10,8 @@ description: 建立并验证隔离的 git worktree 工作区，基线在创建�
 在开始一段开发、或并行多个任务前，**建立一个隔离的 git 工作区（worktree）**，让这段工作在
 独立目录、隔离 checkout（需要时再建立独立分支）上进行，不污染当前工作区、也便于多条开发线并行。
 
-这是 agent-toolkit 的一个能力单元，任何需要隔离工作区的场景都可以调。它只负责"建立隔离"——
-**清理与收尾不在本 skill 范围内**（职责分离）。
-
-> 一句话：要动手改代码、又不想弄乱当前工作区时，先在这里开一个干净、隔离的 worktree。
+任何需要隔离工作区的场景都可以调用它。职责仅限于建立并验证隔离环境，
+不负责后续清理和收尾。
 
 ## 调用契约
 
@@ -28,10 +26,10 @@ description: 建立并验证隔离的 git worktree 工作区，基线在创建�
 - worktree 路径、HEAD 状态（分支名或 detached）、**已验证等于 expected base 的完整 commit ID**、平台。
 - 未通过验证或工作区有未提交改动 → 回 **BLOCKED**：报告实际值与期望值，交调用方 / 用户处理。
 
-**本 skill 不做**
+**职责边界**
 
 - 不自动 stash / 提交 / 丢弃当前工作区的未提交改动。
-- 不合并、不清理、不移除 worktree——本 skill 只建立隔离。
+- 不合并、不清理、不移除 worktree——这个 skill 只建立隔离。
 - 不写业务代码、不跑测试。
 
 ## 何时用 / 何时不用
@@ -44,8 +42,8 @@ description: 建立并验证隔离的 git worktree 工作区，基线在创建�
 
 **不适用**：
 
-- 改动很小、不需要隔离 —— 直接在当前工作区做即可，别为隔离而隔离。
-- 要做的是收尾 / 合并 / 删除 worktree —— 不是本 skill 的事。
+- 改动很小、不需要隔离 —— 直接在当前工作区处理即可。
+- 要做的是收尾 / 合并 / 删除 worktree —— 不是这个 skill 的事。
 - 不在 git 仓库里 —— worktree 是 git 能力，先确认是 git 仓库。
 
 ## 核心流程（检测 → 锁定基线 → 创建 → 验证）
@@ -79,7 +77,7 @@ description: 建立并验证隔离的 git worktree 工作区，基线在创建�
 
 ## 注意事项
 
-- **检测优先**：已在 worktree 就别再嵌套建——先查，再决定建不建。
+- **先检测再创建**：如果已经位于合适的 worktree 中，不再嵌套创建。
 - **基线语义优先**：平台原生与手工命令只是实现手段；是否准确落在 expected base 才是选择依据。
 - **平台分支不混用**：Claude Code 的 `EnterWorktree/worktree.baseRef`、Codex App 的 Worktree/Handoff、
   Codex CLI 的显式 Git 命令分别处理，不用一个平台的参数解释另一个平台。
@@ -87,14 +85,14 @@ description: 建立并验证隔离的 git worktree 工作区，基线在创建�
 - **不搬运脏改动**：不自动 stash、提交或复制当前工作区的未提交改动。
 - **不在这里清理**：worktree 用完的移除 / 合并交回调用方；移除工作树前必须取得用户明确确认。
 
-## 反例（不要这样做）
+## 常见错误
 
-❌ 不检测就建 —— 在已有 worktree 里又套一个 worktree。
-❌ 看到 `EnterWorktree` 就直接调用，却没有确认它会从哪个 commit 创建。
-❌ 在 Codex App 中只看起始分支名称，不核对托管 Worktree 的真实 `HEAD`。
-❌ 把 Codex App 默认 detached HEAD 描述成已经创建了独立分支。
-❌ 当前工作区有未提交改动时自动 stash / 提交，然后继续创建。
-❌ 创建后不核对 `HEAD`，让任务在错误基线上开工。
-❌ 在这里做合并 / 删除 worktree / 清理 —— 越界，本 skill 只建立隔离。
-❌ 在非 git 仓库里硬建 worktree。
-❌ 给小改动也强行开 worktree —— 不需要隔离就别隔离（YAGNI）。
+- 不检测就建 —— 在已有 worktree 里又套一个 worktree。
+- 看到 `EnterWorktree` 就直接调用，却没有确认它会从哪个 commit 创建。
+- 在 Codex App 中只看起始分支名称，不核对托管 Worktree 的真实 `HEAD`。
+- 把 Codex App 默认 detached HEAD 描述成已经创建了独立分支。
+- 当前工作区有未提交改动时自动 stash / 提交，然后继续创建。
+- 创建后不核对 `HEAD`，让任务在错误基线上开工。
+- 在这里做合并 / 删除 worktree / 清理 —— 越界，这个 skill 只建立隔离。
+- 在非 git 仓库里硬建 worktree。
+- 给小改动也强行开 worktree —— 不需要隔离就别隔离（YAGNI）。

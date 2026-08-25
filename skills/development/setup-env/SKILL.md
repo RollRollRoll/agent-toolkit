@@ -1,6 +1,6 @@
 ---
 name: setup-env
-description: 给这个仓库配置这套 skill 所假定的环境：issue tracker、triage 标签词汇与领域文档布局。第一次使用其他 skill 之前跑一次。
+description: 为仓库配置这套 skill 依赖的 issue tracker、triage 标签和领域文档结构。首次使用其他 skill 前运行一次。
 disable-model-invocation: true
 ---
 
@@ -18,7 +18,7 @@ disable-model-invocation: true
 
 ### 1. 探索
 
-看一眼当前仓库，搞清它的起始状态。**有什么读什么，不要假设**：
+先检查仓库的现有状态，以实际文件为准：
 
 - `git remote -v` 和 `.git/config`：这是个 GitHub 仓库吗？哪一个？
 - 仓库根的 `AGENTS.md` 和 `CLAUDE.md`：哪个存在？里面是不是已经有 `## Agent skills` 一节了？
@@ -33,7 +33,7 @@ disable-model-invocation: true
   或者一个填了内容、各自带 `src/` 的 `packages/*`。
   **这些只在真正的大型多包仓库里才有**；没有就是单上下文，**绝大多数仓库都是这种**。
 
-### 2. 把发现摆出来并提问
+### 2. 展示发现并提问
 
 **总结有什么、缺什么。** 然后按顺序过下面几节。**一节，一个回答，再下一节。**
 
@@ -79,7 +79,7 @@ disable-model-invocation: true
 **只有当探索发现了 monorepo 信号时**，才提供**多上下文**方案
 （根目录一份 `CONTEXT-MAP.md` 指向各上下文自己的 `CONTEXT.md`）。那时再确认他们要哪种布局。
 
-### 3. 确认并让他改
+### 3. 确认并允许调整
 
 把草稿拿给用户看：
 
@@ -97,7 +97,7 @@ disable-model-invocation: true
 - 否则 `AGENTS.md` 存在 → 改它。
 - **两个都不存在 → 问用户建哪一个，不要替他挑。**
 
-**`CLAUDE.md` 已经存在时绝不去建 `AGENTS.md`**（反过来同理）；**永远改那个已经在的**。
+如果 `CLAUDE.md` 已存在，就更新它而不新建 `AGENTS.md`；反过来也一样。始终沿用仓库已有的指令文件。
 
 如果选中的文件里**已经有** `## Agent skills` 块，**就地更新它的内容**，不要追加出一个重复的。
 **不要覆盖用户对周围小节的修改。**

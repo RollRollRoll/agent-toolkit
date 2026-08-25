@@ -1,4 +1,4 @@
 interface:
   display_name: "Codebase Design"
-  short_description: "设计深模块接口，判定 seam 位置与深化机会。"
-  default_prompt: "使用 $codebase-design 评估这个模块的接口深浅，并给出深化与 seam 放置建议。"
+  short_description: "评估模块接口，寻找深化机会并确定 seam。"
+  default_prompt: "使用 $codebase-design 评估这个模块的接口深度，指出可深化之处，并建议 seam 的位置。"

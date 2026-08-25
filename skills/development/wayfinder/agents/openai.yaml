@@ -1,5 +1,5 @@
 interface:
   display_name: "Wayfinder"
-  short_description: "把一大块工作绘成决策工单地图。"
+  short_description: "将大型工作规划成一组相互关联的决策工单。"
 policy:
   allow_implicit_invocation: false

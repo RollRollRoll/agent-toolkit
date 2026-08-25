@@ -13,7 +13,7 @@
 - **加 / 去 label**：`gh issue edit <number> --add-label "..."` / `--remove-label "..."`
 - **关闭**：`gh issue close <number> --comment "..."`
 
-仓库从 `git remote -v` 推断；在克隆目录里跑时 `gh` 会自己搞定。
+通过 `git remote -v` 确认仓库；在克隆目录中运行时，`gh` 会使用当前仓库上下文。
 
 ## PR 作为 triage 入口
 

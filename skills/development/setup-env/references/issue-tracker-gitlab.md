@@ -9,7 +9,7 @@
   多行描述用 heredoc；传 `--description -` 会打开编辑器。
 - **读 issue**：`glab issue view <number> --comments`。要机器可读就用 `-F json`。
 - **列 issue**：`glab issue list -F json`，按需加 `--label` 过滤。
-- **评论**：`glab issue note <number> --message "..."`。**GitLab 把评论叫 "note"。**
+- **评论**：`glab issue note <number> --message "..."`。GitLab CLI 使用 `note` 指代评论。
 - **加 / 去 label**：`glab issue update <number> --label "..."` / `--unlabel "..."`。
   多个 label 可以逗号分隔，也可以重复这个 flag。
 - **关闭**：`glab issue close <number>`。**`glab issue close` 不接受关闭评论**，

@@ -1,8 +1,8 @@
 # HTML 报告格式
 
-这份架构评审渲染成**操作系统临时目录里的一个自包含 HTML 文件**。Tailwind 和 Mermaid
-都来自 CDN。**Mermaid 可靠地处理图状的图**；**手写 div 与内联 SVG 处理更有编排感的视觉**
-（体量图、剖面图）。**两者混着用**：别什么都靠 Mermaid，那会开始显得很通用。
+将架构评审渲染为操作系统临时目录中的自包含 HTML 文件。Tailwind 和 Mermaid 从 CDN 加载。
+Mermaid 适合关系图；手写 div 和内联 SVG 适合体量图、剖面图等需要精细编排的视觉。
+根据内容选择合适方式，不必把所有图都交给 Mermaid。
 
 ## 骨架
 
@@ -126,7 +126,7 @@ Before：一棵函数调用树，渲染成嵌套的框。After：**同一棵树�
 **精确使用**：module、interface、implementation、depth、deep、shallow、seam、adapter、
 leverage、locality。
 
-**绝不替换**：component、service、unit（代替 module）· API、signature（代替 interface）·
+**不要替换为**：component、service、unit（代替 module）· API、signature（代替 interface）·
 boundary（代替 seam）· layer、wrapper（当你其实是指 module 时）。
 
 **合乎风格的说法**：

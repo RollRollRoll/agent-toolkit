@@ -1,9 +1,9 @@
 ---
 name: grill-me
-description: 追问一个计划、设计或决定，用连续提问把它打磨清楚。
+description: 通过连续追问检验并完善一项计划、设计或决策。
 disable-model-invocation: true
 ---
 
-# Grill Me — 计划压力测试入口
+# Grill Me
 
-调用 `grilling` skill。
+调用 `grilling` skill，对当前计划、设计或决策进行连续追问。
