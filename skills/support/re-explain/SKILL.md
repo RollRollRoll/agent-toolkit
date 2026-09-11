@@ -11,7 +11,8 @@ disable-model-invocation: true
 1. 先用 1~2 句话说明当前讨论的背景，以及现在进行到哪一步。
 2. 使用简洁、直接、容易理解的中文，完整规则和病句对照见 `references/plain-chinese.md`。
 3. 缩写和专业术语首次出现时说明含义，避免黑话和模糊表达。
-4. 术语沿用项目中已有的说法。按顺序查找：`CONTEXT.md`、`CLAUDE.md`、`AGENTS.md`、
+4. 术语沿用项目中已有的说法。按顺序查找：`CONTEXT.md`（仓库有多份时，沿根目录的
+   `CONTEXT-MAP.md` 找到对应的那份）、`CLAUDE.md`、`AGENTS.md`、
    `README.md`、术语表或词汇表、代码里的命名。找不到既有说法时，用最普通的中文词，
    并明确说明这是本次解释临时采用的说法，不要另造不必要的新词。
 5. 重点说明：
