@@ -1,0 +1,5 @@
+interface:
+  display_name: "Implement Spec"
+  short_description: "实现完整 spec，按依赖并行调度全部工单并交付一个 PR。"
+policy:
+  allow_implicit_invocation: false

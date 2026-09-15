@@ -45,6 +45,7 @@ Claude Code 和 Codex 的插件默认发现位置，也未被插件清单引用�
 |---|---|---|---|
 | `setup-worktree` | 模型可触发 | 动手前要隔离工作区，或多条开发线并行 | 基于确定基线建立并验证隔离的 git worktree |
 | `implement` | **仅人类** | 手上已有 spec 或工单，要直接把它做出来 | 照 spec / 工单实现：尽量用 `tdd` 在约定 seam 上做，收尾跑 `code-review`，再提交到当前分支 |
+| `implement-spec` | **仅人类** | spec 已拆成关联工单，要一次执行完全部工单 | 按阻塞关系并行调度独立 worktree 中的子 agent，逐个合入集成分支，整体审查后交付一个 PR |
 | `tdd` | 模型可触发 | 要用测试先行的方式落地一段行为改动 | 红 → 绿循环的参照：什么算好测试、seam 定在哪、反模式、循环规则 |
 | `diagnosing-bugs` | 模型可触发 | 有个难缠的 bug 或性能回退要定位 | 先造出能变红的紧回路，再复现、最小化、排假设、埋点，修完留回归测试 |
 | `wizard` | 模型可触发 | 有些步骤只有人能做：开服务、拿密钥、点第三方控制台 | 生成交互式 bash 向导逐阶段带人走完，并把捕获到的值写进 `.env` / GitHub secret |
@@ -94,6 +95,7 @@ grill-demand → to-spec → to-tickets → implement → finish-branch
 | `grill-demand` | 供 `to-spec` 的上游访谈 | `grilling` + `domain-modeling` |
 | `implement` | 每段行为改动 | `tdd` |
 | `implement` | 收尾审查 | `code-review` |
+| `implement-spec` | 全部工单集成后的整体审查 | `code-review` |
 
 调用约定：
 
