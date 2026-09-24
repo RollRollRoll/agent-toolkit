@@ -74,6 +74,7 @@ Claude Code 和 Codex 的插件默认发现位置，也未被插件清单引用�
 |---|---|---|---|
 | `writing-for-agents` | 模型可触发 | 要写或改 skill、`AGENTS.md`、`CLAUDE.md` | 写给 agent 读的文档的参照：上下文指针、两种负担、信息层级、完成判据、引导词、修剪 |
 | `test-skill` | 模型可触发 | 想知道某个 skill 实际执行成什么样 | 在隔离沙箱中发起 headless 盲测，产出逐步骤溯源的中文复盘报告 |
+| `retro` | **仅人类** | 一次编程会话结束，要找出工作环境与规则的改进点 | 读取会话记录，检查导航、自动检查、编码规范、指令、工具效率与信息访问，按严重程度提出建议；原样引入上游实验技能 |
 | `agent-config-sync` | 模型可触发 | 多台机器 / 两个 CLI 的配置要对齐 | 从现有配置抽出统一声明，据此安全同步 Codex 与 Claude Code 的用户级配置 |
 | `handoff` | **仅人类** | 当前会话装不下了，要换个 agent 接着做 | 把这场对话压成交接文档，存进系统临时目录供新 agent 接手 |
 
@@ -96,6 +97,7 @@ grill-demand → to-spec → to-tickets → implement → finish-branch
 | `implement` | 每段行为改动 | `tdd` |
 | `implement` | 收尾审查 | `code-review` |
 | `implement-spec` | 全部工单集成后的整体审查 | `code-review` |
+| `retro` | 复盘开始时查阅写作规则 | `writing-for-agents` |
 
 调用约定：
 
