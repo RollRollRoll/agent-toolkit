@@ -5,10 +5,14 @@
 ## 约定
 
 - **创建 issue**：`gh issue create --title "..." --body "..."`。多行正文用 heredoc。
-- **读 issue**：`gh issue view <number> --comments`，用 `jq` 过滤评论，并一并取回 labels。
+- **读 issue**：`gh issue view <number> --json number,title,body,labels,comments`。
 - **列 issue**：
   `gh issue list --state open --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'`，
   按需加 `--label` 与 `--state` 过滤。
+- **设为某个父 issue 的子 issue**：`gh issue create --parent <parent> ...`，或事后
+  `gh issue edit <parent> --add-sub-issue <child>`（`gh` 2.94+）。旧版 `gh`：
+  `gh api --method POST repos/<owner>/<repo>/issues/<parent>/sub_issues -F sub_issue_id=<child-db-id>`
+  （数据库 id，取法同下方**阻塞**）。不支持 sub-issues 时，在子 issue 正文顶部写 `Part of #<parent>`。
 - **评论**：`gh issue comment <number> --body "..."`
 - **加 / 去 label**：`gh issue edit <number> --add-label "..."` / `--remove-label "..."`
 - **关闭**：`gh issue close <number> --comment "..."`
@@ -23,9 +27,8 @@
 
 - **读 PR**：`gh pr view <number> --comments`，看 diff 用 `gh pr diff <number>`。
 - **列出待 triage 的外部 PR**：
-  `gh pr list --state open --json number,title,body,labels,author,authorAssociation,comments`，
-  然后**只留** `authorAssociation` 是 `CONTRIBUTOR`、`FIRST_TIME_CONTRIBUTOR` 或 `NONE` 的
-  （丢掉 `OWNER`/`MEMBER`/`COLLABORATOR`）。
+  `gh api --paginate 'repos/{owner}/{repo}/pulls?state=open' --jq '.[] | select(.author_association | IN("OWNER","MEMBER","COLLABORATOR") | not) | {number, title, author: .user.login, author_association, labels: [.labels[].name]}'`。
+  `gh pr list --json` 不提供作者关系字段，所以走 REST 端点。
 - **评论 / 打标签 / 关闭**：`gh pr comment`、`gh pr edit --add-label`/`--remove-label`、`gh pr close`。
 
 **GitHub 的 issue 和 PR 共用一个编号空间**，所以光一个 `#42` 可能是两者之一：
@@ -37,7 +40,7 @@
 
 ## 当某个 skill 说"取回相关工单"时
 
-跑 `gh issue view <number> --comments`。
+按上面**读 issue** 的方式读取。
 
 ## Wayfinding operations
 
@@ -45,7 +48,7 @@
 
 - **地图**：一个打了 `wayfinder:map` 标签的 issue，正文放 Notes / Decisions so far / 迷雾。
   `gh issue create --label wayfinder:map`。
-- **子工单**：一个作为 GitHub sub-issue 链到地图上的 issue（对 sub-issues 端点跑 `gh api`）。
+- **子工单**：一个作为 GitHub sub-issue 链到地图上的 issue（见**设为某个父 issue 的子 issue**）。
   没启用 sub-issues 时，把子工单加进地图正文的任务清单，并在子工单正文顶部写 `Part of #<map>`。
   标签：`wayfinder:<type>`（`research`/`prototype`/`grilling`/`task`）。
   **一旦被认领，这张工单就指派给驱动它的那位开发者。**

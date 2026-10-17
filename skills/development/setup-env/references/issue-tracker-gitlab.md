@@ -8,7 +8,7 @@
 - **创建 issue**：`glab issue create --title "..." --description "..."`。
   多行描述用 heredoc；传 `--description -` 会打开编辑器。
 - **读 issue**：`glab issue view <number> --comments`。要机器可读就用 `-F json`。
-- **列 issue**：`glab issue list -F json`，按需加 `--label` 过滤。
+- **列 issue**：`glab issue list -O json`，按需加 `--label` 过滤。
 - **评论**：`glab issue note <number> --message "..."`。GitLab CLI 使用 `note` 指代评论。
 - **加 / 去 label**：`glab issue update <number> --label "..."` / `--unlabel "..."`。
   多个 label 可以逗号分隔，也可以重复这个 flag。
@@ -57,9 +57,9 @@
   **原生 blocking link 是 Premium / Ultimate 的功能**；免费版（或用不了的地方）
   退回到描述顶部的一行 `Blocked by: #<n>, #<n>`。
   **所有阻塞者都关闭了，这张工单才算未被阻塞。**
-- **前沿查询**：`glab issue list -F json` 限定在地图的子工单范围内，
+- **前沿查询**：`glab issue list -O json` 限定在地图的子工单范围内，
   **去掉有打开着的阻塞者的**（原生 `blocked_by` 链到一个打开着的 issue，
-  用 `glab api projects/:id/issues/:iid/links` 查；或者 `Blocked by` 那行里还有打开着的 issue）
+  用 `glab api projects/:id/issues/<child-iid>/links` 查；或者 `Blocked by` 那行里还有打开着的 issue）
   **和有 assignee 的**；**地图顺序里排第一的胜出。**
 - **认领**：`glab issue update <n> --assignee @me`，**本次会话的第一个写操作**。
 - **解开**：`glab issue note <n> --message "<答案>"`，然后 `glab issue close <n>`，

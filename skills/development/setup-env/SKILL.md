@@ -124,6 +124,9 @@ disable-model-invocation: true
 `### Triage labels` 子块与 `docs/agents/triage-labels.md`，**只在 B 节跑过时**才写；
 B 节没跑就两个都省掉。
 
+B 节跑过且 tracker 是 GitHub 或 GitLab 时，把 tracker 里还没有的已配置标签逐个建出来
+（`gh label create` / `glab label create`）。
+
 然后用这个 skill 目录下的种子模板作为起点，写出那些文档文件：
 
 - [references/issue-tracker-github.md](references/issue-tracker-github.md)：GitHub issue tracker
