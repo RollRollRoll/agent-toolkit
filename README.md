@@ -56,6 +56,7 @@ Claude Code 和 Codex 的插件默认发现位置，也未被插件清单引用�
 |---|---|---|---|
 | `code-review` | 模型可触发 | 要审一段改动守不守规范、做的是不是 issue / spec 要的东西 | 双轴审查：标准轴（成文规范 + Fowler 坏味道基线）与规格轴各派并行 subagent，结果并排不合并 |
 | `finish-branch` | 模型可触发 | 开发完了，分支 / worktree 该怎么收口 | 清理调试代码、跑最终测试，再由用户拍板合并 / 保留 / 开 PR / 丢弃 |
+| `pr` | 模型可触发 | 要写 PR 正文 | 用最小的可视化说明改动，给出改动前后的证据，判断能否低成本回滚与影响范围 |
 | `git-commit-push` | 模型可触发 | 要解冲突，或把已完成的改动拆成原子提交并推送 | 语义解冲突；或检查敏感信息与异常差异后拆成原子提交，确认后推送 |
 
 ### 帮人想清楚一件事
@@ -98,6 +99,7 @@ grill-demand → to-spec → to-tickets → implement → finish-branch
 | `implement` | 收尾审查 | `code-review` |
 | `implement-spec` | 每个实现子 agent 完成工单 | `tdd` |
 | `implement-spec` | 全部工单集成后的整体审查 | `code-review` |
+| `finish-branch` | 创建 PR 时撰写正文 | `pr` |
 | `retro` | 复盘开始时查阅写作规则 | `writing-for-agents` |
 
 调用约定：
