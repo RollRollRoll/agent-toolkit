@@ -14,9 +14,9 @@ set -euo pipefail
 
 if [[ -t 1 ]] && command -v tput >/dev/null 2>&1 && [[ "$(tput colors 2>/dev/null || echo 0)" -ge 8 ]]; then
   BOLD=$(tput bold); DIM=$(tput dim); RESET=$(tput sgr0)
-  BLUE=$(tput setaf 4); GREEN=$(tput setaf 2); YELLOW=$(tput setaf 3); RED=$(tput setaf 1)
+  BLUE=$(tput setaf 4); GREEN=$(tput setaf 2); YELLOW=$(tput setaf 3)
 else
-  BOLD=""; DIM=""; RESET=""; BLUE=""; GREEN=""; YELLOW=""; RED=""
+  BOLD=""; DIM=""; RESET=""; BLUE=""; GREEN=""; YELLOW=""
 fi
 
 # 由作者在 stages 一节的开头设置。
@@ -32,7 +32,8 @@ SKIPPED=()        # 没能做成的事（比如 gh 不在）
 # 输出不是终端时它什么都不做，这样管道里的日志仍然可读。
 _clear() {
   [[ -t 1 ]] || return 0
-  if command -v tput >/dev/null 2>&1; then tput clear; else printf '\033[2J\033[3J\033[H'; fi
+  if command -v tput >/dev/null 2>&1 && tput clear 2>/dev/null; then return 0; fi
+  printf '\033[2J\033[3J\033[H'
 }
 
 # banner "标题" 显示开场那一帧：这个向导是干什么的。
@@ -70,7 +71,7 @@ open_url() {
     elif command -v explorer.exe >/dev/null 2>&1; then explorer.exe "$url"
     elif command -v xdg-open    >/dev/null 2>&1; then xdg-open "$url"
     elif command -v open        >/dev/null 2>&1; then open "$url"
-    else warn "没能打开浏览器，请手动访问：$url"; fi
+    else false; fi
   } >/dev/null 2>&1 || warn "没能打开浏览器，请手动访问：$url"
 }
 
@@ -88,52 +89,63 @@ confirm() {
   [[ "$reply" =~ ^[Yy] ]]
 }
 
-# _existing KEY：ENV_FILE 里 KEY 当前的值（如果有）。
+# _existing KEY：ENV_FILE 里 KEY 当前的值（如果有），并还原 write_env 加的单引号，
+# 或普通 dotenv 的双引号值。
 _existing() {
   [[ -f "$ENV_FILE" ]] || return 1
-  local line; line=$(grep -E "^${1}=" "$ENV_FILE" | tail -n1) || return 1
-  printf '%s' "${line#*=}"
+  local line value sq="'\\''"; line=$(grep -E "^${1}=" "$ENV_FILE" | tail -n1) || return 1
+  value="${line#*=}"
+  if [[ "$value" == \'*\' ]]; then value="${value:1:${#value}-2}"; value="${value//"$sq"/\'}"
+  elif [[ "$value" == \"*\" ]]; then
+    value="${value:1:${#value}-2}"
+    [[ "$value" == *[\\\$\"]* ]] && return 1   # 含转义、$ 或 "：无法安全还原，重新询问
+  fi
+  printf '%s' "$value"
 }
 
 # ask KEY "提示" 把一个值读进 $KEY。重跑时把 .env 里已有的值作为默认值
-# 给出来（回车就保留它）。输入可见（非密钥）。
+# 给出来（回车就保留它）。输入可见（非密钥），可用 Readline 编辑。
+# 遇到 EOF 且没有输入时返回失败。
 ask() {
-  local key="$1" prompt="$2" current input
+  local key="$1" prompt="$2" current input s=$'\001' e=$'\002' p rc=0
   current=$(_existing "$key" || true)
-  if [[ -n "$current" ]]; then
-    printf '  %s%s%s %s[回车保留当前值]%s ' "$BOLD" "$prompt" "$RESET" "$DIM" "$RESET"
-  else
-    printf '  %s%s%s ' "$BOLD" "$prompt" "$RESET"
-  fi
-  read -r input || true
+  # Readline 需要用 \001..\002 包住颜色码，才能正确定位光标。
+  p="  $s$BOLD$e$prompt$s$RESET$e "
+  [[ -n "$current" ]] && p+="$s$DIM$e[回车保留当前值]$s$RESET$e "
+  read -e -r -p "$p" input || rc=1
+  if (( rc )) && [[ -z "$input" ]]; then return 1; fi
   [[ -z "$input" && -n "$current" ]] && input="$current"
   printf -v "$key" '%s' "$input"
 }
 
 # ask_secret KEY "提示" 和 ask 一样，但输入是隐藏的。
 ask_secret() {
-  local key="$1" prompt="$2" current input
+  local key="$1" prompt="$2" current input rc=0
   current=$(_existing "$key" || true)
   if [[ -n "$current" ]]; then
     printf '  %s%s%s %s[回车保留当前值]%s ' "$BOLD" "$prompt" "$RESET" "$DIM" "$RESET"
   else
     printf '  %s%s%s ' "$BOLD" "$prompt" "$RESET"
   fi
-  read -rs input || true
+  read -rs input || rc=1
   printf '\n'
+  if (( rc )) && [[ -z "$input" ]]; then return 1; fi
   [[ -z "$input" && -n "$current" ]] && input="$current"
   printf -v "$key" '%s' "$input"
 }
 
-# write_env KEY VALUE 把 KEY=VALUE upsert 进 ENV_FILE（文件不存在就建，
-# 已有的那一行会被替换）。幂等。
+# write_env KEY VALUE 把 KEY='VALUE' upsert 进 ENV_FILE（已有的那一行会被替换），
+# 并设置 $KEY。幂等。新建 ENV_FILE 时权限为 0600；写入会穿过符号链接，
+# 并保留已有文件的权限。
 write_env() {
-  local key="$1" value="$2" tmp
-  touch "$ENV_FILE"
+  local key="$1" value="$2" tmp sq="'\\''"
+  [[ -e "$ENV_FILE" ]] || (umask 077 && : > "$ENV_FILE")
   tmp=$(mktemp)
   grep -vE "^${key}=" "$ENV_FILE" > "$tmp" || true
-  printf '%s=%s\n' "$key" "$value" >> "$tmp"
-  mv "$tmp" "$ENV_FILE"
+  printf "%s='%s'\n" "$key" "${value//\'/$sq}" >> "$tmp"
+  cat "$tmp" > "$ENV_FILE"
+  rm -f "$tmp"
+  printf -v "$key" '%s' "$value"
   WRITTEN_ENV+=("$key")
   printf '  %s✓ 已写入%s %s → %s\n' "$GREEN" "$RESET" "$key" "$ENV_FILE"
 }
@@ -182,7 +194,11 @@ finish() {
 # ──────────────────────────────────────────────────────────────────────────
 # STAGES：这一节由你来写。人每走一步，一个 stage()。
 # 把下面这个示例替换掉。把 TOTAL_STAGES 设成与你写的阶段数一致。
+# 所有 stage 都留在 run_wizard 里，最后一行保持原样：这样 bash 会在第一次提问前
+# 解析完整个文件，运行中编辑脚本也不会出错。
 # ──────────────────────────────────────────────────────────────────────────
+
+run_wizard() {
 
 TOTAL_STAGES=1
 
@@ -202,3 +218,6 @@ set_secret STRIPE_SECRET_KEY "$STRIPE_SECRET_KEY"   # CI 需要的是这一个
 # ──────────────────────────────────────────────────────────────────────────
 
 finish
+}
+
+run_wizard "$@"; exit
