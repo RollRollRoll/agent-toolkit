@@ -12,8 +12,8 @@ description: 从指定的 commit、分支、tag 或 merge-base 审查到 HEAD �
 
 两个轴分别交给并行 subagent，保持上下文独立，最后再汇总两份结果。
 
-issue tracker 应该已经提供给你了。如果 `docs/agents/issue-tracker.md` 不在，
-**停下来**让用户先把这份文件补上，不要自己另找一套取 issue 的办法。
+issue tracker 应该已经提供给你了。如果没有，**停下来**让用户先运行 `setup-env`，
+不要自己另找一套取 issue 的办法。
 
 ## 流程
 
@@ -32,7 +32,7 @@ issue tracker 应该已经提供给你了。如果 `docs/agents/issue-tracker.md
 按这个顺序找原始 spec：
 
 1. **commit 信息里的 issue 引用**（`#123`、`Closes #45`、GitLab 的 `!67` 等），
-   按 `docs/agents/issue-tracker.md` 里的流程取回。
+   按 tracker 文档里的流程取回。
 2. **用户作为参数传进来的路径**。
 3. `docs/`、`specs/`、`.scratch/` 下**与分支名或特性对得上**的 spec 文件。
 4. 都没找到 → **问用户 spec 在哪**。用户说本来就没有 → **规格轴跳过**，
@@ -40,8 +40,8 @@ issue tracker 应该已经提供给你了。如果 `docs/agents/issue-tracker.md
 
 ### 3. 找标准来源
 
-仓库里任何**成文记录"代码该怎么写"**的东西：`CODING_STANDARDS.md`、`CONTRIBUTING.md`、
-`AGENTS.md` / `CLAUDE.md` 里的规范段落等。
+在仓库里**搜索**每一份成文记录"代码该怎么写"的文件，例如 `AGENTS.md` / `CLAUDE.md` 里的规范段落。
+`CODING_STANDARDS.md` 或 `CONTRIBUTING.md` 存在时，必须列入。
 
 在仓库成文的东西之上，标准轴**永远**还要带一份**坏味道基线**——一组固定的 Fowler 代码坏味道
 （《重构》第 3 章），**哪怕仓库什么都没写**它也适用。两条规则约束它：
@@ -79,6 +79,8 @@ prompt**——那个 subagent 没有别的途径拿到它。
   → 别继承了，改用组合。
 
 ### 4. 并行派出两个 subagent
+
+两个 subagent 一起在**前台**派出，等它们返回报告后再汇总。
 
 **标准轴 subagent 的 prompt 要包含**：
 

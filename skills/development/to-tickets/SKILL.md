@@ -85,8 +85,9 @@ issue tracker 与 triage 标签词汇应该已经提供给你了。如果没有�
   使用下面的「一张工单一个文件」模板，不要将多张工单合并到同一文件。
 - **真的 issue tracker（GitHub、Linear……）** → **一张工单一个 issue**，**按依赖顺序发**
   （阻塞者在前），这样每张工单的阻塞边才能引用到真实的标识符。
-  **平台有原生的 blocking / sub-issue 关系就用它**；没有就把每张工单的 "Blocked by"
-  设成那些阻塞它的 issue。**除非另有交代，打上 `ready-for-agent` triage 标签**——
+  **平台有原生的 blocking 关系就用它**；没有就把每张工单的 "Blocked by"
+  设成那些阻塞它的 issue。源头是一个已有 issue 时，把每张工单设为它的子 issue
+  （用 tracker 文档里的对应操作）。**除非另有交代，打上 `ready-for-agent` triage 标签**——
   这些工单**天生就是给 agent 捡的**。
 
 **沿着前沿干**：**阻塞者全都完成了的**那些工单。纯线性的链条就是从上到下。
@@ -126,7 +127,7 @@ issue tracker 与 triage 标签词汇应该已经提供给你了。如果没有�
 
 ## Blocked by
 
-- 指向每一个阻塞它的工单的引用，或者 "None (can start immediately)"。
+- 指向每一个阻塞它的工单的引用，或者 "None (can start immediately)"。阻塞边已经用原生关系设置时，省略这一节。
 
 </issue-template>
 
