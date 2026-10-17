@@ -10,7 +10,7 @@ disable-model-invocation: true
 
 - **Issue tracker**：issue 住在哪（默认 GitHub；本地 markdown 也开箱支持）
 - **Triage 标签**：五个标准 triage 角色所用的那几个标签字符串
-- **领域文档**：`CONTEXT.md` 和 ADR 住在哪，以及读它们的消费规则
+- **领域文档**：`GLOSSARY.md` 和 ADR 住在哪，以及读它们的消费规则
 
 **这是一个 prompt 驱动的 skill，不是一个确定性脚本。** 先探索、把发现摆出来、和用户确认，然后再写。
 
@@ -22,7 +22,8 @@ disable-model-invocation: true
 
 - `git remote -v` 和 `.git/config`：这是个 GitHub 仓库吗？哪一个？
 - 仓库根的 `AGENTS.md` 和 `CLAUDE.md`：哪个存在？里面是不是已经有 `## Agent skills` 一节了？
-- 仓库根的 `CONTEXT.md` 和 `CONTEXT-MAP.md`
+- 仓库根的 `GLOSSARY.md` 和 `GLOSSARY-MAP.md`；只有旧名 `CONTEXT.md` / `CONTEXT-MAP.md` 时，
+  在确认环节建议用 `git mv` 改名
 - `docs/adr/` 以及任何 `src/*/docs/adr/` 目录
 - `docs/agents/`：这个 skill 之前的产出是不是已经在了？
 - `.scratch/`：说明这个仓库已经在用本地 markdown 的 issue 约定了
@@ -73,11 +74,11 @@ disable-model-invocation: true
 表示 `needs-triage`）——才去收集这些覆盖值，好让打标签的 skill
 **用已有的标签，而不是造出一批重复的**。
 
-**C 节：领域文档。** 默认**单上下文**（仓库根一份 `CONTEXT.md` + `docs/adr/`）。
+**C 节：领域文档。** 默认**单上下文**（仓库根一份 `GLOSSARY.md` + `docs/adr/`）。
 **这适合绝大多数仓库，不用问就这么写。**
 
 **只有当探索发现了 monorepo 信号时**，才提供**多上下文**方案
-（根目录一份 `CONTEXT-MAP.md` 指向各上下文自己的 `CONTEXT.md`）。那时再确认他们要哪种布局。
+（根目录一份 `GLOSSARY-MAP.md` 指向各上下文自己的 `GLOSSARY.md`）。那时再确认他们要哪种布局。
 
 ### 3. 确认并允许调整
 

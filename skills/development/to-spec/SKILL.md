@@ -71,7 +71,7 @@ issue tracker 与 triage 标签词汇应该已经提供给你了。如果没有�
 spec_id: <SPEC-ID>
 related_issue: <Issue 或项目链接>
 source_context:
-  - <CONTEXT.md 或 CONTEXT-MAP.md>
+  - <GLOSSARY.md 或 GLOSSARY-MAP.md>
 related_adrs:
   - <ADR；没有则写 none>
 last_updated: <YYYY-MM-DD>

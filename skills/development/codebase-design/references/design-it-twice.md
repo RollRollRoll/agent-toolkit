@@ -29,7 +29,7 @@
 - Agent 3：**围绕最常见的调用方优化**——让默认场景变得毫不费力。
 - Agent 4（如适用）：**围绕 ports & adapters 设计**，处理跨 seam 的依赖。
 
-简报里要同时带上 [SKILL.md](../SKILL.md) 的词汇和项目自己的领域词汇（如 `CONTEXT.md`），
+简报里要同时带上 [SKILL.md](../SKILL.md) 的词汇和项目自己的领域词汇（如 `GLOSSARY.md`），
 让每个 subagent 的命名同时对齐架构语言和项目的领域语言。
 
 每个 subagent 输出：

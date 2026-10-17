@@ -15,7 +15,7 @@ disable-model-invocation: true
   **seam**、**adapter**、**leverage**、**locality**）与它的原则（删除测试、
   "接口就是测试面"、"一个适配器 = 假想 seam，两个才是真的"）。
   **每一条建议里都要精确使用这些词**，不要滑向 "component"、"service"、"API" 或 "boundary"。
-- `CONTEXT.md` 里的领域语言**给好的 seam 提供名字**；`docs/adr/` 里的 ADR 记录了
+- `GLOSSARY.md` 里的领域语言**给好的 seam 提供名字**；`docs/adr/` 里的 ADR 记录了
   **这条命令不该重新翻案**的决定。
 
 ## 流程
@@ -30,7 +30,7 @@ disable-model-invocation: true
   那些反复出现的文件和区域，**让这些路径先把你的注意力拉过去**。
   如果改动很散、没有明显热点，**就把网撒大一点**。
 
-**先读**项目的领域术语表（`CONTEXT.md`）和你要动的那块区域里的 ADR。
+**先读**项目的领域术语表（`GLOSSARY.md`）和你要动的那块区域里的 ADR。
 
 然后派一个 subagent 调研代码库。启发式只用于辅助判断，应结合项目结构和实际证据灵活探索，
 **把你感到摩擦的地方记下来**：
@@ -70,8 +70,8 @@ disable-model-invocation: true
 
 报告结尾要有一节 **Top recommendation**：**你会先动哪一个，为什么。**
 
-**领域词汇用 `CONTEXT.md` 的，架构词汇用 `codebase-design` 的。**
-如果 `CONTEXT.md` 定义了 "Order"，那就说 "the Order intake module"，
+**领域词汇用 `GLOSSARY.md` 的，架构词汇用 `codebase-design` 的。**
+如果 `GLOSSARY.md` 定义了 "Order"，那就说 "the Order intake module"，
 **不要说 "the FooBarHandler"，也不要说 "the Order service"**。
 
 **与 ADR 冲突时**：某个候选项与现有 ADR 相抵触时，**只有当摩擦真实到值得重开那条 ADR**，
@@ -92,9 +92,9 @@ disable-model-invocation: true
 **决策成形的过程中，副作用就地发生**；调 Skill 工具的 `domain-modeling`
 **让领域模型一路保持最新**：
 
-- **要用一个 `CONTEXT.md` 里没有的概念给深化后的模块命名？**
-  把这个词加进 `CONTEXT.md`。文件不存在就**按需创建**。
-- **对话中把某个模糊的词磨精确了？** **当场**更新 `CONTEXT.md`。
+- **要用一个 `GLOSSARY.md` 里没有的概念给深化后的模块命名？**
+  把这个词加进 `GLOSSARY.md`。文件不存在就**按需创建**。
+- **对话中把某个模糊的词磨精确了？** **当场**更新 `GLOSSARY.md`。
 - **用户以一个承重的理由否掉了这个候选项？** 提议写一条 ADR，这样说：
   *「要我把这条记成 ADR 吗？免得以后的架构评审又把它提一遍。」*
   **只有当这个理由是将来的探索者为了不再提同样的建议而确实需要的**，才提；

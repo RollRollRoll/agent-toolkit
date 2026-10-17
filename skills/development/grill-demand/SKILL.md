@@ -14,7 +14,7 @@ disable-model-invocation: true
 开始访谈前调用两个配套 skill，具体规则以各自文档为准：
 
 - **`grilling`**：轮次、前沿（frontier）、事实归你查、决策归用户。
-- **`domain-modeling`**：术语与 ADR 当场落盘（`CONTEXT.md` / `docs/adr/`）。
+- **`domain-modeling`**：术语与 ADR 当场落盘（`GLOSSARY.md` / `docs/adr/`）。
 
 本文只说明各层的展开顺序，以及决策树必须覆盖的内容。
 
@@ -98,7 +98,7 @@ disable-model-invocation: true
 - **现状**：相关模块与职责、主要数据流、接口/事件/数据结构、错误处理与运行约束、不能破坏的既有行为。
 - **Prior art**：相似实现、已有测试 seam 与测试模式、fixture 与 harness 约定。
 - **真实命令**：build / test / lint 怎么跑（spec 的 Verification Commands 只收真实命令）。
-- **领域文档**：`CONTEXT.md` 术语、相关 ADR——也是 domain-modeling 拿术语挑刺、和代码对账的原料。
+- **领域文档**：`GLOSSARY.md` 术语、相关 ADR——也是 domain-modeling 拿术语挑刺、和代码对账的原料。
 
 测试 seam 的最终选择和用户确认发生在 `to-spec` 中；这里只需梳理已有 seam，
 并把用户对测试层级的硬偏好（如果有）问出来。

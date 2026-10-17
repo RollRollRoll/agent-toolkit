@@ -10,4 +10,4 @@ Issue 与 spec 记在 GitHub Issues（RollRollRoll/agent-toolkit），通过 `gh
 
 ### Domain docs
 
-single-context 布局：仓库根放一份 `CONTEXT.md`，ADR 放在 `docs/adr/`。见 `docs/agents/domain.md`。
+single-context 布局：仓库根放一份 `GLOSSARY.md`，ADR 放在 `docs/adr/`。见 `docs/agents/domain.md`。

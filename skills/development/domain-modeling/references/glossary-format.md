@@ -1,4 +1,4 @@
-# CONTEXT.md 格式
+# GLOSSARY.md 格式
 
 ## 结构
 
@@ -33,18 +33,18 @@ _Avoid_: Client, buyer, account
 
 ## 单上下文 vs 多上下文仓库
 
-**单上下文（多数仓库）**：仓库根目录一份 `CONTEXT.md`。
+**单上下文（多数仓库）**：仓库根目录一份 `GLOSSARY.md`。
 
-**多上下文**：根目录一份 `CONTEXT-MAP.md`，列出有哪些上下文、各自住在哪、彼此什么关系：
+**多上下文**：根目录一份 `GLOSSARY-MAP.md`，列出有哪些上下文、各自住在哪、彼此什么关系：
 
 ```md
-# Context Map
+# Glossary Map
 
 ## Contexts
 
-- [Ordering](./src/ordering/CONTEXT.md)：接收并跟踪客户订单
-- [Billing](./src/billing/CONTEXT.md)：生成发票并处理付款
-- [Fulfillment](./src/fulfillment/CONTEXT.md)：管理仓库拣货与发货
+- [Ordering](./src/ordering/GLOSSARY.md)：接收并跟踪客户订单
+- [Billing](./src/billing/GLOSSARY.md)：生成发票并处理付款
+- [Fulfillment](./src/fulfillment/GLOSSARY.md)：管理仓库拣货与发货
 
 ## Relationships
 
@@ -55,8 +55,9 @@ _Avoid_: Client, buyer, account
 
 用哪种结构由你**自己推断**：
 
-- 有 `CONTEXT-MAP.md` → 读它去找各个上下文；
-- 只有根目录的 `CONTEXT.md` → 单上下文；
-- 两个都没有 → **等第一个术语定下来时**，按需在根目录创建 `CONTEXT.md`。
+- 有 `GLOSSARY-MAP.md` → 读它去找各个上下文；
+- 只有根目录的 `GLOSSARY.md` → 单上下文；
+- 只有旧名 `CONTEXT.md` / `CONTEXT-MAP.md` → 当作新名文件读写，不另建 `GLOSSARY.md`，并建议用户用 `git mv` 改名；
+- 两个都没有 → **等第一个术语定下来时**，按需在根目录创建 `GLOSSARY.md`。
 
 存在多个上下文时，**推断当前话题属于哪一个**。判断不了就问。

@@ -93,7 +93,7 @@ PR 在范围内时，把外部 PR 也放进这几个桶，**每一行标上 `[PR
 
 4. **补齐信息（如果需要）。** 如果请求还不够完整，调用 `grilling` 和 `domain-modeling`，
    按轮次追问并同步梳理领域术语，
-   **决定落定就当场更新 `CONTEXT.md` / ADR**。
+   **决定落定就当场更新 `GLOSSARY.md` / ADR**。
 
 5. **落实结果**：
    - `ready-for-agent`：发一条 agent brief 评论（[references/agent-brief.md](references/agent-brief.md)）。
