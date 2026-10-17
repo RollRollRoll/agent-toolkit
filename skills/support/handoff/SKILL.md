@@ -6,7 +6,7 @@ disable-model-invocation: true
 ---
 
 将当前对话整理成一份交接文档，让没有前序上下文的 agent 可以继续完成这项工作。
-文档存到用户操作系统的临时目录，不要放进当前工作区。
+文档存到用户操作系统的临时目录（`$TMPDIR`，没有就用 `/tmp`；Windows 用 `%TEMP%`），不要放进当前工作区。
 
 文档中加入 `suggested skills` 小节，列出接手的 agent 应调用哪些 skill。
 
