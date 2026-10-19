@@ -1,66 +1,46 @@
-# Issue tracker：GitLab
+# Issue tracker: GitLab
 
-这个仓库的 issue 与 spec 以 GitLab issue 的形式存在。
-**所有操作用 [`glab`](https://gitlab.com/gitlab-org/cli) CLI。**
+Issues and specs for this repo live as GitLab issues. Use the [`glab`](https://gitlab.com/gitlab-org/cli) CLI for all operations.
 
-## 约定
+## Conventions
 
-- **创建 issue**：`glab issue create --title "..." --description "..."`。
-  多行描述用 heredoc；传 `--description -` 会打开编辑器。
-- **读 issue**：`glab issue view <number> --comments`。要机器可读就用 `-F json`。
-- **列 issue**：`glab issue list -O json`，按需加 `--label` 过滤。
-- **评论**：`glab issue note <number> --message "..."`。GitLab CLI 使用 `note` 指代评论。
-- **加 / 去 label**：`glab issue update <number> --label "..."` / `--unlabel "..."`。
-  多个 label 可以逗号分隔，也可以重复这个 flag。
-- **关闭**：`glab issue close <number>`。**`glab issue close` 不接受关闭评论**，
-  所以先用 `glab issue note <number> --message "..."` 把说明发出去，再关。
-- **Merge request**：**GitLab 把 PR 叫 "merge request"。** 用 `glab mr create`、`glab mr view`、
-  `glab mr note` 等等——形状和 `gh pr ...` 一样，把 `pr` 换成 `mr`、
-  把 `comment`/`--body` 换成 `note`/`--message`。
+- **Create an issue**: `glab issue create --title "..." --description "..."`. Use a heredoc for multi-line descriptions. Pass `--description -` to open an editor.
+- **Read an issue**: `glab issue view <number> --comments`. Use `-F json` for machine-readable output.
+- **List issues**: `glab issue list -O json` with appropriate `--label` filters.
+- **Comment on an issue**: `glab issue note <number> --message "..."`. GitLab calls comments "notes".
+- **Apply / remove labels**: `glab issue update <number> --label "..."` / `--unlabel "..."`. Multiple labels can be comma-separated or by repeating the flag.
+- **Close**: `glab issue close <number>`. `glab issue close` does not accept a closing comment, so post the explanation first with `glab issue note <number> --message "..."`, then close.
+- **Merge requests**: GitLab calls PRs "merge requests". Use `glab mr create`, `glab mr view`, `glab mr note`, etc., the same shape as `gh pr ...` with `mr` in place of `pr` and `note`/`--message` in place of `comment`/`--body`.
 
-仓库从 `git remote -v` 推断；在克隆目录里跑时 `glab` 会自己搞定。
+Infer the repo from `git remote -v`; `glab` does this automatically when run inside a clone.
 
-## MR 作为 triage 入口
+## Merge requests as a triage surface
 
-**MR 作为需求入口：否。** *（这个仓库要是把外部 merge request 当作需求提报，就改成「是」；`triage` 读这个 flag。）*
+**MRs as a request surface: no.** _(Set to `yes` if this repo treats external merge requests as feature requests; `triage` reads this flag.)_
 
-改成「是」之后，MR 走**和 issue 一样的标签与状态**，用 `glab mr` 那套对应命令：
+When set to `yes`, MRs run through the same labels and states as issues, using the `glab mr` equivalents:
 
-- **读 MR**：`glab mr view <number> --comments`，看 diff 用 `glab mr diff <number>`。
-- **列出待 triage 的外部 MR**：`glab mr list -F json`，然后**只留作者不是项目成员 / owner 的那些**
-  （贡献者提的 MR，而不是维护者自己在推进的活）。
-- **评论 / 打标签 / 关闭**：`glab mr note`、`glab mr update --label`/`--unlabel`、`glab mr close`。
+- **Read an MR**: `glab mr view <number> --comments` and `glab mr diff <number>` for the diff.
+- **List external MRs for triage**: `glab mr list -F json`, then keep only MRs whose author is not a project member/owner (a contributor's MR, not a maintainer's in-flight work).
+- **Comment / label / close**: `glab mr note`, `glab mr update --label`/`--unlabel`, `glab mr close`.
 
-**和 GitHub 不同，GitLab 的 issue 与 MR 分开编号**，所以 `#42` 在知道说的是哪个面之后就没有歧义。
+Unlike GitHub, GitLab numbers issues and MRs separately, so `#42` is unambiguous once you know which surface the maintainer means.
 
-## 当某个 skill 说"发布到 issue tracker"时
+## When a skill says "publish to the issue tracker"
 
-建一个 GitLab issue。
+Create a GitLab issue.
 
-## 当某个 skill 说"取回相关工单"时
+## When a skill says "fetch the relevant ticket"
 
-跑 `glab issue view <number> --comments`。
+Run `glab issue view <number> --comments`.
 
 ## Wayfinding operations
 
-供 `wayfinder` 使用。**地图**是单个 issue，**工单是它的子 issue**。
+Used by `wayfinder`. The **map** is a single issue with **child** issues as tickets.
 
-- **地图**：一个打了 `wayfinder:map` 标签的 issue，正文放 Notes / Decisions so far / 迷雾。
-  `glab issue create --label wayfinder:map`。
-  （在有原生 epic 的 GitLab 版本上，也可以用 epic 承载地图；**打标签的 issue 到处都能用**。）
-- **子工单**：一个 issue，描述顶部写 `Part of #<map>`，
-  标签为 `wayfinder:<type>`（`research`/`prototype`/`grilling`/`task`）。
-  **一旦被认领，这张工单就指派给驱动它的那位开发者。**
-- **阻塞**：用 GitLab 的**原生 blocking link**，那是**权威的、UI 里看得见**的表示。
-  用 `/blocked_by #<n>` 这个 quick action 加上去，作为一条 note 发出：
-  `glab issue note <child> --message "/blocked_by #<blocker>"`。
-  **原生 blocking link 是 Premium / Ultimate 的功能**；免费版（或用不了的地方）
-  退回到描述顶部的一行 `Blocked by: #<n>, #<n>`。
-  **所有阻塞者都关闭了，这张工单才算未被阻塞。**
-- **前沿查询**：`glab issue list -O json` 限定在地图的子工单范围内，
-  **去掉有打开着的阻塞者的**（原生 `blocked_by` 链到一个打开着的 issue，
-  用 `glab api projects/:id/issues/<child-iid>/links` 查；或者 `Blocked by` 那行里还有打开着的 issue）
-  **和有 assignee 的**；**地图顺序里排第一的胜出。**
-- **认领**：`glab issue update <n> --assignee @me`，**本次会话的第一个写操作**。
-- **解开**：`glab issue note <n> --message "<答案>"`，然后 `glab issue close <n>`，
-  再往地图的 Decisions so far 追加一个上下文指针（要点 + 链接）。
+- **Map**: a single issue labelled `wayfinder:map`, holding the Notes / Decisions-so-far / Fog body. `glab issue create --label wayfinder:map`. (On GitLab tiers with native epics, an epic may hold the map instead; a labelled issue works everywhere.)
+- **Child ticket**: an issue carrying `Part of #<map>` at the top of its description and labels `wayfinder:<type>` (`research`/`prototype`/`grilling`/`task`). Once claimed, the ticket is assigned to the driving dev.
+- **Blocking**: GitLab's **native blocking link**, the canonical, UI-visible representation. Add it with the `/blocked_by #<n>` quick action, posted as a note (`glab issue note <child> --message "/blocked_by #<blocker>"`). Native blocking links are a Premium/Ultimate feature; on the free tier (or where unavailable) fall back to a `Blocked by: #<n>, #<n>` line at the top of the description. A ticket is unblocked when every blocker is closed.
+- **Frontier query**: `glab issue list -O json` scoped to the map's children, drop any with an open blocker: a native `blocked_by` link to an open issue (`glab api projects/:id/issues/<child-iid>/links`), or an open issue in the `Blocked by` line, or an assignee; first in map order wins.
+- **Claim**: `glab issue update <n> --assignee @me`, the session's first write.
+- **Resolve**: `glab issue note <n> --message "<answer>"`, then `glab issue close <n>`, then append a context pointer (gist + link) to the map's Decisions-so-far.

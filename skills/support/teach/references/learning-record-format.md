@@ -1,58 +1,46 @@
-# 学习记录格式
+# Learning Record Format
 
-学习记录存放在 `./learning-records/`，按顺序编号：`0001-slug.md`、`0002-slug.md`，以此类推。
-**目录按需创建**：等第一份记录真的要写了再建。
+Learning records live in `./learning-records/` and use sequential numbering: `0001-slug.md`, `0002-slug.md`, etc. Create the directory lazily: only when the first record is written.
 
-它们类似教学场景中的 ADR，用于记录不明显的学习所得、关键洞见和用户确认的先备知识。
-这些记录会影响后续课程，并用于判断最近发展区。
+They are the teaching equivalent of ADRs: they capture non-obvious lessons, key insights, and stated prior knowledge that will steer future sessions. They are used to calculate the zone of proximal development.
 
-## 模板
+## Template
 
 ```md
-# {这次学到 / 确立了什么，一个短标题}
+# {Short title of what was learned or established}
 
-{1~3 句：学到了什么（或者确立了哪项先备知识），以及它为什么会影响之后的会话。}
+{1-3 sentences: what was learned (or what prior knowledge was established), and why it matters for future sessions.}
 ```
 
-学习记录可以只有一段，无需为凑格式增加小节。
-**它的价值在于记下"这件事现在已经知道了"以及"它为什么改变接下来该教什么"**，
-而不在于把各个小节填满。
+That is the whole format. A learning record can be a single paragraph. The value is recording _that_ this is now known and _why_ it changes what to teach next, not in filling out sections.
 
-## 可选小节
+## Optional sections
 
-**只在真的能带来价值时才写。大多数记录都不需要。**
+Only include these when they add genuine value. Most records won't need them.
 
-- **Status** frontmatter（`active | superseded by LR-NNNN`）：
-  当早先的理解后来发现是错的、被替换掉时有用。
-- **Evidence**：用户是怎么把这份理解演示出来的（答对了某个问题、做完了某个练习、
-  引用了以往经验）。当这个判断以后可能被重新审视时有用。
-- **Implications**：这解锁了什么、排除了什么。**不显然的时候值得记。**
+- **Status** frontmatter (`active | superseded by LR-NNNN`): useful when an earlier understanding turns out to be wrong and is replaced.
+- **Evidence**: how the user demonstrated the understanding (a question answered, an exercise completed, prior experience cited). Useful when the claim might be revisited.
+- **Implications**: what this unlocks or rules out for future sessions. Worth recording when non-obvious.
 
-## 编号
+## Numbering
 
-扫一遍 `./learning-records/`，找到已有的最大编号，加一。
+Scan `./learning-records/` for the highest existing number and increment by one.
 
-## 什么时候该写一份学习记录
+## When to write a learning record
 
-**下面任意一条成立时就写**：
+Write one when any of these is true:
 
-1. **用户对某件不平凡的事展示出了真正的理解**：不只是接触过，而是**有证据表明他能正确使用这个概念**。
-   **这为"接下来该教什么"抬高了地板。**
-2. **用户透露了先备知识**：「我已经会 X 了。」**记下来**，免得之后的会话重教一遍。
-   **他声称的深度也记下来。**
-3. **一个误解被纠正了**：用户之前信的是错的，现在明白了为什么。
-   **这类记录价值很高**：它们能预测相关主题上以后会绊到的地方。
-4. **使命因为学习而挪动了**：用户发现他在意的其实是别的东西。
-   **交叉链接到 [[MISSION.md]] 并更新它。**
+1. **The user demonstrated genuine understanding of something non-trivial**: not just exposure, but evidence they can use the concept correctly. This sets a new floor for what to teach next.
+2. **The user disclosed prior knowledge**: "I already know X." Record it so future sessions don't re-teach it. Also record the _depth_ claimed.
+3. **A misconception was corrected**: the user previously believed something wrong and now sees why. These are high-value: they predict future stumbling blocks for related topics.
+4. **The mission shifted in response to learning**: the user discovered they cared about something different than they thought. Cross-link to [[MISSION.md]] and update it.
 
-### 哪些不算
+### What does _not_ qualify
 
-- **只是被覆盖过的材料。覆盖不是学会。** 等到有证据再说。
-- **已经作为术语定义简洁记在 [[GLOSSARY.md]] 里的东西。** 别重复。
-- **逐次会话的活动流水。** 学习记录不是日记：**它们是够得上做决策的洞见。**
+- Material that was merely covered. Coverage is not learning. Wait for evidence.
+- Anything already captured tersely in [[GLOSSARY.md]] as a term definition. Don't duplicate.
+- Session-by-session activity logs. Learning records are not a journal: they are decision-grade insights.
 
-## 取代
+## Supersession
 
-当后来的一份记录与早先那份相抵触时（用户的理解加深了或被纠正了），
-**把旧记录标成 `Status: superseded by LR-NNNN`，而不是删掉它**。
-**理解是怎么一路演化过来的，这段历史本身就是有用的信号。**
+When a later record contradicts an earlier one (the user's understanding deepened or corrected), mark the old record `Status: superseded by LR-NNNN` rather than deleting it. The history of how understanding evolved is itself useful signal.

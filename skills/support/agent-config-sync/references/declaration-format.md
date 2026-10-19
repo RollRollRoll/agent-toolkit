@@ -1,6 +1,6 @@
-# 声明格式
+# Declaration format
 
-声明文件名默认为 `agent-config.yaml`，顶层结构如下：
+The declaration file is named `agent-config.yaml` by default. Its top-level structure is:
 
 ```yaml
 apiVersion: agent-config/v1
@@ -16,10 +16,10 @@ targets:
     overlays: []
 ```
 
-每个 overlay 包含 `name`、`when`、可选 `variables` 和 `set`。`when` 支持 `os`、`runtime`、`hostname`、
-`profile` 及 `tags.contains`，各条件使用 AND；字符串列表表示匹配其中任意一个值。主机名忽略大小写。
+Each overlay contains `name`, `when`, optional `variables`, and `set`. `when` supports `os`, `runtime`, `hostname`,
+`profile`, and `tags.contains`. Conditions are combined with AND; a list of strings matches any one of its values. Hostnames are case-insensitive.
 
-上下文优先级为：自动检测值 < `~/.config/aiconfig/context.yaml` < 命令行 `--profile` / `--tag`。支持变量 `${os}`、
-`${runtime}`、`${hostname}`、`${user}`、`${home}`、`${profile}`、自定义变量和 `${env:NAME}`；
-环境变量默认值写作 `${env:NAME:-fallback}`。
+Context precedence is: auto-detected values < `~/.config/aiconfig/context.yaml` < command-line `--profile` / `--tag`. Supported variables are `${os}`,
+`${runtime}`, `${hostname}`, `${user}`, `${home}`, `${profile}`, custom variables, and `${env:NAME}`.
+Write an environment variable default as `${env:NAME:-fallback}`.
 

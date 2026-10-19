@@ -1,224 +1,224 @@
 ---
 name: codebase-analyzer
-description: 调研陌生项目或代码库，用结构化中文报告说明项目用途、架构和实现方式。
+description: Investigate an unfamiliar project or codebase and explain its purpose, architecture, and implementation in a structured Chinese report.
 ---
 
-# Codebase Analyzer — 项目调研
+# Codebase Analyzer: Project Investigation
 
-## 目标
+## Goal
 
-调研用户指定（或当前工作目录下）的软件项目，产出一份**结构化的中文调研报告**，目标读者是
-"对项目不熟悉但需要快速建立完整心智模型"的工程师。报告要同时回答两个问题：
+Investigate the software project the user names (or the one in the current working directory) and produce a **structured investigation report written in Chinese**. The target reader is
+an engineer who "doesn't know the project but needs to build a complete mental model quickly". The report must answer two questions:
 
-1. **它做什么** —— 项目定位、核心功能、用户与价值。
-2. **它怎么实现** —— 架构、技术栈、关键路径、运行方式。
+1. **What it does**: project positioning, core features, users, and value.
+2. **How it is implemented**: architecture, tech stack, key paths, how it runs.
 
-报告的**详尽程度按下文"输出深度"选档**，不是任何情况都套完整模板。
+**Pick the report's level of detail from "Output depth" below**; do not apply the full template in every case.
 
-## 输出深度（先选档，再调研）
+## Output depth (pick a tier first, then investigate)
 
-不同诉求需要不同的报告深度。开始前先选择合适档位，避免用长篇报告回应快速了解的需求。
-**三份输出模板中只读对应那一份**（通用的 investigation-checklist / project-type-checklists 仍按需读取）：
+Different requests need different report depths. Pick the right tier before starting, so a request for a quick look does not get a long report.
+**Read only the one output template that matches the tier** (the shared investigation-checklist / project-type-checklists are still read as needed):
 
-- **快速概览（轻）**：半屏到一屏，一句话定义 + 技术栈 + 目录地图 + 一条核心流程简述。
-  适合"快速看看 / 简单了解 / 大概是啥"。模板：[template-quick.md](references/template-quick.md)
-- **标准调研（默认）**：建立完整心智模型但不堆砌，9 个主干章节，条件章节无关就一行带过。
-  模板：[template-standard.md](references/template-standard.md)
-- **深度报告（重）**：严格、完整走全部 10 章 + 附录，一项不省。适合"完整报告 / 详细调研 / 全面分析 / 交付文档"。
-  模板：[template-deep.md](references/template-deep.md)
+- **Quick overview (light)**: half a screen to one screen: a one-sentence definition + tech stack + directory map + a short description of one core flow.
+  Fits "take a quick look / brief intro / roughly what is it". Template: [template-quick.md](references/template-quick.md)
+- **Standard investigation (default)**: builds a complete mental model without padding: 9 main sections; conditional sections that don't apply get one line.
+  Template: [template-standard.md](references/template-standard.md)
+- **Deep report (heavy)**: strictly and fully covers all 10 chapters + appendix, nothing skipped. Fits "full report / detailed investigation / comprehensive analysis / deliverable document".
+  Template: [template-deep.md](references/template-deep.md)
 
-**选档规则**：
+**Tier rules**:
 
-- 用户明确要"完整 / 详细 / 全面"报告 → 深度报告；说"快速 / 简单 / 大概 / 扫一眼" → 快速概览。
-- **没有明确说明时，默认标准调研**——既不敷衍也不过载。
-- 拿不准时，先按标准调研产出，并在结尾一句话告诉用户"需要更深可展开为深度报告，需要更轻可只看快速概览"。
+- The user explicitly wants a "full / detailed / comprehensive" report → deep report; says "quick / brief / roughly / skim" → quick overview.
+- **When nothing is stated, default to standard investigation**: neither shallow nor overloaded.
+- When unsure, produce the standard investigation first, and end with one sentence telling the user "需要更深可展开为深度报告，需要更轻可只看快速概览" (it can be expanded into a deep report, or cut down to the quick overview).
 
-> 项目大小与输出深度**正交**：大项目也可以只要快速概览。下文"工作流程"以**标准调研 / 深度报告**为基准描述；
-> 选了快速概览时，只做第 1 步采集 + 按 template-quick 产出即可，第 2~3 步按需精简。
+> Project size and output depth are **independent**: a large project can still get just a quick overview. The "Workflow" below is described for **standard investigation / deep report**;
+> when quick overview is chosen, just do the step 1 collection + output per template-quick, and trim steps 2-3 as needed.
 
-## 调研原则
+## Investigation principles
 
-这四条不属于某一个步骤，每一步都适用：
+These four apply to every step, not to any single step:
 
-1. **结论必须有源码证据，可核对** —— 每个重要结论尽量对应到**具体源码路径（含行号）**，
-   如"这是入口""这条路径会落库"后跟 `path:line`，让用户能 jump-to-source 验证。
-   **不准凭项目名或 README 描述断言功能**：README 说有的能力，要去源码找到实现再确认；
-   找不到实现就当作"声称但未在源码验证"。没有证据支撑的结论必须显式写"不确定 / 未在源码确认"。
-2. **"不适用" ≠ "未搞清楚"** —— 一个简单 CLI 没有认证机制，是"不适用（原因：本项目不涉及用户身份）"，
-   而不是"没搞清楚认证在哪"。前者是确定的结论，后者是盲区，混为一谈会误导读者。
-   盲区统一进"## 未搞清楚的部分 / 假设"，不要用合理猜测填补未知；条件章节无关就一行写明
-   "不适用（原因）"，不必硬撑小标题和占位内容。
-3. **自顶向下，不逐文件通读** —— 先抓大局（README / 入口 / 配置 / 依赖 / 目录），再深入实现。
-   **默认跳过不计入扫描范围**：`.git`、`node_modules`、`.venv` / `venv`、`dist`、`build`、`out`、`target`、
-   `coverage`、`__pycache__`、`.next` / `.nuxt` 等构建产物，以及代码生成目录（`generated/`、`*.pb.go`、
-   `*_pb2.py`）。大型 lock / bundle 文件（`package-lock.json`、`yarn.lock`、`*.min.js`）**默认不读**，
-   仅在需要确认依赖版本时按需查看对应条目。
-4. **敏感配置最小读取，报告不得泄露凭据** —— 默认**不读取真实环境文件或疑似凭据文件的内容**：
-   `.env`、`.env.*`（排除 `.env.example` / `.env.sample`）、`secrets.*`、`credentials.*`、`.npmrc`、
-   `.pypirc`、`.netrc`、`*.key`、`*.pem` 及云厂商凭据文件；也不运行 `env` / `printenv` 等会倾倒环境的命令。
-   需要判断是否误提交时，只检查文件名、跟踪状态与忽略规则。配置调研只读示例文件与配置加载代码；
-   即使是示例文件，遇到疑似真实 token / 密码 / 密钥也停止展开并标记为敏感。报告环境变量时只写
-   **变量名、用途、是否必填和加载位置**，不复制运行环境中的值；凭据类默认值一律写 `[已脱敏]`。
-   该约束同样适用于子 agent 简报、中间进度、代码片段和最终落盘报告。
+1. **Conclusions need source-code evidence that can be checked**: tie every important conclusion to a **specific source path (with line number)** where possible,
+   e.g. "this is the entry point" or "this path writes to the database" followed by `path:line`, so the user can jump to the source and verify.
+   **Never assert a feature from the project name or README**: for a capability the README claims, find its implementation in the source before confirming it;
+   if you cannot find it, treat it as "声称但未在源码验证" (claimed but not verified in source). A conclusion without evidence must say explicitly "不确定 / 未在源码确认" (uncertain / not confirmed in source).
+2. **"Not applicable" ≠ "not figured out"**: a simple CLI with no authentication is "不适用（原因：本项目不涉及用户身份）" (not applicable, reason: the project has no user identity),
+   not "didn't figure out where auth is". The first is a firm conclusion, the second is a blind spot; mixing them misleads the reader.
+   Put all blind spots in the `未搞清楚的部分 / 假设 / 已知问题` section (unclear parts / assumptions / known issues: chapter 9 in the standard tier, chapter 10 in the deep tier; the quick tier has no such section, so one line "未搞清楚 X" is enough); do not fill unknowns with plausible guesses. When a conditional section doesn't apply, write one line
+   "不适用（原因）" (not applicable, with reason); no need for forced subheadings and placeholder content.
+3. **Top-down, not file-by-file**: grasp the big picture first (README / entry point / config / dependencies / directories), then go into the implementation.
+   **Skipped by default and not scanned**: `.git`, `node_modules`, `.venv` / `venv`, `dist`, `build`, `out`, `target`,
+   `coverage`, `__pycache__`, `.next` / `.nuxt` and other build output, plus code-generation directories (`generated/`, `*.pb.go`,
+   `*_pb2.py`). Large lock / bundle files (`package-lock.json`, `yarn.lock`, `*.min.js`) are **not read by default**;
+   look at the relevant entries only when you need to confirm a dependency version.
+4. **Read sensitive config minimally; the report must not leak credentials**: by default **do not read the contents of real environment files or suspected credential files**:
+   `.env`, `.env.*` (except `.env.example` / `.env.sample`), `secrets.*`, `credentials.*`, `.npmrc`,
+   `.pypirc`, `.netrc`, `*.key`, `*.pem`, and cloud provider credential files; also do not run commands that dump the environment, such as `env` / `printenv`.
+   When you need to judge whether something was committed by mistake, check only the file name, tracking status, and ignore rules. For config, read only example files and the config-loading code;
+   even in an example file, if you hit what looks like a real token / password / key, stop expanding it and mark it sensitive. When reporting environment variables, write only
+   **variable name, purpose, whether required, and where it is loaded**; do not copy values from the running environment. Write every credential default as `[已脱敏]` (redacted).
+   This rule also applies to subagent briefs, intermediate progress, code snippets, and the final report written to disk.
 
-## 工作流程
+## Workflow
 
-### 第 0 步：确认调研对象与输出深度档
+### Step 0: Confirm the target and the output-depth tier
 
-先确认要调研的目录路径。如果用户没指定，默认就是当前工作目录。如果当前目录是空的或明显不是代码项目，
-停下来问用户。同时按"输出深度"**定下用哪一档**——这决定第 4 步读哪个模板文件。用户没明说就默认**标准调研**。
+First confirm the directory path to investigate. If the user did not give one, default to the current working directory. If the current directory is empty or clearly not a code project,
+stop and ask the user. Also **settle the tier** per "Output depth"; this decides which template file step 4 reads. If the user didn't say, default to **standard investigation**.
 
-### 第 1 步：自顶向下信息采集
+### Step 1: Top-down information gathering
 
-按以下顺序快速扫读：
+Skim quickly in this order:
 
-| 顺序 | 看什么 | 看出来什么 |
+| Order | What to look at | What it tells you |
 |---|---|---|
-| ① | 根目录 `ls`、`README*`、`docs/`、`CHANGELOG*` | 项目是什么、面向谁、怎么用 |
-| ② | 依赖清单：`package.json` / `pyproject.toml` / `requirements*.txt` / `go.mod` / `pom.xml` / `Cargo.toml` / `build.gradle` / `composer.json` 等 | 语言、框架、关键三方库 |
-| ③ | 配置 / 部署：`.env.example` / `.env.sample`、`config.example.*`、配置加载代码、`Dockerfile*`、`docker-compose*`、`Makefile`、`.github/`、`k8s/`、`helm/`、`terraform/` | 变量名与加载来源、部署方式、CI/CD；跳过真实 `.env` 与疑似凭据文件内容 |
-| ④ | 程序入口：`main.*`、`index.*`、`app.*`、`cmd/`、`bin/`、`manage.py`、框架约定的入口（如 Spring 的 `@SpringBootApplication`、Next.js 的 `pages/` `app/`） | 启动从哪开始执行 |
-| ⑤ | 顶层目录结构 | 模块划分 |
-| ⑥ | 数据模型：`models/`、`entities/`、`schema.*`、`migrations/`、ORM 定义 | 核心实体与关系 |
-| ⑦ | 对外接口：路由表、controller、API 定义文件（OpenAPI / proto / GraphQL schema） | 暴露的能力 |
-| ⑧ | 测试目录、CI 配置 | 工程实践 |
+| ① | Root `ls`, `README*`, `docs/`, `CHANGELOG*` | What the project is, who it is for, how to use it |
+| ② | Dependency manifests: `package.json` / `pyproject.toml` / `requirements*.txt` / `go.mod` / `pom.xml` / `Cargo.toml` / `build.gradle` / `composer.json` etc. | Language, framework, key third-party libraries |
+| ③ | Config / deployment: `.env.example` / `.env.sample`, `config.example.*`, config-loading code, `Dockerfile*`, `docker-compose*`, `Makefile`, `.github/`, `k8s/`, `helm/`, `terraform/` | Variable names and where they load from, deployment method, CI/CD; skip the contents of real `.env` and suspected credential files |
+| ④ | Program entry: `main.*`, `index.*`, `app.*`, `cmd/`, `bin/`, `manage.py`, framework-convention entry points (e.g. Spring's `@SpringBootApplication`, Next.js `pages/` `app/`) | Where execution starts |
+| ⑤ | Top-level directory structure | Module breakdown |
+| ⑥ | Data models: `models/`, `entities/`, `schema.*`, `migrations/`, ORM definitions | Core entities and relationships |
+| ⑦ | External interfaces: route tables, controllers, API definition files (OpenAPI / proto / GraphQL schema) | Exposed capabilities |
+| ⑧ | Test directories, CI config | Engineering practice |
 
-绝大多数模块**只需要看入口、目录索引、关键类名**就够了，深入读源码只在追端到端流程时进行。
+For most modules, **looking at the entry point, directory index, and key class names** is enough; read source in depth only when tracing an end-to-end flow.
 
-### 第 2 步：识别项目类型并追加专项分析
+### Step 2: Identify the project type and add type-specific analysis
 
-基于第 1 步采集到的依赖、入口、目录结构（**看证据，不看名字**）判断项目类型，按
-[project-type-checklists.md](references/project-type-checklists.md) 对应小节追加专项分析。常见类型：
-**CLI 项目**、**Web 服务**、**Library / SDK**、**Agent 项目**、**MCP Server**、**DevTool / Workflow 工具**、
-**Agent 编程工具插件 / 扩展（Claude Code / Codex）**。
+Judge the project type from the dependencies, entry points, and directory structure gathered in step 1 (**go by evidence, not by names**), and add the analysis from the matching section of
+[project-type-checklists.md](references/project-type-checklists.md). Common types:
+**CLI project**, **Web service**, **Library / SDK**, **Agent project**, **MCP Server**, **DevTool / Workflow tool**,
+**Agent coding tool plugin / extension (Claude Code / Codex)**.
 
-- 一个项目可能同时命中多类（如"Web 服务 + 运维 CLI"），命中几类就各做一份专项分析，并分别给出判断依据。
-- 判不出明确类型时，写明"未匹配到专项类型"，只做通用调研，不要硬套。
+- A project can match several types at once (e.g. "Web service + ops CLI"). Do a separate type-specific analysis for each match, and give the evidence for each.
+- If no clear type fits, write "未匹配到专项类型" (no specific type matched) and do only the general investigation; do not force a fit.
 
-### 第 3 步：选 1~2 条端到端流程并完整追踪
+### Step 3: Pick 1-2 end-to-end flows and trace them fully
 
-挑最能代表项目核心价值的流程（典型 HTTP 请求处理、最核心 CLI 命令、定时任务的一次执行、消息消费的一条流水）。
-**追代表性流程，不追全部**——其他次要流程一句话带过。从**入口**开始沿调用链走到**最终的输出 / 副作用**
-（响应、落库、写文件、发消息），记录每一跳：经过哪个文件 / 函数（带路径）、关键的转换 / 决策点、
-数据形状如何变化、外部依赖在哪一步被调用。
+Pick the flows that best represent the project's core value (a typical HTTP request, the most central CLI command, one run of a scheduled job, one message-consumption pipeline).
+**Trace representative flows, not all of them**; mention minor flows in one sentence. Start at the **entry point** and follow the call chain to the **final output / side effect**
+(response, database write, file write, message sent), recording each hop: which file / function it passes (with path), key transformations / decision points,
+how the data shape changes, and at which step external dependencies are called.
 
-这部分是报告里**信息密度最高**的章节，读者通过这一节就能掌握项目的"气脉"。
+This is the **most information-dense** section of the report; from it alone the reader should understand how the project's main logic runs.
 
-### 第 4 步：按对应档模板组织输出
+### Step 4: Organize output with the template for the chosen tier
 
-**按第 0 步选定的档，读取并填充对应模板**——三个模板各自独立，不要混用：
+**Read and fill the template for the tier chosen in step 0**. The three templates are independent; do not mix them:
 
-- **快速概览** → [template-quick.md](references/template-quick.md)：半屏到一屏。
-- **标准调研（默认）** → [template-standard.md](references/template-standard.md)：9 个主干章节，
-  条件章节无关就一行带过，不为凑满硬撑。
-- **深度报告** → [template-deep.md](references/template-deep.md)：严格走完整 10 章 + 附录，
-  每章都要保留标题，没内容就写"未搞清楚 / 不适用（原因）"，不省略。
+- **Quick overview** → [template-quick.md](references/template-quick.md): half a screen to one screen.
+- **Standard investigation (default)** → [template-standard.md](references/template-standard.md): 9 main sections;
+  conditional sections that don't apply get one line, no padding to fill them.
+- **Deep report** → [template-deep.md](references/template-deep.md): strictly cover all 10 chapters + appendix.
+  Keep every chapter heading; when a chapter has no content write "未搞清楚 / 不适用（原因）" (not figured out / not applicable, with reason); skip nothing.
 
-三档都遵循同一套「调研纪律」，区别只在**覆盖范围与详尽度**。调研每个章节时的具体追问点见
-[investigation-checklist.md](references/investigation-checklist.md)。第 2 步识别出的类型专项分析
-写入模板的"项目类型专项分析"章节（快速概览档可省略此章）。
+All three tiers follow the same investigation discipline; they differ only in **coverage and level of detail**. For the specific questions to ask when investigating each section, see
+[investigation-checklist.md](references/investigation-checklist.md). Write the type-specific analysis from step 2 into the template's
+"项目类型专项分析" (project-type analysis) section (the quick overview tier can omit it).
 
-### 大项目：分阶段与并行（按需启用）
+### Large projects: phases and parallelism (enable as needed)
 
-判断"大"的粗略指标：源文件 > 500、顶层模块 > 10、或一次性写完报告会超过单次输出能力。
-满足任一条件、**且用户要标准或深度档**时（只要快速概览就直接产出，不必启动分阶段）：
+Rough indicators of "large": more than 500 source files, more than 10 top-level modules, or a report too long to write in one output.
+When any of these holds **and the user wants the standard or deep tier** (for a quick overview, just produce it; no phases needed):
 
-1. **先只输出"全局概览 + 目录地图"**，并告诉用户"项目较大，我先给出全局概览和目录地图，
-   然后按模块逐个深入，你可以在任何时候打断或调整顺序"。这份过渡概览**不受任何模板的完整性约束**。
-2. **按模块并行调研**：环境提供子 agent 工具时（Claude Code 用 `Agent` + `subagent_type=Explore`；
-   Codex 用只读 `explorer` 或等价 agent thread），把"调研模块 X"作为独立任务派出去。
-   **工具不可用则退化为顺序调研，并在报告里说明"未启用并行"。**
-3. **聚合**：子 agent 返回后由你统一按模板拼装，消除模块间冲突 / 重复 / 不一致；详尽程度按选定档决定。
-   深度档还可**按报告章节并行起草**（描述性章节派子 agent、气脉章节主 agent 自己写），缩短撰写墙钟。
+1. **First output only "global overview + directory map"**, and tell the user "项目较大，我先给出全局概览和目录地图，
+   然后按模块逐个深入，你可以在任何时候打断或调整顺序" (the project is large; I'll give the overview and directory map first, then go module by module, and you can interrupt or reorder at any time). This interim overview is **not bound by any template's completeness rules**.
+2. **Investigate modules in parallel**: when the environment provides a subagent tool (Claude Code: `Agent` + `subagent_type=Explore`;
+   Codex: a read-only `explorer` or equivalent agent thread), send "investigate module X" out as a separate task.
+   **If the tool is not available, fall back to sequential investigation and state "未启用并行" (parallelism not enabled) in the report.**
+3. **Aggregate**: after the subagents return, assemble everything yourself per the template, removing conflicts / duplication / inconsistencies between modules; the level of detail follows the chosen tier.
+   The deep tier can also **draft report chapters in parallel** (descriptive chapters go to subagents, the core-logic chapters the main agent writes itself) to cut wall-clock writing time.
 
-切分原则、派活模板、输出节奏与两个变体详见 [parallel-strategy.md](references/parallel-strategy.md)。
+Splitting rules, task-brief template, output pacing, and two variants are in [parallel-strategy.md](references/parallel-strategy.md).
 
-### 第 5 步：自检
+### Step 5: Self-check
 
-输出前按「通用项 + 所选档专项」检查。只使用当前档位的清单，避免用深度报告的标准扩写快速概览，
-避免将快速概览扩展成不必要的长报告。
+Before output, check "common items + items for the chosen tier". Use only the current tier's list, so a quick overview is not expanded to deep-report standards,
+and does not grow into an unnecessarily long report.
 
-**通用项（三档都要）**：
+**Common items (all three tiers)**:
 
-- [ ] 输出深度选档对不对？（默认标准调研；用户要"完整"才上深度报告，要"快速"就给概览）
-- [ ] 「调研纪律」四条都守住了？（结论带 `path:line`、没凭名字 / README 猜、区分"不适用 / 未搞清楚"、
-      没读真实 `.env` 与凭据文件、报告与中间产物里没有真实值 / token / 密码 / 密钥）
-- [ ] 全文是不是中文？
-- [ ] 输出前问过目的地了吗？（终端 / 文件 / 两者）选"文件 / 两者"时处理了同名覆盖吗？
+- [ ] Is the tier right? (Default standard investigation; deep report only when the user wants "full", overview when they want "quick")
+- [ ] Are all four investigation principles kept? (Conclusions carry `path:line`; no guessing from names / README; "not applicable" vs "not figured out" kept apart;
+      no real `.env` or credential files read; no real values / tokens / passwords / keys in the report or intermediate output)
+- [ ] Is the whole report in Chinese?
+- [ ] Did you ask about the destination before output? (terminal / file / both) When "file / both" was chosen, did you handle an existing file with the same name?
 
-**🟢 快速概览档**：
+**🟢 Quick overview tier**:
 
-- [ ] 是否控制在半屏到一屏？有没有不小心扩写成标准报告？
-- [ ] 一句话定义 + 技术栈 + 精简目录地图 + **一条核心流程的简述**齐了吗？
-      （是简述，不需要逐跳；**不需要**专项分析和综合评价）
+- [ ] Is it kept to half a screen to one screen? Did it accidentally grow into a standard report?
+- [ ] Are the one-sentence definition + tech stack + trimmed directory map + **a short description of one core flow** all there?
+      (A short description, not hop by hop; type-specific analysis and overall assessment are **not needed**)
 
-**🟡 标准调研档**：
+**🟡 Standard investigation tier**:
 
-- [ ] 一页纸概览能让读者扫一眼抓住大局吗？
-- [ ] 报告开头（一页纸概览前）放了「## 目录」章节目录吗？条目与各 ## 章节真实标题一一对应、可点击跳转？
-      （这是 TOC，与第 4 章的"目录地图"不是一回事）
-- [ ] 目录地图是"标注重点"而非罗列全部？
-- [ ] 有没有 1~2 条端到端流程，每一跳给了文件路径？
-- [ ] 识别了项目类型并做了专项分析？（判不出写"未匹配"）综合评价（含项目亮点）给了吗？
-- [ ] 不确定的点是否单列在"未搞清楚"章节，且与"不适用"区分开？
+- [ ] Can the reader grasp the big picture from a glance at the one-page overview?
+- [ ] Is there a "## 目录" table of contents at the start of the report (before the one-page overview)? Do its entries match the real ## section headings one to one, and do the links jump?
+      (This is the TOC, not the same thing as the "directory map" in chapter 4)
+- [ ] Does the directory map "highlight what matters" rather than list everything?
+- [ ] Are there 1-2 end-to-end flows, with a file path for each hop?
+- [ ] Was the project type identified and type-specific analysis done? (Write "未匹配" if none matched.) Is the overall assessment (including project highlights) given?
+- [ ] Are uncertain points listed separately in the "not figured out" section, and kept apart from "not applicable"?
 
-**🔴 深度报告档**：
+**🔴 Deep report tier**:
 
-- [ ] 模板全部章节都在、没有省略标题？空章节写了"未搞清楚 / 不适用（原因）"？
-- [ ] 标准档的全部检查项是否也都满足？（深度档是标准档的超集）
-- [ ] 配置 / 环境变量、可观测性、安全等深度档独有章节是否完整填写或标注不适用？
-- [ ] 综合评价章（第 9 章）是否给出**项目亮点**，且每条落到 `path:line`（不是泛泛"架构清晰"）？
-- [ ] 若命中 **DevTool / Workflow 工具**：是否按「意图 → 入口 → 流程」**穷举了工作场景全景**？
-- [ ] 若命中 **Agent 编程工具插件 / 扩展**：是否区分 Claude Code / Codex 信号、**逐条画像 + 画了整体装配图**？
-      条目多时是否用了并行（或注明未启用）？
-- [ ] 若启用了**按报告章节并行起草**：是否做了逐章聚合 / 统一术语 / **跨章一致性核对**？
-      一页纸概览是否先出、章节是否边就绪边推？无子 agent 工具或项目偏小时是否退化为串行并注明？
+- [ ] Are all template chapters present with no headings dropped? Do empty chapters say "未搞清楚 / 不适用（原因）"?
+- [ ] Are all standard-tier checks also met? (The deep tier is a superset of the standard tier)
+- [ ] Are the deep-tier-only chapters (config / environment variables, observability, security) filled in or marked not applicable?
+- [ ] Does the overall assessment chapter (chapter 9) give **project highlights**, each tied to `path:line` (not a generic "clear architecture")?
+- [ ] If it matches **DevTool / Workflow tool**: did you **exhaustively cover all work scenarios** as "intent → entry point → flow"?
+- [ ] If it matches **Agent coding tool plugin / extension**: did you separate Claude Code / Codex signals, **profile each item, and draw an overall assembly diagram**?
+      With many items, did you use parallelism (or note it was not enabled)?
+- [ ] If **parallel drafting by report chapter** was used: did you aggregate chapter by chapter / unify terms / **check consistency across chapters**?
+      Did the one-page overview come out first, and were chapters pushed as they became ready? With no subagent tool or a small project, did you fall back to serial and note it?
 
-### 第 6 步：询问输出目的地
+### Step 6: Ask for the output destination
 
-报告在对话中产出、且第 5 步自检通过后，**先不要把全文贴出来**，而是问用户希望报告输出到哪里。
-默认**不自动写盘**——按用户选择决定。
+After the report is produced in the conversation and the step 5 self-check passes, **do not paste the full text yet**; ask the user where they want the report.
+By default **do not write to disk automatically**; act on the user's choice.
 
-- **询问方式**：当前环境提供交互式选择工具时使用它（如 Claude Code 的 AskUserQuestion 或 Codex
-  当前会话暴露的用户输入能力）；不可用就用纯文本询问，让用户回一个。
-  - **终端**：把报告全文输出在对话里，不写文件。
-  - **文件**：写入文件；对话中只说明保存路径，并附报告的一页纸概览，不重复全文。
-  - **两者**：报告全文输出在对话里，**同时**写入文件。
-- **一页纸概览的来源**（选"文件"时终端要留的那段）：标准 / 深度档直接摘报告里的 `## 一页纸概览` 章节；
-  快速概览档没有该章节，摘它的"一句话定义 + 核心价值"两三行。
-- **选"文件"或"两者"时的写盘细节**：把刚产出的那一档报告**原文**（中文、Markdown）写入文件。
-  - **默认位置**：被调研项目的根目录。
-  - **默认文件名**：`<项目名>-调研报告-<YYYYMMDD>.md`（`<项目名>` 取被调研目录名），
-    例如 `codebase-analyzer-调研报告-20260603.md`。用户指定了路径 / 文件名则以用户的为准。
-  - 写盘前若发现**同名文件已存在**，先提示用户确认覆盖还是改名，不要静默覆盖。
-  - 写入内容就是对话里那份报告，不要为落盘重新精简或扩写。
-- **选完不再二次追问**：选"终端"就只输出在对话里、不存盘；想存又想终端看全文的，一开始就选"两者"。
-- **大项目分阶段产出时**：等全部模块 / 章节聚合、形成完整报告后再问目的地，落定的是最终完整版
-  而非过渡概览；流式过程中只向终端推进度 + 概要，过程成稿不逐份贴终端。
+- **How to ask**: when the environment provides an interactive choice tool, use it (e.g. Claude Code's AskUserQuestion or the user-input capability
+  exposed by the current Codex session); if not available, ask in plain text and have the user reply with one option.
+  - **Terminal**: output the full report in the conversation, do not write a file.
+  - **File**: write it to a file; in the conversation only state the saved path and include the report's one-page overview, without repeating the full text.
+  - **Both**: output the full report in the conversation, **and** write it to a file.
+- **Where the one-page overview comes from** (the part left in the terminal when "file" is chosen): for the standard / deep tiers, take the report's `## 一页纸概览` section directly;
+  the quick overview tier has no such section, so take the two or three lines of its `## 一句话定义` (one-sentence definition) and `## 核心价值` (core value) sections.
+- **Write details when "file" or "both" is chosen**: write the **original text** of the report just produced (Chinese, Markdown) to the file.
+  - **Default location**: the root of the investigated project.
+  - **Default file name**: `<项目名>-调研报告-<YYYYMMDD>.md` (`<项目名>` is the project name, taken from the investigated directory name),
+    e.g. `codebase-analyzer-调研报告-20260603.md`. If the user gives a path / file name, use theirs.
+  - If **a file with the same name already exists** before writing, ask the user to confirm overwrite or rename; do not overwrite silently.
+  - Write exactly the report from the conversation; do not trim or expand it for the file.
+- **No second question after the choice**: "terminal" means output in the conversation only, no file; a user who wants both a file and the full text in the terminal should choose "both" up front.
+- **When a large project is produced in phases**: ask about the destination only after all modules / chapters are aggregated into the complete report; what gets saved is the final complete version,
+  not the interim overview. During streaming, push only progress + summaries to the terminal; do not paste each interim draft to the terminal.
 
-## 输出格式约束
+## Output format rules
 
-- **整篇报告必须使用中文**（包括代码片段中的注释，原文代码保持不变）。
-- 章节顺序**遵循所选档的模板**；大项目阶段 1 的临时概览不受模板约束。
-- 文件路径用反引号包裹，例如 `src/server/router.ts:42`。
-- 涉及代码片段使用带语言标识的 fenced code block。
-- 结构化对照数据（模块职责、环境变量、对外接口、外部系统等）**用表格**——这类多列、需对齐的数据
-  正是表格的用武之地。正文叙述、长说明、连贯逻辑**不要**塞进表格，用列表或段落更易读。
-- 环境变量表只列变量名、用途、是否必填和加载位置；不要为填表去读取或复制真实值。
-- 重点用 **粗体**，避免大段斜体。
-- **不写矫饰文风**：有直白表达就用直白表达，不用隐喻和华丽辞藻替代陈述。
-  写"一个值得调整的参数"，不写"一个值得转动的旋钮"；写"这一点依然重要"，不写"这一点依然有一席之地"。
-  这类句子是在展示写作者，不是在传达观点；隐喻还会带来作者没选、也控制不了的联想，读者要多花力气才能解读。
+- **The whole report must be in Chinese** (including comments in code snippets; original code stays unchanged).
+- Section order **follows the chosen tier's template**; the interim overview in phase 1 of a large project is not bound by the template.
+- Wrap file paths in backticks, e.g. `src/server/router.ts:42`.
+- Use fenced code blocks with a language tag for code snippets.
+- **Use tables** for structured comparison data (module responsibilities, environment variables, external interfaces, external systems, etc.): this multi-column data that needs alignment
+  is what tables are for. Do **not** put narrative text, long explanations, or connected reasoning in tables; lists or paragraphs read better.
+- The environment variable table lists only variable name, purpose, whether required, and where it is loaded; do not read or copy real values to fill it.
+- Use **bold** for emphasis; avoid long stretches of italics.
+- **No ornamental prose**: when a plain statement exists, use it; do not replace statements with metaphors or flowery wording.
+  Write "一个值得调整的参数", not "一个值得转动的旋钮"; write "这一点依然重要", not "这一点依然有一席之地".
+  Such sentences show off the writer instead of conveying a point; metaphors also bring associations the writer didn't choose and can't control, and the reader has to work harder to decode them.
 
-## 常见错误
+## Common mistakes
 
-- "这个项目大概是一个 web 应用，应该用了 Express。" —— 没看依赖文件就猜。
-- 把每个文件都 Read 一遍后再开始写报告 —— 浪费上下文，且大概率丢失全局。
-- "认证相关的逻辑在 auth 模块里。" —— 没给路径，读者无法核对。
-- 端到端流程只写"请求进来，处理，返回"——没追到具体文件 / 函数。
-- 把"本项目不涉及用户身份"这种确定结论，写成"没搞清楚认证在哪" —— 把不适用当成盲区。
-- 直接输出整篇巨型报告，没有先给概览。
-- 用英文输出，或中英混杂。
-- "认证模块是整个系统的心脏。" —— 用隐喻代替陈述；写"所有请求都先经过认证模块"。
-- 为了补全配置章节读取真实 `.env` / 私钥 / 凭据文件，或把 token、密码、密钥及敏感默认值写进报告。
-- 没问过目的地就把整篇报告刷满终端，或擅自把报告写进项目目录。
+- "这个项目大概是一个 web 应用，应该用了 Express。": guessing without looking at the dependency files.
+- Reading every file before starting to write the report: wastes context and likely loses the big picture.
+- "认证相关的逻辑在 auth 模块里。": no path given, so the reader cannot check it.
+- The end-to-end flow only says "request comes in, gets processed, returns": not traced to specific files / functions.
+- Writing a firm conclusion like "本项目不涉及用户身份" as "没搞清楚认证在哪": treating not-applicable as a blind spot.
+- Outputting a giant report directly without giving an overview first.
+- Writing in English, or mixing Chinese and English.
+- "认证模块是整个系统的心脏。": a metaphor instead of a statement; write "所有请求都先经过认证模块".
+- Reading real `.env` / private keys / credential files to complete the config section, or writing tokens, passwords, keys, or sensitive defaults into the report.
+- Flooding the terminal with the whole report without asking about the destination, or writing the report into the project directory without permission.

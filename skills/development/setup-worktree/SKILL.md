@@ -1,98 +1,98 @@
 ---
 name: setup-worktree
-description: 创建并验证隔离的 Git worktree，在创建前明确锁定基线提交。
+description: Create and verify an isolated Git worktree, locking the base commit explicitly before creating it.
 ---
 
-# Setup Worktree — 工作区隔离
+# Setup Worktree: Workspace Isolation
 
-## 目标
+## Goal
 
-在开始一段开发、或并行多个任务前，**建立一个隔离的 git 工作区（worktree）**，让这段工作在
-独立目录、隔离 checkout（需要时再建立独立分支）上进行，不污染当前工作区、也便于多条开发线并行。
+Before starting a stretch of development, or running several tasks in parallel, **set up an isolated git workspace (worktree)** so the work happens in
+a separate directory with an isolated checkout (and its own branch when needed). It does not pollute the current workspace and makes parallel lines of development easier.
 
-任何需要隔离工作区的场景都可以调用它。职责仅限于建立并验证隔离环境，
-不负责后续清理和收尾。
+Any situation that needs an isolated workspace can call it. Its job is limited to setting up and verifying the isolated environment;
+it is not responsible for later cleanup or wrap-up.
 
-## 调用契约
+## Invocation contract
 
-**传入**
+**Inputs**
 
-- **expected base**（可选）：要求的起点 commit。不给就用当前本地 `HEAD`，不自行改成远端默认分支。
-- **用途 / 命名线索**：关联的任务或功能名，用于分支与 worktree 目录命名，便于后续辨认与清理。
-- **是否要独立分支**：只要隔离 checkout 还是要长期分支。
+- **expected base** (optional): the required starting commit. If not given, use the current local `HEAD`; do not switch to the remote default branch on your own.
+- **Purpose / naming hint**: the related task or feature name, used to name the branch and worktree directory so they are easy to recognize and clean up later.
+- **Whether a separate branch is needed**: just an isolated checkout, or a long-lived branch.
 
-**取回**
+**Returns**
 
-- worktree 路径、HEAD 状态（分支名或 detached）、**已验证等于 expected base 的完整 commit ID**、平台。
-- 未通过验证或工作区有未提交改动 → 回 **BLOCKED**：报告实际值与期望值，交调用方 / 用户处理。
+- Worktree path, HEAD state (branch name or detached), **the full commit ID verified to equal the expected base**, and platform.
+- If verification fails or the workspace has uncommitted changes, return **BLOCKED**: report actual and expected values and hand it to the caller / user.
 
-**职责边界**
+**Responsibility boundaries**
 
-- 不自动 stash / 提交 / 丢弃当前工作区的未提交改动。
-- 不合并、不清理、不移除 worktree——这个 skill 只建立隔离。
-- 不写业务代码、不跑测试。
+- Do not automatically stash / commit / discard uncommitted changes in the current workspace.
+- Do not merge, clean up, or remove worktrees; this skill only sets up isolation.
+- Do not write business code or run tests.
 
-## 何时用 / 何时不用
+## When to use / when not to use
 
-**适用**：
+**Use it when**:
 
-- 开始一段开发，想把它隔离到干净工作区（不与当前未提交改动混在一起）。
-- 要并行执行多个任务，每个任务需要各自隔离、互不踩文件。
-- 想同时维护多条开发线（多个 worktree）。
+- Starting a stretch of development that you want isolated in a clean workspace (not mixed with current uncommitted changes).
+- Running several tasks in parallel, where each needs its own isolation and must not touch the others' files.
+- Maintaining several lines of development at once (several worktrees).
 
-**不适用**：
+**Do not use it when**:
 
-- 改动很小、不需要隔离 —— 直接在当前工作区处理即可。
-- 要做的是收尾 / 合并 / 删除 worktree —— 不是这个 skill 的事。
-- 不在 git 仓库里 —— worktree 是 git 能力，先确认是 git 仓库。
+- The change is small and needs no isolation: just work in the current workspace.
+- The job is wrap-up / merge / deleting a worktree: that is not this skill's job.
+- You are not in a git repository: worktrees are a git feature, so confirm it is a git repository first.
 
-## 核心流程（检测 → 锁定基线 → 创建 → 验证）
+## Core flow (detect → lock base → create → verify)
 
-1. **检测当前状态**：
-   - 是否在 git 仓库？否 → 告知不适用，停。
-   - **是否已在一个合适的隔离环境里？** 是 → 不重复建；仍需核对当前 `HEAD` 是否就是调用方要求的基线。
-   - 当前有无未提交改动（含未跟踪文件）？有 → **停止创建并让用户先处理**。不得自动 stash、提交、丢弃，也不得假设新 worktree 会携带这些改动。
-2. **锁定 expected base**：
-   - 调用方明确给出基线时，以调用方给出的 commit 为准。
-   - 未给出时，用 `git rev-parse HEAD` 记录当前本地 `HEAD` 的完整 commit ID；默认以这个本地 `HEAD` 为基线，不要自行改成远端默认分支。
-   - 并行任务必须各自记录 expected base；同一批任务若要求同源，所有 worktree 使用同一个 commit ID。
-3. **按平台选择能保证 expected base 的创建方式**：
-   - 只有在平台原生工具**能保证从 expected base 创建**时才使用它；无法确认语义时，统一退回显式命令：
-     `git worktree add -b <分支名> <路径> <expected-base>`。
-   - **Claude Code**：保留 `worktree.baseRef` 语义。默认值 `fresh` 从 `origin` 默认分支创建，`head` 才从本地 `HEAD` 创建；
-     该设置同时影响 `--worktree`、`EnterWorktree` 和 subagent isolation。expected base 是本地 `HEAD` 时，
-     不能把默认 `fresh` 当成等价语义，也不得擅自修改用户设置。
-   - **Codex App**：托管 Worktree 从新任务里选定分支的 `HEAD` 创建，默认处于 detached HEAD；
-     创建前让用户在 composer 选择 `Worktree` 与起始分支，或在已有任务中使用 Handoff。只有选定分支的 `HEAD` 等于 expected base 时才使用该路径；
-     创建后再用真实 commit ID 核验，不因 UI 显示的分支名跳过验证。需要长期分支时，验证后再使用 `Create branch here`，不要把默认 detached HEAD 误报成独立分支。
-   - **Codex CLI / IDE**：不假设存在 Codex App 的托管 Worktree/Handoff；需要隔离时使用显式 `git worktree add`。
-     Codex App 的 `.worktreeinclude` 只用于复制 Git 已忽略且确实需要的本地文件，不得借它搬运普通未提交改动，也不得未经用户同意加入凭据文件。
-   - 记下 **平台、worktree 路径、HEAD 状态（detached 或分支名）与 expected base**，供后续验证与清理。
-4. **创建后验证，未通过不得开工**：
-   - 在新 worktree 中执行 `git rev-parse HEAD`，结果必须与 expected base 的 commit ID 完全一致。
-   - 确认新 worktree 状态干净，原工作区没有被改动；Codex App 托管 Worktree 还要记录是否为 detached HEAD。
-   - 若 HEAD 不匹配：**停止，不做代码修改，也不要用 rebase / reset 静默修正**；报告实际值与期望值，由用户决定后续处理。
+1. **Detect the current state**:
+   - In a git repository? No: say it does not apply, stop.
+   - **Already in a suitable isolated environment?** Yes: do not create another; still check that the current `HEAD` is the base the caller asked for.
+   - Any uncommitted changes (including untracked files)? Yes: **stop creating and have the user handle them first**. Do not automatically stash, commit, or discard them, and do not assume the new worktree will carry these changes.
+2. **Lock the expected base**:
+   - When the caller gives a base explicitly, use the commit the caller gave.
+   - When not given, record the full commit ID of the current local `HEAD` with `git rev-parse HEAD`; use this local `HEAD` as the base by default and do not switch to the remote default branch on your own.
+   - Parallel tasks must each record their expected base; if a batch of tasks must share the same origin, all worktrees use the same commit ID.
+3. **Pick a creation method per platform that guarantees the expected base**:
+   - Use the platform's native tool only when it **is guaranteed to create from the expected base**; when you cannot confirm its semantics, fall back to the explicit command:
+     `git worktree add -b <branch-name> <path> <expected-base>`.
+   - **Claude Code**: respect the `worktree.baseRef` semantics. The default `fresh` creates from the `origin` default branch; only `head` creates from the local `HEAD`.
+     This setting affects `--worktree`, `EnterWorktree`, and subagent isolation alike. When the expected base is the local `HEAD`,
+     do not treat the default `fresh` as equivalent, and do not change the user's settings on your own.
+   - **Codex App**: a managed Worktree is created from the `HEAD` of the branch chosen in a new task and starts in detached HEAD by default.
+     Before creating, have the user choose `Worktree` and the starting branch in the composer, or use Handoff in an existing task. Use this path only when the chosen branch's `HEAD` equals the expected base;
+     after creating, verify with the real commit ID, and do not skip verification because of the branch name shown in the UI. When a long-lived branch is needed, use `Create branch here` after verification; do not report the default detached HEAD as a separate branch.
+   - **Codex CLI / IDE**: do not assume Codex App's managed Worktree/Handoff exists; when isolation is needed, use an explicit `git worktree add`.
+     Codex App's `.worktreeinclude` is only for copying local files that Git ignores and that are really needed. Do not use it to carry ordinary uncommitted changes, and do not add credential files without the user's consent.
+   - Record **platform, worktree path, HEAD state (detached or branch name), and expected base** for later verification and cleanup.
+4. **Verify after creating; do not start work until it passes**:
+   - Run `git rev-parse HEAD` in the new worktree; the result must exactly match the expected base's commit ID.
+   - Confirm the new worktree is clean and the original workspace was not changed; for a Codex App managed Worktree, also record whether it is detached HEAD.
+   - If HEAD does not match: **stop, make no code changes, and do not silently fix it with rebase / reset**; report actual and expected values and let the user decide what to do next.
 
-> 检验：新 worktree 是否处于独立目录，`HEAD == expected base`，HEAD 状态已明确，新旧工作区都保持干净？全部满足才算隔离成立。
+> Check: is the new worktree in a separate directory, with `HEAD == expected base`, a clear HEAD state, and both old and new workspaces clean? Isolation holds only when all of these are true.
 
-## 注意事项
+## Notes
 
-- **先检测再创建**：如果已经位于合适的 worktree 中，不再嵌套创建。
-- **基线语义优先**：平台原生与手工命令只是实现手段；是否准确落在 expected base 才是选择依据。
-- **平台分支不混用**：Claude Code 的 `EnterWorktree/worktree.baseRef`、Codex App 的 Worktree/Handoff、
-  Codex CLI 的显式 Git 命令分别处理，不用一个平台的参数解释另一个平台。
-- **命名可追溯**：分支 / worktree 路径用关联任务 / 功能的名字，便于后续辨认与清理。
-- **不搬运脏改动**：不自动 stash、提交或复制当前工作区的未提交改动。
-- **不在这里清理**：worktree 用完的移除 / 合并交回调用方；移除工作树前必须取得用户明确确认。
+- **Detect before creating**: if you are already in a suitable worktree, do not create a nested one.
+- **Base semantics come first**: native platform tools and manual commands are just means; whether you land exactly on the expected base is what decides the choice.
+- **Do not mix platforms**: handle Claude Code's `EnterWorktree/worktree.baseRef`, Codex App's Worktree/Handoff, and
+  Codex CLI's explicit Git commands separately; do not interpret one platform's parameters in terms of another.
+- **Traceable names**: name the branch / worktree path after the related task / feature so it is easy to recognize and clean up later.
+- **Do not carry dirty changes**: do not automatically stash, commit, or copy uncommitted changes from the current workspace.
+- **Do not clean up here**: removing / merging the worktree when done goes back to the caller; get the user's explicit confirmation before removing a worktree.
 
-## 常见错误
+## Common mistakes
 
-- 不检测就建 —— 在已有 worktree 里又套一个 worktree。
-- 看到 `EnterWorktree` 就直接调用，却没有确认它会从哪个 commit 创建。
-- 在 Codex App 中只看起始分支名称，不核对托管 Worktree 的真实 `HEAD`。
-- 把 Codex App 默认 detached HEAD 描述成已经创建了独立分支。
-- 当前工作区有未提交改动时自动 stash / 提交，然后继续创建。
-- 创建后不核对 `HEAD`，让任务在错误基线上开工。
-- 在这里做合并 / 删除 worktree / 清理 —— 越界，这个 skill 只建立隔离。
-- 在非 git 仓库里硬建 worktree。
-- 给小改动也强行开 worktree —— 不需要隔离就别隔离（YAGNI）。
+- Creating without detecting: nesting a worktree inside an existing worktree.
+- Seeing `EnterWorktree` and calling it directly without confirming which commit it creates from.
+- In Codex App, looking only at the starting branch name and not checking the managed Worktree's real `HEAD`.
+- Describing Codex App's default detached HEAD as a separate branch already created.
+- Automatically stashing / committing when the current workspace has uncommitted changes, then continuing to create.
+- Not checking `HEAD` after creating, so the task starts on the wrong base.
+- Merging / deleting worktrees / cleaning up here: out of scope, this skill only sets up isolation.
+- Forcing a worktree in a non-git directory.
+- Forcing a worktree for a small change: if it needs no isolation, do not isolate (YAGNI).

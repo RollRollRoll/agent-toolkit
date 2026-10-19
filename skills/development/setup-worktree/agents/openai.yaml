@@ -1,4 +1,4 @@
 interface:
   display_name: "Setup Worktree"
-  short_description: "锁定基线，并创建和验证隔离的 Git worktree。"
-  default_prompt: "使用 $setup-worktree 为这次开发创建隔离工作区，先锁定基线提交，再创建并核对 HEAD。"
+  short_description: "Lock the base commit, then create and verify an isolated Git worktree."
+  default_prompt: "Use $setup-worktree to create an isolated workspace for this work: lock the base commit first, then create the worktree and check its HEAD."

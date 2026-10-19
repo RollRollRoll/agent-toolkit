@@ -1,79 +1,74 @@
 ---
 name: to-spec
-description: 将当前对话整理成 spec 并发布到项目的 issue tracker；只综合已有讨论，不再补做需求访谈。
+description: "Turn the current conversation into a spec and publish it to the project issue tracker: no interview, just synthesis of what you've already discussed."
 disable-model-invocation: true
 ---
 
-这个 skill 根据当前对话和已经获得的代码库信息产出 spec。
-它只整理已有内容，不再发起需求访谈。
+This skill takes the current conversation context and codebase understanding and produces a spec. Do NOT interview the user; just synthesize what you already know.
 
-issue tracker 与 triage 标签词汇应该已经提供给你了。如果没有，让用户去跑 `setup-env`。
+The issue tracker and triage label vocabulary should have been provided to you. If not, tell the user to run `setup-env`.
 
-## 流程
+## Process
 
-1. 探索仓库，搞清代码库当前的状态（如果你还没探索过）。整份 spec 都用项目领域术语表里的词汇，
-   并尊重你要动的那块区域的 ADR。
+1. Explore the repo to understand the current state of the codebase, if you haven't already. Use the project's domain glossary vocabulary throughout the spec, and respect any ADRs in the area you're touching.
 
-2. 把你打算在哪些 seam 上测这个特性勾出来。**已有的 seam 优先于新建的。用能用的最高的那个 seam。**
-   如果确实需要新的 seam，就把它提在你能提的最高点上。
-   **整个代码库上的 seam 越少越好——理想数量是一个。**
+2. Sketch out the seams at which you're going to test the feature. Existing seams should be preferred to new ones. Use the highest seam possible. If new seams are needed, propose them at the highest point you can. The fewer seams across the codebase, the better - the ideal number is one.
 
-   **和用户确认这些 seam 是否符合他的预期。**
+Check with the user that these seams match their expectations.
 
-3. 按下面的模板写这份 spec，然后把它发布到项目的 issue tracker。
-   打上 `ready-for-agent` triage 标签——不需要额外 triage。
+3. Write the spec using the template below, then publish it to the project issue tracker. Apply the `ready-for-agent` triage label - no need for additional triage.
 
 <spec-template>
 
 # Implementation-Ready Delivery Spec
 
-## 文档定位
+## Purpose of this document
 
-`Implementation-Ready Delivery Spec` 是进入任务拆分前的单一权威文档，负责回答三类问题：
+The `Implementation-Ready Delivery Spec` is the single authoritative document before task breakdown. It answers three kinds of question:
 
-1. **系统应该表现成什么样**：用户问题、解决方案、范围、行为需求、禁止行为、边界场景和验收标准。
-2. **系统准备怎么实现**：现状基线、技术决策、组件、数据、接口、失败处理和兼容方案。
-3. **如何确认实现正确**：测试原则、测试 seam、验证方式，以及需求到设计和验证的覆盖关系。
+1. **How the system should behave**: the user problem, solution, scope, behavioral requirements, prohibited behavior, edge scenarios, and acceptance criteria.
+2. **How the system will be implemented**: the current baseline, technical decisions, components, data, interfaces, failure handling, and compatibility plan.
+3. **How to confirm the implementation is correct**: testing principles, test seams, verification methods, and coverage from requirements to design and verification.
 
 
-## 编写规则
+## Writing rules
 
-1. 整份文档使用项目领域术语表中的词汇，并遵守相关 ADR。
-2. 同一信息只在一个权威位置完整定义，其他章节通过 `REQ`、`SCN`、`DEC`、`VAL` 等编号引用。
-3. 行为章节只描述外部可观察结果，不包含技术选型和架构。
-4. 技术设计不得重新定义行为需求，只说明如何满足它们。
-5. 默认描述模块、接口和契约，不枚举容易过时的具体实现文件路径。
-6. 默认不嵌入实现代码。只有当原型中的状态机、Schema、Reducer 或类型形状比散文更精确地表达一项已确认决策时，才保留决策密度高的最小片段，并注明来源于原型。
-7. 不提前写 task-by-task 的施工清单；设计依赖不等于任务依赖。
-8. 不适用的可选章节可以删除，但必须能说明“不适用”的理由，不能因为遗漏而消失。
-9. 不写矫饰文风：有直白表达就用直白表达，不用隐喻和华丽辞藻替代陈述。写“一个值得调整的参数”，不写“一个值得转动的旋钮”；写“这一点依然重要”，不写“这一点依然有一席之地”。隐喻会带来作者未选择、也无法控制的联想，读者要多花力气解读，spec 的精确性会因此受损。
+1. Use the project's domain glossary vocabulary throughout, and respect the relevant ADRs.
+2. Define each piece of information in full in exactly one authoritative place; other sections refer to it by ID (`REQ`, `SCN`, `DEC`, `VAL`, etc.).
+3. Behavior sections describe only externally observable results, with no technology choices or architecture.
+4. Technical design must not redefine behavioral requirements; it only explains how they are met.
+5. Describe modules, interfaces, and contracts by default. Do NOT list specific implementation file paths; they may end up being outdated very quickly.
+6. Don't embed implementation code by default. Only when a prototype's state machine, schema, reducer, or type shape expresses a confirmed decision more precisely than prose, keep the smallest decision-rich snippet and note that it came from a prototype.
+7. Don't write a task-by-task build list ahead of time; design dependencies are not task dependencies.
+8. Optional sections that don't apply may be deleted, but you must be able to give the reason they don't apply; they must not disappear through oversight.
+9. No ornate prose: when there is a plain way to say something, say it plainly; don't replace statements with metaphors and flowery wording. Write "a parameter worth adjusting", not "a knob worth turning"; write "this still matters", not "this still has its place". Metaphors bring associations the author didn't choose and can't control, the reader has to work harder to decode them, and the spec loses precision.
 
 ---
 
-## 最小编号体系
+## Minimal ID scheme
 
-| 类型 | 格式 | 用途 |
+| Type | Format | Use |
 |---|---|---|
-| 正向需求 | `REQ-001` | 系统必须提供的行为 |
-| 负向需求 | `NEG-001` | 系统禁止出现的行为 |
-| 质量需求 | `QOS-001` | 性能、可靠性、安全等可量化要求 |
-| 场景 | `SCN-001-A` | Requirement 的可观察验收场景 |
-| 技术决策 | `DEC-001` | 重大或需要追溯的技术决定 |
-| 验证项 | `VAL-001` | 自动测试、基准、故障注入或人工验证 |
+| Positive requirement | `REQ-001` | Behavior the system must provide |
+| Negative requirement | `NEG-001` | Behavior the system must not exhibit |
+| Quality requirement | `QOS-001` | Quantifiable performance, reliability, security, etc. |
+| Scenario | `SCN-001-A` | Observable acceptance scenario for a requirement |
+| Technical decision | `DEC-001` | Major technical decision, or one that needs tracing |
+| Verification | `VAL-001` | Automated test, benchmark, fault injection, or manual check |
 
-组件、接口和数据实体默认直接使用稳定名称，不强制增加额外编号。
+Components, interfaces, and data entities use stable names directly by default; no extra IDs are required.
 
 ---
 
-# Implementation-Ready Delivery Spec：`<功能名称>`
+# Implementation-Ready Delivery Spec: `<feature name>`
 
 ```yaml
 spec_id: <SPEC-ID>
-related_issue: <Issue 或项目链接>
+related_issue: <issue or project link>
 source_context:
-  - <GLOSSARY.md 或 GLOSSARY-MAP.md>
+  - <GLOSSARY.md or GLOSSARY-MAP.md>
 related_adrs:
-  - <ADR；没有则写 none>
+  - <ADR; write none if there are none>
 last_updated: <YYYY-MM-DD>
 ```
 
@@ -83,77 +78,77 @@ last_updated: <YYYY-MM-DD>
 
 ### 1.1 Problem
 
-从用户视角描述当前问题。不要在这里写技术方案。
+The problem that the user is facing, from the user's perspective. Don't write the technical solution here.
 
 ```markdown
-<谁在什么情况下遇到什么问题，这个问题造成什么后果>
+<who hits what problem in what situation, and what it leads to>
 ```
 
 ### 1.2 Solution Overview
 
-从用户视角说明系统将提供什么能力，以及用户或上下游系统如何获得结果。不要写组件、数据库、框架或协议选型。
+The solution to the problem, from the user's perspective: what capability the system will provide, and how users or upstream / downstream systems get the result. Don't write components, databases, frameworks, or protocol choices.
 
 ```markdown
-<系统提供什么用户可感知的解决方式，主流程如何改善当前问题>
+<what user-visible solution the system provides, and how the main flow improves the current problem>
 ```
 
-### 1.3 User Stories（按需）
+### 1.3 User Stories (as needed)
 
-提供一个**很长的、带编号的用户故事列表**。
+A LONG, numbered list of user stories. Each user story should be in the format of:
 
-1. 作为一个 `<actor>`，我想要 `<feature>`，以便 `<benefit>`。
-2. 作为一个 `<actor>`，我想要 `<feature>`，以便 `<benefit>`。
+1. As an `<actor>`, I want a `<feature>`, so that `<benefit>`
+2. As an `<actor>`, I want a `<feature>`, so that `<benefit>`
 
 <user-story-example>
 
-1. 作为一名移动银行客户，我希望能够查看我的账户余额，以便我能够对自己的消费做出更明智的决策。
+1. As a mobile bank customer, I want to see balance on my accounts, so that I can make better informed decisions about my spending
 
 </user-story-example>
 
-这份用户故事列表应该**非常全面**，覆盖该功能的所有方面。
+This list of user stories should be extremely extensive and cover all aspects of the feature.
 
 
 ### 1.4 In Scope
 
-- `<本次明确建设的能力>`
-- `<本次明确覆盖的主流程>`
-- `<本次需要保证的兼容、迁移或运行行为>`
+- `<capability explicitly built in this delivery>`
+- `<main flow explicitly covered in this delivery>`
+- `<compatibility, migration, or runtime behavior this delivery must guarantee>`
 
 ### 1.5 Out of Scope
 
-- `<明确不建设的能力>`
-- `<与当前问题相邻但不属于本次交付的内容>`
+- `<capability explicitly not built>`
+- `<content adjacent to the current problem but not part of this delivery>`
 
 ### 1.6 Hard Constraints
 
-- `<兼容性约束>`
-- `<性能或容量约束>`
-- `<安全或合规约束>`
-- `<技术栈、部署环境或依赖约束>`
-- `<已经确定且不能由本次设计改变的 ADR 约束>`
+- `<compatibility constraint>`
+- `<performance or capacity constraint>`
+- `<security or compliance constraint>`
+- `<tech stack, deployment environment, or dependency constraint>`
+- `<settled ADR constraint this design cannot change>`
 
 ### 1.7 Change Summary
 
-| Change Type | 内容 | 对现有系统的影响 |
+| Change Type | Content | Impact on existing system |
 |---|---|---|
-| Added | `<新增行为或能力>` | `<影响>` |
-| Modified | `<修改行为>` | `<影响>` |
-| Removed | `<移除行为>` | `<影响>` |
+| Added | `<new behavior or capability>` | `<impact>` |
+| Modified | `<changed behavior>` | `<impact>` |
+| Removed | `<removed behavior>` | `<impact>` |
 
 ---
 
 ## 2. Behavioral Contract
 
-本章是系统行为的唯一权威定义。
+This chapter is the only authoritative definition of system behavior.
 
-规范词汇：
+Normative vocabulary:
 
-- `MUST`：必须满足；
-- `MUST NOT`：禁止发生；
-- `SHOULD`：默认应满足，允许存在明确例外；
-- `MAY`：允许但不强制。
+- `MUST`: must be met;
+- `MUST NOT`: must not happen;
+- `SHOULD`: should be met by default, with explicit exceptions allowed;
+- `MAY`: allowed but not required.
 
-可以按以下结构组织需求：
+Requirements may be organized like this:
 
 ```markdown
 ### ADDED Requirements
@@ -161,115 +156,115 @@ last_updated: <YYYY-MM-DD>
 ### REMOVED Requirements
 ```
 
-`MODIFIED` 必须写修改后的完整契约，不只写差异摘要；`REMOVED` 必须说明移除后系统如何表现。
+`MODIFIED` must give the full contract after the change, not just a diff summary; `REMOVED` must say how the system behaves after the removal.
 
 ### 2.1 Functional Requirements
 
-#### REQ-001：`<行为标题>`
+#### REQ-001: `<behavior title>`
 
-系统 MUST `<用户或外部系统可观察的行为>`。
+The system MUST `<behavior observable by the user or an external system>`.
 
-##### SCN-001-A：`<正常场景>`
+##### SCN-001-A: `<normal scenario>`
 
-- GIVEN `<前置状态，可选>`
-- WHEN `<触发条件>`
-- THEN `<可观察结果>`
-- AND `<额外结果，可选>`
+- GIVEN `<precondition, optional>`
+- WHEN `<trigger>`
+- THEN `<observable result>`
+- AND `<additional result, optional>`
 
-##### SCN-001-B：`<异常或边界场景>`
+##### SCN-001-B: `<error or edge scenario>`
 
-- GIVEN `<前置状态>`
-- WHEN `<异常、边界或竞争条件>`
-- THEN `<系统必须表现出的结果>`
+- GIVEN `<precondition>`
+- WHEN `<error, edge, or race condition>`
+- THEN `<result the system must show>`
 
 ### 2.2 Negative Requirements
 
-#### NEG-001：`<禁止行为标题>`
+#### NEG-001: `<prohibited behavior title>`
 
-系统 MUST NOT `<禁止发生的可观察行为>`。
+The system MUST NOT `<observable behavior that must not happen>`.
 
-验证：
+Verification:
 
-- `<用户、API 或外部系统层面的检查>`
-- `<代码、依赖、配置或文档层面的辅助检查>`
+- `<check at the user, API, or external system level>`
+- `<supporting check at the code, dependency, configuration, or documentation level>`
 
-负向需求至少要有一项用户或外部系统可观察的验证，不能只有“代码里不存在某个类”。
+A negative requirement needs at least one verification observable by the user or an external system, not only "a certain class does not exist in the code".
 
-### 2.3 Quality Requirements（按需）
+### 2.3 Quality Requirements (as needed)
 
-仅在存在明确、可量化的质量目标时保留。
+Keep only when there are explicit, quantifiable quality targets.
 
-#### QOS-001：`<质量要求标题>`
+#### QOS-001: `<quality requirement title>`
 
-系统 MUST `<量化的性能、容量、可靠性、安全或合规目标>`。
+The system MUST `<quantified performance, capacity, reliability, security, or compliance target>`.
 
-验证：
+Verification:
 
-- `<压测、基准、故障注入、审计或观测方法>`
+- `<load test, benchmark, fault injection, audit, or observation method>`
 
 ---
 
 ## 3. Technical Design
 
-本章回答“如何实现”，不得重新定义 §2 的系统行为。
+This chapter answers "how to implement it" and must not redefine the system behavior in §2.
 
-本章描述稳定的模块、接口、数据约束和技术决策，不枚举易过时的具体实现文件路径；除非原型片段比文字更精确地表达一项已确认决策，否则不嵌入实现代码。
+It describes stable modules, interfaces, data constraints, and technical decisions. Do NOT list specific implementation file paths, which go out of date quickly. Don't embed implementation code, unless a prototype snippet expresses a confirmed decision more precisely than prose.
 
 ### 3.1 Existing Context / System Context
 
 #### Brownfield
 
-- 当前相关模块及职责：
-- 当前主要数据流：
-- 当前接口、事件和数据结构：
-- 当前错误处理和运行约束：
-- 已有测试 seam 与测试模式：
-- 代码库中的相似实现或 Prior Art：
-- 需要遵守的领域术语和 ADR：
-- 不能破坏的既有行为：
+- Current relevant modules and responsibilities:
+- Current main data flows:
+- Current interfaces, events, and data structures:
+- Current error handling and runtime constraints:
+- Existing test seams and test patterns:
+- Similar implementations or prior art in the codebase:
+- Domain terms and ADRs to respect:
+- Existing behavior that must not break:
 
 #### Greenfield
 
-- 系统边界：
-- 外部参与者和外部系统：
-- 外部依赖：
-- 部署和运行边界：
-- 主要领域上下文及关系：
-- 已确定的技术栈或平台约束：
+- System boundary:
+- External actors and external systems:
+- External dependencies:
+- Deployment and runtime boundary:
+- Main domain contexts and their relationships:
+- Settled tech stack or platform constraints:
 
-只保留与当前功能有关的现状，不重写整个系统架构。
+Keep only the current state relevant to this feature; don't rewrite the whole system architecture.
 
 ### 3.2 Key Technical Decisions
 
-只对重大、难逆或存在真实取舍的决策写完整 Decision。
+Write a full Decision only for decisions that are major, hard to reverse, or involve a real trade-off.
 
-#### DEC-001：`<技术决策标题>`
+#### DEC-001: `<technical decision title>`
 
 **Selected**
 
 ```markdown
-<最终采用的方案>
+<the option finally adopted>
 ```
 
 **Alternatives**
 
-- `<候选方案 A>`
-- `<候选方案 B>`
+- `<candidate option A>`
+- `<candidate option B>`
 
 **Trade-off**
 
 | Dimension | Selected | Alternative |
 |---|---|---|
-| Complexity | `<评价>` | `<评价>` |
-| Performance | `<评价>` | `<评价>` |
-| Reliability | `<评价>` | `<评价>` |
-| Maintainability | `<评价>` | `<评价>` |
-| Migration Cost | `<评价>` | `<评价>` |
+| Complexity | `<assessment>` | `<assessment>` |
+| Performance | `<assessment>` | `<assessment>` |
+| Reliability | `<assessment>` | `<assessment>` |
+| Maintainability | `<assessment>` | `<assessment>` |
+| Migration Cost | `<assessment>` | `<assessment>` |
 
 **Rationale**
 
 ```markdown
-<为什么选择该方案，以及为什么不选择其他方案>
+<why this option was chosen, and why the others were not>
 ```
 
 **Supports**
@@ -280,145 +275,145 @@ last_updated: <YYYY-MM-DD>
 
 **Assumptions**
 
-- `<该决策依赖的未验证前提；没有则删除>`
+- `<unverified premise this decision depends on; delete if none>`
 
 **ADR**
 
-- `<ADR 或 N/A>`
+- `<ADR or N/A>`
 
-常规且容易逆转的决策可以简写为：
+Routine, easily reversed decisions can be shortened to:
 
 ```markdown
-- <决策点>：<选择> —— <一句理由>
+- <decision point>: <choice> (<one-sentence reason>)
 ```
 
 ### 3.3 Components and Data Flow
 
 | Component | Change | Responsibility | Depends On | Supports |
 |---|---|---|---|---|
-| `<组件>` | Add / Modify / Remove | `<单一职责>` | `<依赖>` | `<REQ / NEG / QOS>` |
+| `<component>` | Add / Modify / Remove | `<single responsibility>` | `<dependencies>` | `<REQ / NEG / QOS>` |
 
-主要数据流：
+Main data flow:
 
 ```text
-<入口>
-  → <组件 A>
-  → <组件 B>
-  → <存储、外部接口或事件>
-  → <结果>
+<entry point>
+  → <component A>
+  → <component B>
+  → <storage, external interface, or event>
+  → <result>
 ```
 
 ### 3.4 Data and Interface Changes
 
 | Item | Type | Change | Contract / Constraint | Supports |
 |---|---|---|---|---|
-| `<实体或接口>` | Data / API / Event / Config | Add / Modify / Remove | `<关键字段、输入输出或约束>` | `<REQ / NEG / QOS>` |
+| `<entity or interface>` | Data / API / Event / Config | Add / Modify / Remove | `<key fields, input/output, or constraints>` | `<REQ / NEG / QOS>` |
 
-对外接口或跨模块契约需要明确：
+External interfaces and cross-module contracts must state:
 
-- 输入；
-- 输出；
-- 错误语义；
-- 幂等语义；
-- 权限与数据可见性；
-- 向后兼容性；
-- 事件顺序、投递和去重语义。
+- input;
+- output;
+- error semantics;
+- idempotency semantics;
+- permissions and data visibility;
+- backward compatibility;
+- event ordering, delivery, and deduplication semantics.
 
-### 3.5 State, Concurrency and Idempotency（按需）
+### 3.5 State, Concurrency and Idempotency (as needed)
 
-只保留适用内容。不适用时可以删除本节，或简短说明不适用原因。
+Keep only what applies. If it doesn't apply, delete this section or briefly state why.
 
 #### State Model
 
 ```text
-<状态 A>
-  ├─ <条件> → <状态 B>
-  └─ <条件> → <状态 C>
+<state A>
+  ├─ <condition> → <state B>
+  └─ <condition> → <state C>
 ```
 
 #### Concurrency
 
-- `<并发边界>`
-- `<锁、版本、事务、租约或串行化方式>`
-- `<不同实体或分区是否可以并行>`
-- `<并发冲突如何向外部表现>`
+- `<concurrency boundary>`
+- `<locks, versions, transactions, leases, or serialization>`
+- `<whether different entities or partitions can run in parallel>`
+- `<how concurrency conflicts show externally>`
 
 #### Idempotency
 
-- `<重复请求如何处理>`
-- `<事件或命令如何去重>`
-- `<幂等标识和有效期是什么>`
+- `<how duplicate requests are handled>`
+- `<how events or commands are deduplicated>`
+- `<what the idempotency key and its lifetime are>`
 
 ### 3.6 Error and Failure Handling
 
 | Failure | Observable Behavior | Recovery / Degradation | Covered Scenario |
 |---|---|---|---|
-| `<失败情况>` | `<外部可观察结果>` | `<恢复、重试、补偿或降级>` | `<SCN>` |
+| `<failure case>` | `<externally observable result>` | `<recovery, retry, compensation, or degradation>` | `<SCN>` |
 
-失败设计至少覆盖：
+Failure design must cover at least:
 
-- 输入或状态非法；
-- 依赖超时或不可用；
-- 部分成功；
-- 重试和重复执行；
-- 数据不一致；
-- 无法自动恢复时的人工接管或安全停止。
+- invalid input or state;
+- dependency timeout or unavailability;
+- partial success;
+- retries and repeated execution;
+- data inconsistency;
+- manual takeover or safe stop when automatic recovery is impossible.
 
-### 3.7 Migration, Compatibility, Rollout and Rollback（按需）
+### 3.7 Migration, Compatibility, Rollout and Rollback (as needed)
 
-Brownfield 中只要涉及数据、接口、配置或运行行为变化，本节原则上应保留。
+In brownfield work, keep this section whenever data, interfaces, configuration, or runtime behavior change.
 
 #### Migration
 
-- `<Schema、数据或配置迁移>`
-- `<迁移顺序>`
-- `<混合版本期间如何运行>`
-- `<迁移失败处理>`
+- `<schema, data, or configuration migration>`
+- `<migration order>`
+- `<how it runs during the mixed-version period>`
+- `<migration failure handling>`
 
 #### Compatibility
 
-- `<API、事件、数据、旧客户端或混合版本兼容>`
-- `<哪些旧行为必须保持>`
+- `<API, event, data, old client, or mixed-version compatibility>`
+- `<which old behavior must be kept>`
 
 #### Rollout
 
-- `<Feature Flag、灰度范围、启用顺序和观察窗口>`
+- `<feature flag, rollout scope, enable order, and observation window>`
 
 #### Rollback
 
-- `<触发条件>`
-- `<代码、配置、Schema 或数据回滚>`
-- `<不能回滚时的降级行为>`
+- `<trigger conditions>`
+- `<code, configuration, schema, or data rollback>`
+- `<degraded behavior when rollback is impossible>`
 
-### 3.8 Observability, Security and Performance（按需）
+### 3.8 Observability, Security and Performance (as needed)
 
-不适用的部分可以删除，不必为完整模板强行填充。
+Delete the parts that don't apply; don't fill them in just to complete the template.
 
 #### Observability
 
-- 日志：
-- 指标：
-- Trace：
-- 业务事件：
-- 告警条件：
-- 诊断和审计所需的关键标识：
+- Logs:
+- Metrics:
+- Traces:
+- Business events:
+- Alert conditions:
+- Key identifiers needed for diagnosis and audit:
 
 #### Security
 
-- 认证：
-- 授权：
-- 敏感数据：
-- 审计：
-- 主要威胁及缓解方式：
+- Authentication:
+- Authorization:
+- Sensitive data:
+- Audit:
+- Main threats and mitigations:
 
 #### Performance
 
-- 延迟预算：
-- 吞吐预算：
-- 容量假设：
-- 资源预算：
-- 性能退化边界：
-- 压测或基准方法：
+- Latency budget:
+- Throughput budget:
+- Capacity assumptions:
+- Resource budget:
+- Performance degradation boundary:
+- Load test or benchmark method:
 
 ---
 
@@ -426,40 +421,40 @@ Brownfield 中只要涉及数据、接口、配置或运行行为变化，本节
 
 ### 4.1 Testing Principles
 
-- 测试外部可观察行为，不绑定内部实现细节。
-- 优先复用代码库中已有、且能够观察目标行为的最高层 seam。
-- 只有现有 seam 无法观察关键行为时才新增 seam；新增数量应尽可能少。
-- 单元测试用于纯逻辑和高组合复杂度，不替代对外部行为的集成验证。
-- 每个 `SCN` 必须有验证方式，每个 `NEG` 必须有负向验证，每个 `QOS` 必须有量化证据。
-- 测试设计应引用代码库中的相似测试、fixture、harness 或约定，而不是重新发明一套模式。
+- Only test external behavior, not implementation details.
+- Prefer reusing the highest existing seam in the codebase that can observe the target behavior.
+- Add a seam only when existing seams can't observe a key behavior; add as few as possible.
+- Unit tests are for pure logic and high combinatorial complexity; they don't replace integration verification of external behavior.
+- Every `SCN` must have a verification method, every `NEG` a negative verification, and every `QOS` quantified evidence.
+- Test design should reference similar tests, fixtures, harnesses, or conventions in the codebase (prior art) rather than invent a new pattern.
 
 ### 4.2 Test Seams
 
 | Seam | Level | Reason | Prior Art | Covers |
 |---|---|---|---|---|
-| `<测试入口>` | Unit / Component / Integration / Contract / E2E | `<为什么在这一层测试>` | `<现有类似测试或测试模式；没有则写 none>` | `<REQ / NEG / QOS>` |
+| `<test entry point>` | Unit / Component / Integration / Contract / E2E | `<why test at this level>` | `<existing similar test or pattern; write none if there is none>` | `<REQ / NEG / QOS>` |
 
 ### 4.3 Verification Plan
 
 | Verification | Requirement / Scenario | Method | Expected Result |
 |---|---|---|---|
-| VAL-001 | `<REQ、NEG、QOS 或 SCN>` | `<自动测试、基准、故障注入或人工检查>` | `<通过条件>` |
+| VAL-001 | `<REQ, NEG, QOS, or SCN>` | `<automated test, benchmark, fault injection, or manual check>` | `<pass condition>` |
 
 ### 4.4 Requirement Coverage
 
-本表是最小追踪闭环。每条本版 `REQ`、`NEG` 和 `QOS` 都必须有设计落点与验证方式。
+This table is the minimal traceability loop. Every `REQ`, `NEG`, and `QOS` in this version must have a design location and a verification method.
 
 | Requirement | Design Location | Verification | Status |
 |---|---|---|---|
-| REQ-001 | `<组件 / 接口 / DEC / 设计章节>` | VAL-001 | Covered |
-| NEG-001 | `<设计限制 / 接口 / DEC>` | VAL-002 | Covered |
-| QOS-001 | `<性能、安全或可靠性设计>` | VAL-003 | Covered |
+| REQ-001 | `<component / interface / DEC / design section>` | VAL-001 | Covered |
+| NEG-001 | `<design restriction / interface / DEC>` | VAL-002 | Covered |
+| QOS-001 | `<performance, security, or reliability design>` | VAL-003 | Covered |
 
-状态只允许：
+Allowed statuses are only:
 
-- `Covered`：设计和验证均已明确；
-- `Blocked`：缺少会阻塞拆分的行为、设计或验证信息；
-- `Deferred`：明确不属于本版，且已说明重访条件。
+- `Covered`: design and verification are both explicit;
+- `Blocked`: missing behavior, design, or verification information that blocks breakdown;
+- `Deferred`: explicitly not in this version, with the condition for revisiting stated.
 
 ### 4.5 Verification Commands
 
@@ -471,25 +466,25 @@ Brownfield 中只要涉及数据、接口、配置或运行行为变化，本节
 <static analysis or other required check>
 ```
 
-正式文档应使用仓库真实命令，不能保留抽象工具名。
+The final document must use the repo's real commands, not abstract tool names.
 
 ### 4.6 Completion Criteria
 
-- 所有本版 `REQ` 的 Scenario 通过；
-- 所有 `NEG` 的负向验证通过；
-- 所有 `QOS` 达到量化门槛；
-- Requirement Coverage 中不存在未解释的 `Blocked`；
-- Brownfield 的兼容、迁移、灰度和回滚验证通过；
-- 没有无法解释的测试跳过；
-- 关键日志、指标、事件和审计信息可以被观察；
-- §5 Open Items 中不存在阻塞性未决问题。
+- All scenarios of every `REQ` in this version pass;
+- All negative verifications of every `NEG` pass;
+- Every `QOS` meets its quantified threshold;
+- Requirement Coverage has no unexplained `Blocked`;
+- Brownfield compatibility, migration, rollout, and rollback verifications pass;
+- No unexplained skipped tests;
+- Key logs, metrics, events, and audit information can be observed;
+- §5 Open Items has no blocking unresolved questions.
 
 ---
 
 ## 5. Open Items
 
-只记录无法归入前述章节、但对实现和评审确有价值的补充信息。不要把未解决的关键问题藏在本节中。
+Record only supplementary information that doesn't fit the sections above but is genuinely useful for implementation and review. Don't hide unresolved key questions in this section.
 
-- `<补充说明>`
+- `<supplementary note>`
 
 </spec-template>

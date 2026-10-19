@@ -1,23 +1,20 @@
 ---
 name: re-explain
-description: 补齐必要上下文，用简单、明确的中文重新解释已有内容。
+description: Re-explain earlier content in simple, clear Chinese, filling in the context needed to follow it.
 disable-model-invocation: true
 ---
 
-# Re-Explain — 简明中文重述
+# Re-Explain: restate in plain Chinese
 
-重新解释前面的内容，并遵循以下要求：
+Re-explain the earlier content, following these rules:
 
-1. 先用 1~2 句话说明当前讨论的背景，以及现在进行到哪一步。
-2. 使用简洁、直接、容易理解的中文，完整规则和病句对照见 `references/plain-chinese.md`。
-3. 缩写和专业术语首次出现时说明含义，避免黑话和模糊表达。
-4. 术语沿用项目中已有的说法。按顺序查找：`GLOSSARY.md`（仓库有多份时，沿根目录的
-   `GLOSSARY-MAP.md` 找到对应的那份）、`CLAUDE.md`、`AGENTS.md`、
-   `README.md`、术语表或词汇表、代码里的命名。找不到既有说法时，用最普通的中文词，
-   并明确说明这是本次解释临时采用的说法，不要另造不必要的新词。
-5. 重点说明：
-   - 现在在做什么；
-   - 为什么要这样做；
-   - 前一步和这一步是什么关系；
-   - 接下来会发生什么。
-6. 补齐理解当前内容所需的前置信息，不假设用户记得前面的全部细节。
+1. Start with 1-2 sentences on the background of the current discussion and where it has got to.
+2. Write in short, direct, easy-to-understand Chinese. The full rules and the bad/good sentence pairs are in `references/plain-chinese.md`.
+3. Explain each abbreviation and technical term the first time it appears. Avoid jargon and vague wording.
+4. Use the terms the project already uses. Look them up in this order: `GLOSSARY.md` (follow `GLOSSARY-MAP.md` to the right one if the repo has more than one), `CLAUDE.md`, `AGENTS.md`, `README.md`, any glossary or vocabulary list, then names in the code. If there is no existing term, use the most ordinary Chinese word and say clearly that it is a term chosen only for this explanation. Don't coin new terms you don't need.
+5. Focus on:
+   - what is being done now;
+   - why it is done this way;
+   - how the previous step relates to this one;
+   - what happens next.
+6. Fill in the background needed to understand the current content. Don't assume the user remembers all the earlier details.

@@ -1,63 +1,61 @@
-# GLOSSARY.md 格式
+# GLOSSARY.md Format
 
-## 结构
+## Structure
 
 ```md
-# {上下文名称}
+# {Context Name}
 
-{一两句话说明这个上下文是什么、为什么存在。}
+{One or two sentence description of what this context is and why it exists.}
 
 ## Language
 
-**Order**：
-{一两句话说明这个术语是什么}
+**Order**:
+{A one or two sentence description of the term}
 _Avoid_: Purchase, transaction
 
-**Invoice**：
-交付之后发给客户的付款请求。
+**Invoice**:
+A request for payment sent to a customer after delivery.
 _Avoid_: Bill, payment request
 
-**Customer**：
-下订单的个人或组织。
+**Customer**:
+A person or organization that places orders.
 _Avoid_: Client, buyer, account
 ```
 
-## 规则
+## Rules
 
-- **要有立场。** 同一个概念有多个说法时，**挑一个最好的**，其余的列进 `_Avoid_`。
-- **定义要紧。** 最多一两句。写它**是什么**，不写它**做什么**。
-- **只收这个上下文独有的术语。** 通用编程概念（超时、错误类型、工具模式）不进来，
-  哪怕项目里用得再多。加词之前先问：**这是本上下文独有的概念，还是通用编程概念？**
-  只有前者该进。
-- **自然聚成簇时用小标题分组。** 如果所有术语本来就属于同一个内聚区域，平铺一份列表就够。
+- **Be opinionated.** When multiple words exist for the same concept, pick the best one and list the others under `_Avoid_`.
+- **Keep definitions tight.** One or two sentences max. Define what it IS, not what it does.
+- **Only include terms specific to this project's context.** General programming concepts (timeouts, error types, utility patterns) don't belong even if the project uses them extensively. Before adding a term, ask: is this a concept unique to this context, or a general programming concept? Only the former belongs.
+- **Group terms under subheadings** when natural clusters emerge. If all terms belong to a single cohesive area, a flat list is fine.
 
-## 单上下文 vs 多上下文仓库
+## Single vs multi-context repos
 
-**单上下文（多数仓库）**：仓库根目录一份 `GLOSSARY.md`。
+**Single context (most repos):** One `GLOSSARY.md` at the repo root.
 
-**多上下文**：根目录一份 `GLOSSARY-MAP.md`，列出有哪些上下文、各自住在哪、彼此什么关系：
+**Multiple contexts:** A `GLOSSARY-MAP.md` at the repo root lists the contexts, where they live, and how they relate to each other:
 
 ```md
 # Glossary Map
 
 ## Contexts
 
-- [Ordering](./src/ordering/GLOSSARY.md)：接收并跟踪客户订单
-- [Billing](./src/billing/GLOSSARY.md)：生成发票并处理付款
-- [Fulfillment](./src/fulfillment/GLOSSARY.md)：管理仓库拣货与发货
+- [Ordering](./src/ordering/GLOSSARY.md): receives and tracks customer orders
+- [Billing](./src/billing/GLOSSARY.md): generates invoices and processes payments
+- [Fulfillment](./src/fulfillment/GLOSSARY.md): manages warehouse picking and shipping
 
 ## Relationships
 
-- **Ordering → Fulfillment**：Ordering 发出 `OrderPlaced` 事件，Fulfillment 消费它来启动拣货
-- **Fulfillment → Billing**：Fulfillment 发出 `ShipmentDispatched` 事件，Billing 消费它来生成发票
-- **Ordering ↔ Billing**：共享 `CustomerId` 与 `Money` 类型
+- **Ordering → Fulfillment**: Ordering emits `OrderPlaced` events; Fulfillment consumes them to start picking
+- **Fulfillment → Billing**: Fulfillment emits `ShipmentDispatched` events; Billing consumes them to generate invoices
+- **Ordering ↔ Billing**: Shared types for `CustomerId` and `Money`
 ```
 
-用哪种结构由你**自己推断**：
+The skill infers which structure applies:
 
-- 有 `GLOSSARY-MAP.md` → 读它去找各个上下文；
-- 只有根目录的 `GLOSSARY.md` → 单上下文；
-- 只有旧名 `CONTEXT.md` / `CONTEXT-MAP.md` → 当作新名文件读写，不另建 `GLOSSARY.md`，并建议用户用 `git mv` 改名；
-- 两个都没有 → **等第一个术语定下来时**，按需在根目录创建 `GLOSSARY.md`。
+- If `GLOSSARY-MAP.md` exists, read it to find contexts
+- If only a root `GLOSSARY.md` exists, single context
+- If only the legacy names `CONTEXT.md` / `CONTEXT-MAP.md` exist, read and write them as if they were the new names, don't create a separate `GLOSSARY.md`, and suggest the user rename them with `git mv`
+- If neither exists, create a root `GLOSSARY.md` lazily when the first term is resolved
 
-存在多个上下文时，**推断当前话题属于哪一个**。判断不了就问。
+When multiple contexts exist, infer which one the current topic relates to. If unclear, ask.

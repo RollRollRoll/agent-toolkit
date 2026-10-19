@@ -1,5 +1,5 @@
 interface:
   display_name: "Improve Codebase Architecture"
-  short_description: "找出架构改进点，并深入分析选中的方案。"
+  short_description: "Find and grill architecture improvements"
 policy:
   allow_implicit_invocation: false

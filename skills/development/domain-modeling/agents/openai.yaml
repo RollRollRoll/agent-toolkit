@@ -1,4 +1,3 @@
 interface:
   display_name: "Domain Modeling"
-  short_description: "梳理领域语言，并记录到 GLOSSARY.md 和 ADR。"
-  default_prompt: "使用 $domain-modeling 梳理这个项目的领域术语，把确认后的定义写入 GLOSSARY.md。"
+  short_description: "Build and sharpen a domain model"

@@ -1,5 +1,5 @@
 interface:
   display_name: "Setup Env"
-  short_description: "配置 issue tracker、triage 标签和领域文档结构。"
+  short_description: "Configure a repo for the skills"
 policy:
   allow_implicit_invocation: false

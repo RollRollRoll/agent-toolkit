@@ -1,57 +1,57 @@
-# 模拟用户剧本模板
+# Simulated user script template
 
-剧本在阶段 3 生成、开跑前定稿。驱动循环中你（编排者）扮演用户时**严格照本回答**；剧本未覆盖的问题按人设合理即兴，并把即兴问答追记进末尾附录。
+Generate the script in Phase 3 and finalize it before the run starts. During the driving loop, when you (the orchestrator) play the user, **answer strictly from the script**. For questions the script does not cover, improvise in a way that fits the persona, and record the improvised Q&A in the appendix at the end.
 
 ```markdown
-# 剧本：<用户任务场景一句话>
+# Script: <one sentence describing the user's task scenario>
 
-## 身份背景
+## Background
 
-<模拟用户是谁：角色、技术水平、所处情境。>
+<Who the simulated user is: role, technical level, situation.>
 
-## 真实意图
+## Real intent
 
-<用户实际想解决的问题——可以与首轮说出来的诉求不一致。>
+<The problem the user actually wants solved. It may differ from what they ask for in the first turn.>
 
-## 隐藏痛点
+## Hidden pain point
 
-<首轮不主动提供的关键信息。只有被测 agent 问到相关问题时才透露。
-这是考验目标 skill 意图挖掘能力的核心机关。>
+<Key information the user does not volunteer in the first turn. Reveal it only when the agent under test asks a related question.
+This is the core mechanism for testing the target skill's ability to dig out intent.>
 
-## 答案素材
+## Answer material
 
-<可预见的问题 → 答案，逐条列出：>
+<Foreseeable questions → answers, one per line:>
 
-- 问到预算 / 时间 → "……"
-- 问到使用者是谁 → "……"
-- 问到现有方案 → "……"
+- Asked about budget / timeline → "..."
+- Asked who will use it → "..."
+- Asked about the current solution → "..."
 
-## 回答风格
+## Answer style
 
-- 简短度：<例：每次不超过两句话>
-- 含糊度：<例：首次回答给模糊说法，被追问才具体>
-- 语气：<例：随和但没耐心，被连问三个以上问题会表现不满>
+- Brevity: <e.g. no more than two sentences each time>
+- Vagueness: <e.g. give a vague answer first, get specific only when pressed>
+- Tone: <e.g. easygoing but impatient; shows annoyance when asked more than three questions in a row>
 
-## 不透露边界
+## Never-reveal boundary
 
-<无论怎么问都不说的信息（模拟用户自己也没想清楚的部分），以及被问到时的回应方式，例："不知道，你看着办"。>
+<Information the user will not give no matter how they are asked (parts the simulated user has not thought through either), and how to respond when asked, e.g. "I don't know, your call.">
 
-## 即兴追记（执行中填写）
+## Improvised answers (fill in during the run)
 
-| 轮次 | 被测 agent 的问题 | 即兴回答 |
-|------|-------------------|----------|
-|      |                   |          |
+| Turn | Question from the agent under test | Improvised answer |
+|------|------------------------------------|-------------------|
+|      |                                    |                   |
 ```
 
-## 示例片段
+## Example excerpt
 
-> **身份背景**：算法工程师，日常跑模型实验，不熟悉前端。
-> **真实意图**：想随时知道每个实验的状态和结果。
-> **隐藏痛点**：其实连一份完整的实验清单都没有——"dashboard"是他想象中的解法，不是真实需求。
-> **回答风格**：简短，偏技术词汇；对"为什么"类问题不耐烦。
+> **Background**: ML engineer who runs model experiments every day and is not familiar with frontend work.
+> **Real intent**: wants to know the status and results of every experiment at any time.
+> **Hidden pain point**: does not even have a complete list of experiments. The "dashboard" is the solution he imagines, not the real need.
+> **Answer style**: short, leans on technical terms; impatient with "why" questions.
 
-## 编写要求
+## Writing requirements
 
-- 隐藏痛点必须与首轮诉求之间存在"字面需求 ≠ 真实需要"的落差，否则测不出挖掘能力。
-- 答案素材至少覆盖目标 skill 明确要求询问的每个维度（对照阶段 1 的指令清单写）。
-- 任何可能被逐字转述给被测进程的答案素材都必须遵守盲测红线，不得出现"测试 / 评估"等表述。编排说明本身不得混入逐轮 prompt 文件。
+- There must be a gap between the hidden pain point and the first-turn request ("what they literally ask for ≠ what they really need"); otherwise the test cannot measure intent digging.
+- Answer material must cover at least every dimension the target skill explicitly requires asking about (write it against the Phase 1 instruction inventory).
+- Any answer material that might be passed verbatim to the process under test must follow the blind-test red line and must not contain wording such as "test / evaluate" (测试 / 评估). Orchestration notes themselves must never be mixed into the per-turn prompt files.

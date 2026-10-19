@@ -1,125 +1,93 @@
 ---
 name: grill-demand
-description: 通过深入访谈逐层明确问题、范围、行为和技术决策，同时记录 ADR 与术语；访谈结果应足以让 to-spec 直接产出完整 spec。
+description: "Interview the user in depth to settle problem, scope, behavior, and technical decisions layer by layer, creating docs (ADRs and glossary) as you go. The result should be enough for to-spec to produce a complete spec directly."
 disable-model-invocation: true
 ---
 
-# Grill Demand — 为 spec 补齐共识
+# Grill Demand: build the shared understanding a spec needs
 
-## 定位
+## Role
 
-这个 skill 是 `to-spec` 的上游访谈。`to-spec` 只综合已有对话和代码库，不会继续访谈用户；
-因此，这里需要补齐代码库无法确认、对话中也尚未明确的信息，包括真实意图、范围、行为契约和技术决策。
+This skill is the interview upstream of `to-spec`. `to-spec` only synthesizes the existing conversation and the codebase; it does not interview the user any further. So this skill must fill in what the codebase can't confirm and the conversation hasn't yet made clear: the real intent, scope, behavioral contract, and technical decisions.
 
-开始访谈前调用两个配套 skill，具体规则以各自文档为准：
+Before starting the interview, call the Skill tool twice, for "grilling" and "domain-modeling". Each skill's own doc holds its rules:
 
-- **`grilling`**：轮次、前沿（frontier）、事实归你查、决策归用户。
-- **`domain-modeling`**：术语与 ADR 当场落盘（`GLOSSARY.md` / `docs/adr/`）。
+- **`grilling`**: rounds, the frontier, facts are yours to find, decisions are the user's.
+- **`domain-modeling`**: write terms and ADRs to disk as they come up (`GLOSSARY.md` / `docs/adr/`).
 
-本文只说明各层的展开顺序，以及决策树必须覆盖的内容。
+This doc only covers the order in which the layers open up, and what the design tree must cover.
 
-这个 skill 需要用户实时参与，不适用于 CI、定时任务或自治循环。
+This skill needs the user to take part live. It is not for CI, scheduled jobs, or autonomous loops.
 
-## 分层展开：把层当作 frontier 的前置条件
+## Layered expansion: layers are frontier prerequisites
 
-覆盖清单分三层。**下层问题的前置条件是上层已定**——这不是另一套流程，
-就是 grilling 里"前置条件已确定才进前沿"的具体化：
+The coverage checklist has three layers. **A lower layer's questions have the upper layer being settled as a prerequisite.** This is not a separate process; it is grilling's "a question enters the frontier only once its prerequisites are settled", made concrete:
 
-1. **问题与范围层**还没明确（连"要解决什么"都没把握）时，前沿里只有这一层的问题。
-   优先完整陈述当前假设，请用户证伪，例如「我目前理解你要的是 X，因为 Y」，并说明置信度。
-   这样用户可以直接纠正整体理解，而不只是在选项中选择。对 `scalable`、`clean architecture`、
-   「业界标准做法」等抽象回答继续追问，确认它是否对应真实需求。发现方案薄弱时，具体说明问题。
-2. **行为层**问题的前置条件是它所属的能力已被纳入范围。
-3. **技术层**问题的前置条件是它要实现的行为已经明确。行为尚未稳定时，不进入技术选型。
+1. While the **problem and scope layer** is unclear (you aren't even sure "what is being solved"), the frontier holds only this layer's questions. Prefer stating your current assumption in full and asking the user to falsify it, for example "My current understanding is that you want X, because Y", with your confidence level. This lets the user correct the whole picture directly, not just pick among options. When the user answers in the abstract (`scalable`, `clean architecture`, "the industry-standard way"), keep asking whether it maps to a real need. When you find a weak spot in the plan, say specifically what is wrong.
+2. A **behavior layer** question has as its prerequisite that the capability it belongs to is in scope.
+3. A **technical layer** question has as its prerequisite that the behavior it implements is settled. Don't move into technology choices while behavior is still unstable.
 
-任何时候暴露出更上层的不确定性（比如某个技术选项让你发现"他要解决的根本不是那个问题"），
-受影响的下层分支就失去了前置条件，应先回到上层重新确认。
+Whenever uncertainty surfaces at a higher layer (for example, a technical option makes you realize "the problem they want solved isn't that one at all"), the affected lower branches lose their prerequisites. Go back and reconfirm the higher layer first.
 
-**规模先判**：如果这个想法其实是多个独立子系统，先指出来、先拆分，逐个走本流程，
-避免把一棵决策树扩展成整个系统的说明书。
+**Size it first**: if the idea is really several independent subsystems, point that out and split it first, then run this process on each one. Don't grow one design tree into a manual for the whole system.
 
-## 覆盖清单（结束前逐项过）
+## Coverage checklist (go through every item before ending)
 
-清单对应 `to-spec` 的 Implementation-Ready Delivery Spec 模板（见 [../to-spec/SKILL.md](../to-spec/SKILL.md)）。
-模板中需要、但无法从代码库确认的信息，都应在这里覆盖；模板变更时同步更新本清单。
+The checklist maps to the Implementation-Ready Delivery Spec template in `to-spec` (see [../to-spec/SKILL.md](../to-spec/SKILL.md)). Anything the template needs that the codebase can't confirm must be covered here; when the template changes, update this checklist to match.
 
-每一项的合法终态只有三种：**已定** / **不适用（说得出理由）** / **显式挂起（将进 spec 的 Open Items）**。
-"没聊到"不是终态。
+Each item has only three valid end states: **settled** / **not applicable (with a stated reason)** / **explicitly deferred (goes into the spec's Open Items)**. "Never came up" is not an end state.
 
-### A · 问题与范围层（供 spec §1）
+### A · Problem and scope layer (feeds spec §1)
 
-- **真实意图**：谁、在什么情况下、遇到什么问题、不解决有什么后果、为什么是现在。
-  字面需求不一定等于真实痛点，需要继续确认背后的原因。
-- **解决方式（用户视角）**：系统将提供什么用户可感知的能力、主流程如何改善问题。不含组件与选型。
-- **参与者**：有哪几类 actor、各自要完成什么事（user stories 的原料）。
-- **做什么 / 不做什么**：两份显式清单。**"不做什么"强制非空**；每条"不做"都要能在行为层转成可验证的禁止项。
-- **硬约束**：兼容性、性能与容量、安全与合规、技术栈与部署环境与外部依赖、既有 ADR——五类逐个问过或判无。
-- **brownfield 增改删**：对既有行为的 Added / Modified / Removed 清单。改的要说修改后的完整行为，
-  删的要说删除后系统如何表现。
-- **greenfield 能力定档**：把"需求已含 + 补充"的能力维度汇成清单，每个维度落一档：
-  纳入 / 默认不做 / 后续版本——不默认全纳入。是否先做一轮功能空间调研（防整类能力被漏）
-  **由用户决定**：给出建议和一句理由，然后等待回答；调研可用环境里的 research / deep-research 类
-  skill，跑不起来就降级为凭领域知识自列并注明未调研。调研产出是参考不是需求，一项都不默认纳入。
+- **Real intent**: who, in what situation, hits what problem, what happens if it isn't solved, and why now. The literal request is not always the real pain point; keep confirming the reason behind it.
+- **Solution (user's view)**: what user-visible capability the system will provide, and how the main flow improves the problem. No components or technology choices.
+- **Actors**: which kinds of actor exist and what each needs to get done (raw material for user stories).
+- **In scope / out of scope**: two explicit lists. **"Out of scope" must not be empty**; every out-of-scope item must be convertible into a verifiable prohibition at the behavior layer.
+- **Hard constraints**: compatibility, performance and capacity, security and compliance, tech stack / deployment environment / external dependencies, existing ADRs. Ask about each of the five, or rule it out.
+- **Brownfield add / change / remove**: an Added / Modified / Removed list for existing behavior. For changes, state the full behavior after the change; for removals, state how the system behaves after removal.
+- **Greenfield capability tiers**: collect the capability dimensions ("already in the request" plus "added") into a list, and put each dimension in one tier: in / not by default / later version. Don't include everything by default. Whether to first run a survey of the feature space (so a whole class of capability isn't missed) is **the user's decision**: give a recommendation and a one-sentence reason, then wait for the answer. The survey can use a research / deep-research style skill from the environment; if none can run, fall back to listing from domain knowledge and note that no survey was done. Survey output is reference, not requirements; nothing from it is included by default.
 
-### B · 行为层（供 spec §2）
+### B · Behavior layer (feeds spec §2)
 
-- **每条纳入的能力**：写成外部可观察的 MUST 行为，正常场景与异常 / 边界场景都能表达为
-  GIVEN/WHEN → THEN（触发条件和可观察结果都聊到了才算）。写不出可观察结果的
-  （「要好用」「性能要好」）只是目标，不是可验证行为，需要继续澄清。
-- **边界探针**：边界值 / 空值与空态 / 排序稳定性 / 并发与竞争 / 幂等与重复 / 精度 / 编码 /
-  超时与失败——逐项判断是否适用，并将适用项写成场景。
-- **每条禁止项**：怎么从用户或外部系统层面验证它没发生（无某入口 / 不返回某数据 / 无某可见能力）。
-  只有代码级检查（"没有某个类"）不算明确。
-- **量化质量目标**：性能、容量、可靠性、安全合规里有没有必须量化的目标（QOS）及其验证方法；
-  没有就明确"本版无量化质量目标"。
+- **Each in-scope capability**: written as an externally observable MUST behavior, with both normal and error / edge scenarios expressible as GIVEN/WHEN → THEN (it only counts once both the trigger and the observable result have been discussed). Anything without an observable result ("should be easy to use", "performance should be good") is a goal, not a verifiable behavior; keep clarifying.
+- **Edge probes**: boundary values / null and empty states / sort stability / concurrency and races / idempotency and duplicates / precision / encoding / timeouts and failures. Judge each one for applicability, and write the applicable ones as scenarios.
+- **Each prohibition**: how to verify from the user's or an external system's side that it did not happen (no such entry point / doesn't return such data / no such visible capability). A code-level check alone ("there is no such class") does not count as clear.
+- **Quantified quality targets**: whether performance, capacity, reliability, or security and compliance have targets that must be quantified (QOS), and how to verify them. If none, state explicitly "this version has no quantified quality targets".
 
-### C · 技术层（供 spec §3–4）
+### C · Technical layer (feeds spec §3-4)
 
-- **决策探针**——逐维度判 需决策 / 不适用（有理由）/ 延后：数据模型；接口契约；状态管理；
-  错误与失败处理；并发与一致性；性能与规模；安全与权限；可观测性；迁移与兼容；
-  测试策略与 seam；外部依赖与选型。"忘了想"和"想过判不适用"是两回事。
-- **重大且难逆的决策**（新建核心数据模型、对外契约、存储与框架选型、引入新依赖、性能预算、
-  兼容与安全边界）：必须给出至少两个候选方案、各自取舍和推荐意见，再交由用户决定。
-  常规可逆的决策：推断 + 一句理由，假设显式说出来（"假设内部只读、无需认证"）。
-  选型的 API 与版本特性查官方文档或源码确认，不凭记忆。
-- **架构落点**：每条纳入的行为落在哪个（新增或修改的）组件上、主数据流怎么走；
-  重大结构变化（新服务 / 新层 / 新组件边界）按重大决策处理。
-- **对外与跨模块契约**：逐个检查相关接口的输入、输出、错误语义、幂等语义、权限与数据可见性、
-  向后兼容，以及事件顺序、投递和去重。
-- **失败六类**：非法输入或状态、依赖超时或不可用、部分成功、重试与重复执行、数据不一致、
-  无法自动恢复时的人工接管或安全停止——每类的外部可观察表现与恢复方式。
-- **brownfield 演进**：迁移（顺序、混合版本期、失败处理）、必须保持的旧行为、灰度与观察窗口、
-  回滚触发与方式——只要动数据 / 接口 / 配置 / 运行行为，这一项就适用。
+- **Decision probes**: for each dimension, judge needs a decision / not applicable (with reason) / deferred: data model; interface contracts; state management; error and failure handling; concurrency and consistency; performance and scale; security and permissions; observability; migration and compatibility; testing strategy and seams; external dependencies and technology choices. "Forgot to think about it" and "thought about it and judged it not applicable" are different things.
+- **Major, hard-to-reverse decisions** (a new core data model, external contracts, storage and framework choices, new dependencies, performance budgets, compatibility and security boundaries): give at least two candidate options, the trade-offs of each, and a recommendation, then let the user decide. For routine, reversible decisions: infer, give a one-sentence reason, and state the assumption out loud ("assuming internal read-only, no authentication needed"). Confirm the APIs and version features of a chosen technology from official docs or source, not from memory.
+- **Architecture placement**: which (new or modified) component each in-scope behavior lands on, and how the main data flow goes. Treat major structural changes (a new service / new layer / new component boundary) as major decisions.
+- **External and cross-module contracts**: for each relevant interface, check input, output, error semantics, idempotency semantics, permissions and data visibility, backward compatibility, and event ordering, delivery, and deduplication.
+- **Six failure classes**: invalid input or state, dependency timeout or unavailability, partial success, retries and repeated execution, data inconsistency, and manual takeover or safe stop when automatic recovery is impossible. For each, the externally observable behavior and the recovery method.
+- **Brownfield evolution**: migration (order, mixed-version period, failure handling), old behavior that must be kept, rollout and observation window, rollback triggers and method. This item applies whenever data / interfaces / configuration / runtime behavior change.
 
-### D · 事实清单（你自己查，不问用户）
+### D · Fact checklist (look these up yourself; don't ask the user)
 
-按 grilling 的规则派 subagent 查找以下事实，为各层问题提供依据：
+Following grilling's rules, dispatch subagents to find these facts as the basis for each layer's questions:
 
-- **现状**：相关模块与职责、主要数据流、接口/事件/数据结构、错误处理与运行约束、不能破坏的既有行为。
-- **Prior art**：相似实现、已有测试 seam 与测试模式、fixture 与 harness 约定。
-- **真实命令**：build / test / lint 怎么跑（spec 的 Verification Commands 只收真实命令）。
-- **领域文档**：`GLOSSARY.md` 术语、相关 ADR——也是 domain-modeling 拿术语挑刺、和代码对账的原料。
+- **Current state**: relevant modules and responsibilities, main data flows, interfaces / events / data structures, error handling and runtime constraints, existing behavior that must not break.
+- **Prior art**: similar implementations, existing test seams and test patterns, fixture and harness conventions.
+- **Real commands**: how build / test / lint run (the spec's Verification Commands only accepts real commands).
+- **Domain docs**: `GLOSSARY.md` terms and relevant ADRs. These are also what domain-modeling uses to challenge terms and reconcile them with the code.
 
-测试 seam 的最终选择和用户确认发生在 `to-spec` 中；这里只需梳理已有 seam，
-并把用户对测试层级的硬偏好（如果有）问出来。
+The final choice of test seams, and the user's confirmation of it, happens in `to-spec`. Here you only map the existing seams and ask about any hard preference the user has for test levels.
 
-## 结束闸门
+## End gate
 
-grilling 的前沿为空后，再检查一遍覆盖清单 A–D。仍有未讨论的项目时，
-将其作为新分支放回前沿；所有项目都进入三种终态后才能结束。
+Once grilling's frontier is empty, go through coverage checklist A-D once more. If any item is still undiscussed, put it back on the frontier as a new branch. End only when every item is in one of the three end states.
 
-1. 用用户自己的语言复述共识：要解决什么 / 做什么与不做什么 / 关键技术决策（各一句）/
-   怎么算做完 / 挂起项。对未继续展开的分支也要说明。
-2. 检查 domain-modeling 已及时写入术语和 ADR，没有遗漏待记录内容。
-3. 告诉用户：这场讨论已经够 `to-spec` 用了，跑 `to-spec` 即可产出并发布 spec。
-   **不要自己代跑 to-spec，也不要开始实现。**
+1. Restate the shared understanding in the user's own words: what is being solved / what is in and out of scope / key technical decisions (one sentence each) / what counts as done / deferred items. Also mention the branches that were not expanded further.
+2. Check that domain-modeling has written terms and ADRs as they came up, and nothing is left unrecorded.
+3. Tell the user: this discussion is enough for `to-spec`; run `to-spec` to produce and publish the spec. **Don't run to-spec yourself, and don't start implementing.**
 
-## 常见错误
+## Common mistakes
 
-- 问题层还没明确，就并行展开行为与技术分支——层不是流程装饰，是前置条件。
-- 把"不做什么"留空，或只有一句"不做同步"而说不出怎么验证它没发生。
-- 重大且难逆的决策（数据模型 / 对外契约 / 新依赖）用"就用 X"带过，不摆候选与取舍。
-- 向用户询问你自己派 subagent 就能查到的代码库事实。
-- 前沿空了就宣布结束，不对覆盖清单扫尾——"没聊到"混进了"已覆盖"。
-- 聊完顺手把 spec 也写了、发了——产出 spec 是 to-spec 的职责，这里到共识为止。
-- 在这里重述 grilling 的轮次规则或 to-spec 的模板格式——判据住在各自的 skill 里。
+- Expanding behavior and technical branches in parallel before the problem layer is clear. Layers are not process decoration; they are prerequisites.
+- Leaving "out of scope" empty, or writing only "no sync" without being able to say how to verify it didn't happen.
+- Glossing over a major, hard-to-reverse decision (data model / external contract / new dependency) with "just use X", without laying out candidates and trade-offs.
+- Asking the user for codebase facts a subagent could find.
+- Declaring the session over as soon as the frontier is empty, without sweeping the coverage checklist, so "never came up" gets mixed in with "covered".
+- Writing and publishing the spec at the end as well. Producing the spec is to-spec's job; this skill stops at shared understanding.
+- Restating grilling's round rules or to-spec's template format here. Each rule lives in its own skill.

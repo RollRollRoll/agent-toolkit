@@ -1,23 +1,46 @@
-# 项目调研报告模板 · 深度报告档
+# Report template: deep report tier
 
-> 这是「深度报告」的完整骨架。需要更轻的输出时改用：
-> - 快速概览 → [template-quick.md](template-quick.md)
-> - 标准调研 → [template-standard.md](template-standard.md)
+> This is the full skeleton for the **deep report**. For lighter output use instead:
+> - Quick overview → [template-quick.md](template-quick.md)
+> - Standard investigation → [template-standard.md](template-standard.md)
 >
-> 深度报告按本模板的章节顺序和层级编写，并保留所有标题。没有内容时写明：
-> - **"未搞清楚（原因：…）"** —— 你没读到 / 推断不出 / 需要业务侧确认（这是盲区）。
-> - **"不适用（原因：…）"** —— 项目本身不涉及这一项（这是确定的结论）。
+> Write the deep report in this template's chapter order and hierarchy, and keep every heading. When there is no content, say so explicitly:
+> - **"未搞清楚（原因：…）"** (not figured out, reason: ...): you did not read it / cannot infer it / it needs confirmation from the business side (this is a blind spot).
+> - **"不适用（原因：…）"** (not applicable, reason: ...): the project does not involve this item (this is a firm conclusion).
 >
-> 两种情况不要混用。条件章节与项目无关时，用一行「不适用（原因）」说明即可，无需展开子标题和占位内容。
+> Do not mix the two. When a conditional section does not concern the project, one line "不适用（原因）" is enough; no need for subheadings and placeholder content.
 >
-> **深度档大项目提速**：调研大项目时，描述性章节（第 1/2/3/4/6/7/8 章）可拆给子 agent 并行起草，一页纸概览与第 5/9/10 章由主 agent 亲自写，
-> 并分阶段流式输出——详见 [parallel-strategy.md](parallel-strategy.md) 的「按报告章节并行起草」。**本模板的章节结构、顺序、层级不变。**
+> **Speeding up the deep tier on large projects**: when investigating a large project, the descriptive chapters (1/2/3/4/6/7/8) can be handed to subagents to draft in parallel, while the main agent writes the one-page overview and chapters 5/9/10 itself,
+> and output is streamed in phases. See "Variant: parallel drafting by report chapter" in [parallel-strategy.md](parallel-strategy.md). **The chapter structure, order, and hierarchy of this template do not change.**
+>
+> **How to fill this template** (same rules in all three templates):
+> - Everything below the first `---` line is the report skeleton. Headings, bold field labels, table headers, and the `目录` links are **fixed Chinese strings**: copy them verbatim.
+> - `{{...}}` placeholders describe what goes there, in English. Replace each one with Chinese content.
+> - Blockquotes starting with `> Guidance:` are instructions for you. Do not copy them into the report.
+> - English meaning of the fixed `##` headings (`###` subheadings are explained by the placeholders under them):
+>
+> | Heading | Meaning |
+> |---|---|
+> | `项目调研报告` | Project investigation report (report title) |
+> | `目录` | Table of contents |
+> | `一页纸概览` | One-page overview |
+> | `1. 项目定位与功能` | Positioning and features |
+> | `2. 整体架构` | Overall architecture |
+> | `3. 技术栈` | Tech stack |
+> | `4. 代码结构与核心实现` | Code structure and core implementation |
+> | `5. 端到端代表性流程` | Representative end-to-end flows |
+> | `6. 配置、依赖与运行` | Configuration, dependencies, and running |
+> | `7. 工程实践与质量` | Engineering practice and quality |
+> | `8. 项目类型专项分析` | Project-type analysis |
+> | `9. 综合评价（亮点 / 适合度 / 二次开发）` | Overall assessment (highlights / fit / further development) |
+> | `10. 未搞清楚的部分 / 假设 / 已知问题` | Unclear parts / assumptions / known issues |
+> | `附录 A：调研路径回放（可选）` | Appendix A: investigation path replay (optional) |
 
 ---
 
-# 项目调研报告：{{项目名}}
+# 项目调研报告：{{project name}}
 
-> **调研对象**：`{{绝对路径或仓库地址}}`
+> **调研对象**：`{{absolute path or repository URL}}`
 > **调研时间**：{{YYYY-MM-DD}}
 > **报告读者**：对项目不熟悉的工程师
 
@@ -42,19 +65,17 @@
 
 ## 一页纸概览
 
-> 目标：读者只看这一节，就能在 1 分钟内掌握"这个项目是什么、长什么样、用什么技术做的"。
+> Guidance: the goal is that a reader who reads only this section grasps in 1 minute "what this project is, what it looks like, and what technology it is built with".
 
-- **一句话定义**：{{一句话讲清楚这个项目做什么、给谁用}}
-- **核心价值**：{{解决了什么问题，对用户有什么意义}}
-- **架构风格**：{{单体 / 微服务 / 前后端分离 / CLI 工具 / 库 / 事件驱动 / Serverless 等}}
-- **主要技术栈**：{{语言 + 关键框架 + 数据库 / 中间件，一行内列完}}
-- **运行形态**：{{长驻 server / 一次性 CLI / 定时任务 / SDK 库 / 浏览器前端 / 桌面应用…}}
-- **代码规模感**：{{代码行数量级、模块数、是否单仓多包}}
+- **一句话定义**：{{one sentence on what the project does and who it is for}}
+- **核心价值**：{{which problem it solves and what it means for users}}
+- **架构风格**：{{monolith / microservices / separate frontend and backend / CLI tool / library / event-driven / serverless, etc.}}
+- **主要技术栈**：{{language + key frameworks + database / middleware, all on one line}}
+- **运行形态**：{{long-running server / one-shot CLI / scheduled job / SDK library / browser frontend / desktop app ...}}
+- **代码规模感**：{{order of magnitude of lines, number of modules, monorepo or not}}
 
 ```text
-┌──────────────────────────────────────────────────┐
-│      架构示意（ASCII，5~10 行内能看懂全貌）      │
-└──────────────────────────────────────────────────┘
+{{architecture sketch in ASCII, 5-10 lines that show the whole picture}}
 ```
 
 ---
@@ -62,95 +83,95 @@
 ## 1. 项目定位与功能
 
 ### 1.1 解决什么问题
-{{用户在没有这个项目时面对的痛点 / 工作流断点}}
+{{the pain points / workflow breaks users face without this project}}
 
 ### 1.2 目标用户
-{{终端用户、开发者、运维、特定行业…}}
+{{end users, developers, ops, a specific industry ...}}
 
 ### 1.3 核心价值
-{{相对于已有方案的差异化}}
+{{how it differs from existing solutions}}
 
 ### 1.4 功能地图
 
-> 不只是罗列功能名，而是把每个核心功能落到"怎么触发、从哪进、谁实现、进出什么"，并标明是否已在源码核实。
+> Guidance: do not just list feature names. Tie each core feature to "how it is triggered, where it enters, what implements it, what goes in and out", and mark whether it was verified in the source.
 
 | 功能 | 用户触发方式 | 入口文件 | 核心实现 | 输入 | 输出 | 已在源码确认 |
 |---|---|---|---|---|---|---|
-| {{功能 1}} | {{CLI 命令 / HTTP 请求 / 函数调用 / 事件}} | `{{path:line}}` | `{{path:line}}` | {{入参形态}} | {{产出形态}} | 是 / 否（仅据 README） |
+| {{feature 1}} | {{CLI command / HTTP request / function call / event}} | `{{path:line}}` | `{{path:line}}` | {{input shape}} | {{output shape}} | 是 / 否（仅据 README） |
 | … | … | … | … | … | … | … |
 
 ### 1.5 主要用户流程
-{{典型场景下用户怎么用这个项目，2~5 步}}
+{{how users use the project in a typical scenario, 2-5 steps}}
 
 ### 1.6 功能边界
-- **做什么**：{{明确属于本项目职责的能力}}
-- **不做什么**：{{明确划在范围外的能力，避免读者误解}}
+- **做什么**：{{capabilities clearly within the project's responsibility}}
+- **不做什么**：{{capabilities clearly out of scope, to prevent misreading}}
 
 ### 1.7 主要输入与输出
-- **输入**：{{HTTP 请求 / CLI 参数 / 文件 / 消息 / 事件…}}
-- **输出**：{{HTTP 响应 / 标准输出 / 文件 / 数据库写入 / 下游消息…}}
+- **输入**：{{HTTP requests / CLI arguments / files / messages / events ...}}
+- **输出**：{{HTTP responses / stdout / files / database writes / downstream messages ...}}
 
 ---
 
 ## 2. 整体架构
 
 ### 2.1 架构风格
-{{单体 / 微服务 / 前后端分离 / 事件驱动 / 分层 / 六边形 / CQRS …，给出判断依据，不要只贴标签}}
+{{monolith / microservices / separate frontend and backend / event-driven / layered / hexagonal / CQRS ...; give the evidence for the judgment, not just a label}}
 
 ### 2.2 主要模块 / 服务
 | 模块 | 路径 | 职责 | 对外暴露 | 依赖 |
 |---|---|---|---|---|
-| {{模块名}} | `{{path}}` | {{一句话职责}} | {{API / 函数 / 事件}} | {{依赖的模块或外部系统}} |
+| {{module name}} | `{{path}}` | {{one-sentence responsibility}} | {{API / functions / events}} | {{modules or external systems it depends on}} |
 | … | … | … | … | … |
 
 ### 2.3 模块间通信
-{{进程内函数调用 / HTTP / gRPC / 消息队列 / 共享数据库…，每种通信方式举一两个具体调用点}}
+{{in-process function calls / HTTP / gRPC / message queue / shared database ...; give one or two concrete call sites for each kind}}
 
 ### 2.4 数据流
-{{数据从入口进入后，经过哪些模块，最终去哪里——文字描述 + 一张简化的流程图}}
+{{where data goes after it enters, which modules it passes through, where it ends up: a written description + a simplified flow diagram}}
 
 ### 2.5 控制流
-> 数据流回答"数据去哪"，控制流回答"谁在驱动、何时结束、出错怎么办"。
+> Guidance: data flow answers "where does the data go"; control flow answers "what drives execution, when does it end, what happens on error".
 
-- **主入口如何调度**：入口拿到请求 / 命令后，怎么分发到具体处理逻辑？（路由表 / 命令分发 / 任务队列）`{{path:line}}`
-- **主循环 / 状态机**：是否存在长驻主循环、事件循环或状态机？状态怎么迁移？`{{path:line}}`（没有则写"无，单次执行后退出"）
-- **异常如何冒泡**：错误从底层往上怎么传？是否有统一错误处理 / 兜底？`{{path:line}}`
-- **任务何时结束**：正常终止条件是什么？（请求返回 / 命令执行完 / 收到停止信号）
-- **失败处理**：是否有重试 / 回滚 / 降级 / 熔断？在哪实现？`{{path:line}}`（没有则写"无"）
+- **主入口如何调度**：{{after the entry point receives a request / command, how is it dispatched to the handling logic (route table / command dispatch / task queue)}} `{{path:line}}`
+- **主循环 / 状态机**：{{is there a long-running main loop, event loop, or state machine, and how do states change}} `{{path:line}}` {{if none, write "无，单次执行后退出" (none, exits after a single run)}}
+- **异常如何冒泡**：{{how errors pass upward from lower layers; is there unified error handling / a catch-all}} `{{path:line}}`
+- **任务何时结束**：{{the normal termination condition (request returns / command finishes / stop signal received)}}
+- **失败处理**：{{is there retry / rollback / fallback / circuit breaking, and where is it implemented}} `{{path:line}}` {{if none, write "无" (none)}}
 
 ### 2.6 与外部系统的交互
 | 外部系统 | 用途 | 调用方式 | 调用点 |
 |---|---|---|---|
-| {{如 PostgreSQL / Redis / S3 / 第三方 API}} | {{用来做什么}} | {{协议 / SDK}} | `{{path:line}}` |
+| {{e.g. PostgreSQL / Redis / S3 / third-party API}} | {{what it is used for}} | {{protocol / SDK}} | `{{path:line}}` |
 
 ---
 
 ## 3. 技术栈
 
 ### 3.1 语言与框架
-- **主语言**：{{语言 + 版本，给出读到的依据，例如 `pyproject.toml` 中的 `python = "^3.11"`}}
-- **核心框架**：{{框架 + 版本 + 用途}}
-- **次要框架 / 工具链**：{{ORM / 模板引擎 / 构建工具 / 包管理器…}}
+- **主语言**：{{language + version, with the evidence you read, e.g. `python = "^3.11"` in `pyproject.toml`}}
+- **核心框架**：{{framework + version + purpose}}
+- **次要框架 / 工具链**：{{ORM / template engine / build tool / package manager ...}}
 
 ### 3.2 数据存储与中间件
 | 类别 | 选型 | 用途 | 配置位置 |
 |---|---|---|---|
-| 数据库 | {{如 PostgreSQL 14}} | {{主存储 / 业务数据}} | `{{path}}` |
-| 缓存 | {{如 Redis}} | {{用途}} | `{{path}}` |
-| 消息队列 | {{如 Kafka / RabbitMQ}} | {{用途}} | `{{path}}` |
+| 数据库 | {{e.g. PostgreSQL 14}} | {{primary storage / business data}} | `{{path}}` |
+| 缓存 | {{e.g. Redis}} | {{purpose}} | `{{path}}` |
+| 消息队列 | {{e.g. Kafka / RabbitMQ}} | {{purpose}} | `{{path}}` |
 | 搜索 | … | … | … |
 
 ### 3.3 关键三方库
-> 只列**对架构有形塑作用**或**承担核心业务能力**的库。工具类小库不必罗列。
+> Guidance: list only libraries that **shape the architecture** or **carry core business capability**. Small utility libraries need not be listed.
 
 | 库 | 作用 | 在哪里用 |
 |---|---|---|
-| {{lib}} | {{为什么这个项目离不开它}} | `{{path}}` |
+| {{lib}} | {{why the project cannot do without it}} | `{{path}}` |
 
 ### 3.4 部署与基础设施
-- **运行环境**：{{容器 / 裸机 / Serverless / Kubernetes …}}
-- **构建产物**：{{二进制 / 镜像 / npm 包 / 静态站点…}}
-- **基础设施定义**：{{Dockerfile / docker-compose / k8s manifest / Terraform / CDK 的位置}}
+- **运行环境**：{{container / bare metal / serverless / Kubernetes ...}}
+- **构建产物**：{{binary / image / npm package / static site ...}}
+- **基础设施定义**：{{location of Dockerfile / docker-compose / k8s manifests / Terraform / CDK}}
 
 ---
 
@@ -159,251 +180,251 @@
 ### 4.1 目录结构与模块划分逻辑
 
 ```text
-{{项目根目录}}/
-├── {{dir1}}/         # {{该目录的职责}}
-│   ├── {{subdir}}/   # {{子职责}}
+{{project root}}/
+├── {{dir1}}/         # {{responsibility of this directory}}
+│   ├── {{subdir}}/   # {{sub-responsibility}}
 │   └── …
 ├── {{dir2}}/         # …
 └── …
 ```
 
-> 划分逻辑：{{按层（controller/service/repo）/ 按业务领域 / 按模块单仓 / hybrid …}}
+> 划分逻辑：{{by layer (controller/service/repo) / by business domain / modules in a monorepo / hybrid ...}}
 
 ### 4.2 关键文件 / 目录地图
 
-> 不是罗列全部，而是**标注重点**：读者要去找"入口、核心算法、对外接口、数据模型"时该看哪里。
+> Guidance: do not list everything; **highlight what matters**: where the reader should look for "entry point, core algorithm, external interfaces, data models".
 
 | 文件 / 目录 | 角色 | 备注 |
 |---|---|---|
-| `{{path}}` | 程序入口 | {{为什么是入口的依据}} |
-| `{{path}}` | 路由 / 接口注册 | {{包含哪些路由}} |
-| `{{path}}` | 核心业务逻辑 | {{核心做了什么}} |
+| `{{path}}` | 程序入口 | {{evidence that it is the entry point}} |
+| `{{path}}` | 路由 / 接口注册 | {{which routes it contains}} |
+| `{{path}}` | 核心业务逻辑 | {{what the core does}} |
 | `{{path}}` | 数据模型定义 | {{ORM / schema}} |
-| `{{path}}` | 配置加载 | {{读哪些环境变量}} |
+| `{{path}}` | 配置加载 | {{which environment variables it reads}} |
 | … | … | … |
 
 ### 4.3 程序入口与启动流程
-{{从启动命令到首个请求 / 任务能被处理之间发生的事，按时序列出}}
+{{what happens between the start command and the point where the first request / task can be handled, in time order}}
 
-1. `{{path:line}}` —— {{做了什么}}
-2. `{{path:line}}` —— {{做了什么}}
+1. `{{path:line}}`：{{what it does}}
+2. `{{path:line}}`：{{what it does}}
 3. …
 
 ### 4.4 数据模型 / Schema
-- **核心实体**：{{实体 1、实体 2、…}}
-- **关系**：{{文字 + 简单 ER 描述，例如 `User 1—N Order N—1 Product`}}
+- **核心实体**：{{entity 1, entity 2, ...}}
+- **关系**：{{text + a simple ER description, e.g. `User 1:N Order N:1 Product`}}
 - **定义位置**：`{{path}}`、迁移在 `{{path}}`
 
 ### 4.5 核心业务逻辑 / 关键算法
-{{对项目独特价值最关键的那部分实现。包括但不限于：调度算法、匹配规则、状态机、解析器、推理流水线等}}
+{{the implementation most essential to the project's unique value, including but not limited to scheduling algorithms, matching rules, state machines, parsers, inference pipelines}}
 
 - **位置**：`{{path:line}}`
-- **思路**：{{核心思路文字描述，避免直接贴大段代码；必要时贴 10~30 行关键片段}}
-- **复杂度 / 性能敏感点**：{{若有}}
+- **思路**：{{written description of the core idea; avoid pasting large blocks of code; paste a 10-30 line key snippet only when needed}}
+- **复杂度 / 性能敏感点**：{{if any}}
 
 ### 4.6 对外暴露的接口
 
-> 把对外暴露的能力列全：HTTP / gRPC / GraphQL / CLI 命令 / SDK 函数 / 消息事件等。
+> Guidance: list all externally exposed capabilities: HTTP / gRPC / GraphQL / CLI commands / SDK functions / message events, etc.
 
 | 类型 | 名称 / 路径 | 描述 | 定义位置 |
 |---|---|---|---|
-| {{REST}} | `GET /api/xxx` | {{做什么}} | `{{path:line}}` |
-| {{CLI}} | `xxx run` | {{做什么}} | `{{path:line}}` |
+| {{REST}} | `GET /api/xxx` | {{what it does}} | `{{path:line}}` |
+| {{CLI}} | `xxx run` | {{what it does}} | `{{path:line}}` |
 | … | … | … | … |
 
 ---
 
 ## 5. 端到端代表性流程
 
-> **报告里信息密度最高的章节**。挑 1~2 条最能体现项目核心价值的流程，从入口到输出全程串起来。
+> Guidance: **the most information-dense chapter of the report**. Pick 1-2 flows that best show the project's core value and connect them end to end from entry point to output.
 
-### 流程 A：{{流程名，例如"用户登录请求"}}
+### 流程 A：{{flow name, e.g. "user login request"}}
 
-**触发**：{{客户端动作 / 定时器 / 消息 / CLI 调用}}
+**触发**：{{client action / timer / message / CLI call}}
 
 **调用链**：
 
 ```text
 [入口] {{path:line}}
-   ↓ 解析参数 / 中间件
-[层 1] {{path:line}}     # {{做了什么；数据形态}}
+   ↓ {{argument parsing / middleware}}
+[层 1] {{path:line}}     # {{what it does; data shape}}
    ↓
-[层 2] {{path:line}}     # {{做了什么}}
-   ↓ 调用 {{外部系统}}
-[层 3] {{path:line}}     # {{做了什么}}
+[层 2] {{path:line}}     # {{what it does}}
+   ↓ {{calls external system}}
+[层 3] {{path:line}}     # {{what it does}}
    ↓
-[出口] {{path:line}}     # 返回 / 落库 / 发消息
+[出口] {{path:line}}     # {{response / database write / message sent}}
 ```
 
 **关键点**：
-- {{鉴权 / 权限校验在哪步}}
-- {{事务边界在哪}}
-- {{重试 / 降级 / 限流的处理点}}
-- {{可能的失败点与处理方式}}
+- {{at which step authentication / authorization checks happen}}
+- {{where the transaction boundaries are}}
+- {{where retry / fallback / rate limiting is handled}}
+- {{possible failure points and how they are handled}}
 
-### 流程 B：{{第二条流程，可选}}
+### 流程 B：{{second flow, optional}}
 
-（若项目核心只需一条流程能讲清，可不写。若有显著不同的另一条主线，例如读流程 + 写流程、同步 API + 异步任务，建议补一条。）
+{{optional: if one flow is enough to explain the project's core, omit this. If there is a clearly different second main line, such as read flow + write flow, or synchronous API + asynchronous job, add one.}}
 
 ---
 
 ## 6. 配置、依赖与运行
 
 ### 6.1 配置项与环境变量
-> 只从示例配置与加载代码取证。不得读取或复制真实环境值；凭据类默认值也不得原样写入报告。
+> Guidance: take evidence only from example config and loading code. Do not read or copy real environment values; do not write credential defaults into the report as-is.
 
 | 变量 | 含义 | 必填 | 加载位置 |
 |---|---|---|---|
-| `{{ENV_VAR}}` | {{用途}} | 是 / 否 | `{{path:line}}` |
+| `{{ENV_VAR}}` | {{purpose}} | 是 / 否 | `{{path:line}}` |
 
 ### 6.2 不同环境差异（dev / staging / prod）
-{{每种环境用哪些配置文件 / 哪些变量被切换}}
+{{which config files each environment uses / which variables are switched}}
 
 ### 6.3 依赖的外部服务与集成点
-{{数据库、缓存、第三方 API、SSO、对象存储…每项写清"在没有它时项目能否启动 / 哪些功能不可用"}}
+{{database, cache, third-party APIs, SSO, object storage ...; for each, state "can the project start without it / which features become unavailable"}}
 
 ### 6.4 构建与部署
-- **本地构建**：`{{命令}}`
-- **打包产物**：`{{产物路径 / 镜像名}}`
-- **部署方式**：{{CI 触发 / 手动 / GitOps …}}
+- **本地构建**：`{{command}}`
+- **打包产物**：`{{artifact path / image name}}`
+- **部署方式**：{{CI-triggered / manual / GitOps ...}}
 - **CI/CD 定义**：`{{path}}`
 
 ### 6.5 可观测性
-- **日志**：{{日志库、日志级别配置、输出去向}}
-- **监控 / 指标**：{{Prometheus / OpenTelemetry / 自定义打点 …，初始化位置}}
-- **错误追踪**：{{Sentry / Bugsnag / 自研}}
-- **trace / 链路追踪**：{{是否接入}}
+- **日志**：{{logging library, log-level config, where output goes}}
+- **监控 / 指标**：{{Prometheus / OpenTelemetry / custom instrumentation ..., where it is initialized}}
+- **错误追踪**：{{Sentry / Bugsnag / in-house}}
+- **trace / 链路追踪**：{{integrated or not}}
 
 ---
 
 ## 7. 工程实践与质量
 
 ### 7.1 测试
-- **类型**：{{单元 / 集成 / e2e / 性能 …}}
-- **框架**：{{pytest / jest / go test …}}
+- **类型**：{{unit / integration / e2e / performance ...}}
+- **框架**：{{pytest / jest / go test ...}}
 - **目录**：`{{path}}`
-- **运行方式**：`{{命令}}`
-- **覆盖度**：{{若有覆盖率配置 / 报告，写出实际数值或"未读到"}}
+- **运行方式**：`{{command}}`
+- **覆盖度**：{{if there is coverage config / a coverage report, write the actual number, or "未读到" (not found)}}
 
 ### 7.2 本地开发环境搭建
-> 按这一节的步骤，一个新人应该能把项目跑起来。
+> Guidance: by following the steps in this section, a newcomer should be able to get the project running.
 
-1. 前置依赖：{{语言版本 / 工具 / docker …}}
-2. 安装：`{{命令}}`
-3. 配置：{{需要复制 `.env.example`、申请哪类凭据；只写名称与获取途径，不写实际值}}
-4. 启动：`{{命令}}`
-5. 验证：{{访问哪个 URL / 看到什么输出代表 OK}}
+1. 前置依赖：{{language version / tools / docker ...}}
+2. 安装：`{{command}}`
+3. 配置：{{whether to copy `.env.example`, which kinds of credentials to request; write only names and how to obtain them, never actual values}}
+4. 启动：`{{command}}`
+5. 验证：{{which URL to visit / what output means it is OK}}
 
 ### 7.3 文档现状
-{{README 是否齐全；是否有架构文档、ADR、API 文档；是否最新}}
+{{is the README complete; are there architecture docs, ADRs, API docs; are they up to date}}
 
 ### 7.4 代码质量信号
-- **静态检查**：{{linter / formatter / type checker，配置文件}}
-- **PR / commit 规范**：{{若有 commit 规约、PR 模板}}
-- **明显的 TODO / FIXME / HACK**：{{是否大量分布、集中在哪些区域}}
+- **静态检查**：{{linter / formatter / type checker, and their config files}}
+- **PR / commit 规范**：{{commit conventions or PR templates, if any}}
+- **明显的 TODO / FIXME / HACK**：{{are they widespread, which areas they cluster in}}
 
 ### 7.5 认证与安全
-- **认证机制**：{{Session / JWT / OAuth / API Key …，实现位置}}
-- **授权 / 权限模型**：{{RBAC / ABAC / 自定义}}
-- **敏感数据处理**：{{从配置代码、忽略规则和文件跟踪状态确认加密 / 脱敏 / 凭据存储方式；不读取或展示凭据内容}}
-- **常见安全考量**：{{CSRF / CORS / SQL 注入防护 / 速率限制 …，是否注意到}}
+- **认证机制**：{{session / JWT / OAuth / API key ..., where it is implemented}}
+- **授权 / 权限模型**：{{RBAC / ABAC / custom}}
+- **敏感数据处理**：{{confirm encryption / redaction / credential storage from config code, ignore rules, and file tracking status; do not read or show credential contents}}
+- **常见安全考量**：{{CSRF / CORS / SQL injection protection / rate limiting ...; are they addressed}}
 
 ---
 
 ## 8. 项目类型专项分析
 
-> 根据 [project-type-checklists.md](project-type-checklists.md) 判断出的项目类型，追加对应专项分析。命中几类就写几个小节，
-> 并各自说明判断依据（看证据，不看名字）。若未匹配到明确类型，本节写"未匹配到专项类型（原因：…）"。每条结论同样要给源码路径。
+> Guidance: add the type-specific analysis for the project types identified per [project-type-checklists.md](project-type-checklists.md). Write one subsection per matched type,
+> each with its evidence (go by evidence, not names). If no clear type matches, write "未匹配到专项类型（原因：…）" (no specific type matched, reason: ...) for this chapter. Every conclusion also needs a source path.
 
-### 8.x {{项目类型，如"CLI 项目" / "Web 服务" / "Library / SDK" / "Agent 项目" / "MCP Server" / "DevTool / Workflow 工具" / "Agent 编程工具插件 / 扩展（Claude Code / Codex）"}}
+### 8.x {{project type, e.g. "CLI 项目" / "Web 服务" / "Library / SDK" / "Agent 项目" / "MCP Server" / "DevTool / Workflow 工具" / "Agent 编程工具插件 / 扩展（Claude Code / Codex）"}}
 
-- **判断依据**：{{为什么归为此类，给出依赖 / 入口 / 目录证据}}
-- {{按该类型清单逐条作答，每条带 `path:line`；不适用的写"不适用（原因）"，没查清的写"未确认"}}
+- **判断依据**：{{why it falls in this type, with dependency / entry point / directory evidence}}
+- {{answer the checklist for that type item by item, each with `path:line`; write "不适用（原因）" for items that do not apply and "未确认" (not confirmed) for items you did not figure out}}
 
 #### 若命中 DevTool / Workflow 工具：工作场景全景（穷举）
 
-> 按「意图 → 入口 → 流程」穷举所有工作场景（详见 [project-type-checklists.md](project-type-checklists.md) 的 f 类深度档专项）。
-> **与第 5 章分工**：第 5 章逐跳深追 1~2 条核心流程，本表广度覆盖、主路径可略粗。
+> Guidance: exhaustively list all work scenarios as "intent → entry point → flow" (see the deep-tier section of type f in [project-type-checklists.md](project-type-checklists.md)).
+> **Division of work with chapter 5**: chapter 5 traces 1-2 core flows hop by hop; this table covers breadth, and the main path can be coarser.
 
 | 用户意图 / 任务 | 对应入口 | 主路径 | 关键分支 | 源码位置 |
 |---|---|---|---|---|
-| {{意图 1}} | {{命令 / 触发}} | {{主流程简述}} | {{失败 / 降级 / 特殊输入}} | `{{path:line}}` |
+| {{intent 1}} | {{command / trigger}} | {{brief main flow}} | {{failure / fallback / special input}} | `{{path:line}}` |
 | … | … | … | … | … |
 
 #### 若命中 Claude Code / Codex 插件或扩展：扩展件逐条画像 + 装配图
 
-> 每个 skill / command / hook / subagent / custom agent 逐条画像，
-> 并标注平台与发现路径（详见 [project-type-checklists.md](project-type-checklists.md) 的 g 类）。
-> 条目多时按 [parallel-strategy.md](parallel-strategy.md) 的「按扩展条目并行」派子 agent。
+> Guidance: profile each skill / command / hook / subagent / custom agent one by one,
+> and mark its platform and discovery path (see type g in [project-type-checklists.md](project-type-checklists.md)).
+> With many items, dispatch subagents per "Variant: parallel by extension item" in [parallel-strategy.md](parallel-strategy.md).
 
 | 条目 | 类型 | 平台 / 发现路径 | 触发条件 | 输入 → 输出 | 内部关键逻辑 | 依赖 / 被依赖 |
 |---|---|---|---|---|---|---|
-| {{名称}} | skill / command / hook / subagent / custom agent | {{Claude / Codex / 双平台；清单或目录}} | {{触发}} | {{入 → 出}} | `{{path:line}}` | {{协作关系}} |
+| {{name}} | skill / command / hook / subagent / custom agent | {{Claude / Codex / both; manifest or directory}} | {{trigger}} | {{in → out}} | `{{path:line}}` | {{collaboration}} |
 | … | … | … | … | … | … | … |
 
-**整体装配图**（技术编排视角，区别于场景表的用户视角）：
+**整体装配图**：
 
 ```text
-{{ASCII：平台清单 → skill / command → subagent / custom agent → hook 的编排关系，5~15 行看懂全貌}}
+{{ASCII of how platform manifests → skills / commands → subagents / custom agents → hooks are orchestrated, 5-15 lines that show the whole picture; a technical-orchestration view, distinct from the user view of the scenario table}}
 ```
 
 ---
 
 ## 9. 综合评价（亮点 / 适合度 / 二次开发）
 
-> 帮读者做决策：这个项目能不能用、值不值得在它基础上改，以及有哪些值得学习借鉴的设计。结论要基于前面章节的事实，不要凭印象。
+> Guidance: help the reader decide whether the project can be used, whether it is worth building on, and which designs are worth learning from. Base conclusions on facts from earlier chapters, not impressions.
 
 ### 9.1 项目亮点
 
-> 这个项目**最巧妙 / 最有特色 / 最值得学习借鉴**的设计——技术欣赏视角，区别于下面"优点"（决策视角）。每条落到具体 `path:line`，说清**妙在哪、为什么别人难做到这么好**，
-> 不准泛泛说"架构清晰"。
+> Guidance: the project's **cleverest / most distinctive / most worth-learning** designs, from a technical-appreciation view, distinct from "优点" (strengths) below, which is a decision view. Tie each one to a specific `path:line`, and explain **what is clever about it and why others find it hard to do this well**.
+> Do not write a generic "clear architecture".
 
-- {{亮点 1：如某个精巧的抽象 / 独特算法 / 干净的扩展机制 / 聪明的工程取舍，`path:line`，妙在哪}}
+- {{highlight 1: e.g. an elegant abstraction / a unique algorithm / a clean extension mechanism / a smart engineering trade-off, `path:line`, and what is clever about it}}
 
 ### 9.2 项目优点（决策视角）
-- {{基于源码 / 架构观察到的强项，如设计清晰、测试完善、扩展点明确}}
+- {{strengths observed in the source / architecture, e.g. clear design, thorough tests, well-defined extension points}}
 
 ### 9.3 项目局限
-- {{观察到的短板，如耦合紧、缺测试、文档过时、强绑定某框架}}
+- {{weaknesses observed, e.g. tight coupling, missing tests, outdated docs, hard dependency on a framework}}
 
 ### 9.4 适合使用场景
-- {{什么场景下直接拿来用是合适的}}
+- {{scenarios where using it directly is appropriate}}
 
 ### 9.5 不适合使用场景
-- {{什么场景下不建议用，以及原因}}
+- {{scenarios where it is not recommended, and why}}
 
 ### 9.6 是否值得二次开发
-- **结论**：{{值得 / 谨慎 / 不建议}}
-- **依据**：{{代码可读性、模块化程度、扩展点、社区活跃度、技术债规模等}}
-- **二开切入点**：{{若值得，从哪些模块 / 扩展点入手；若不建议，替代方案是什么}}
+- **结论**：{{值得 / 谨慎 / 不建议 (worth it / with caution / not recommended)}}
+- **依据**：{{code readability, modularity, extension points, community activity, size of technical debt, etc.}}
+- **二开切入点**：{{if worth it, which modules / extension points to start from; if not, what the alternative is}}
 
 ---
 
 ## 10. 未搞清楚的部分 / 假设 / 已知问题
 
-> **不要省略本节**。任何没读到、推断不出、需要业务侧确认的内容都列在这。读者据此知道哪些结论可以信、哪些需要复核。
+> Guidance: **do not omit this section**. List everything you did not read, could not infer, or that needs confirmation from the business side. From this the reader knows which conclusions to trust and which to re-check.
 
 ### 10.1 未搞清楚（需要进一步确认）
-- {{问题 1}}
+- {{question 1}}
   - 我看了：`{{path}}`
-  - 仍不明：{{具体不明的点}}
-  - 建议确认方式：{{读哪个文档 / 问谁 / 跑什么实验}}
+  - 仍不明：{{the specific point still unclear}}
+  - 建议确认方式：{{which document to read / whom to ask / what experiment to run}}
 
 ### 10.2 调研中做出的假设
-- {{假设 1，以及为什么这样假设}}
+- {{assumption 1, and why you made it}}
 
 ### 10.3 已知技术债 / 明显坏味道
-- {{债 1}}：位置 `{{path}}`，表现：{{xxx}}
+- {{debt 1}}：位置 `{{path}}`，表现：{{symptom}}
 
 ### 10.4 显眼的 TODO / FIXME
-- `{{path:line}}`：{{原文摘要}}
+- `{{path:line}}`：{{summary of the original text}}
 
 ---
 
 ## 附录 A：调研路径回放（可选）
 
-> 如果用户希望复核你的调研深度，把"我读了哪些文件 / 在每个文件里看了什么"列在这里。读者看完能复现你的调研过程。
+> Guidance: if the user wants to check how deep your investigation went, list "which files I read / what I looked at in each file" here. After reading it, the reader can reproduce your investigation.
 
-- `{{path}}` —— 用于确认 {{xxx}}
-- `{{path}}` —— 用于追踪 {{xxx 流程}}
+- `{{path}}`：用于确认 {{what it confirmed}}
+- `{{path}}`：用于追踪 {{which flow it traced}}
 - …

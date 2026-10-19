@@ -1,11 +1,11 @@
-# Claude Code settings.json 边界
+# Claude Code settings.json boundaries
 
-`targets.claude.base` 与各 overlay 的 `set` 直接使用 Claude Code `settings.json` 原生字段。生成器输出 UTF-8、
-两空格缩进 JSON，不增加工具元数据。
+`targets.claude.base` and each overlay's `set` use native Claude Code `settings.json` fields directly. The generator outputs UTF-8,
+two-space-indented JSON and adds no tool metadata.
 
-这个 skill 不管理 `~/.claude.json`、凭据、OAuth Token、项目级设置、hooks 或会话数据。
+This skill does not manage `~/.claude.json`, credentials, OAuth tokens, project-level settings, hooks, or session data.
 
-下列字段属于其他 Claude Code 文件，不允许写入 `settings.json`。校验器从本节读取清单，更新字段时无需修改 Skill 提示词或 Python 常量。
+The fields below belong to other Claude Code files and must not be written to `settings.json`. The validator reads the list from this section, so updating the fields does not require changing the skill prompt or Python constants.
 
 <!-- rejected-fields:start -->
 - `autoConnectIde`

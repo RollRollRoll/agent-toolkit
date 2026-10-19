@@ -1,185 +1,185 @@
-# 调研追问清单
+# Investigation question checklist
 
-> 本清单适用于快速概览、标准调研和深度报告，区别只在展开程度。
-> 下文标注的"对应模板 X.Y"编号以 [template-deep.md](template-deep.md) 的完整章节为准；标准档章节有所合并，按语义对应即可。
+> This checklist applies to the quick overview, standard investigation, and deep report; they differ only in how far each item is expanded.
+> The "template section X.Y" numbers below follow the full chapters of [template-deep.md](template-deep.md); the standard tier merges some sections, so map by meaning.
 >
-> 调研每个章节时，用对应问题检查覆盖情况。项目确实不涉及某项时写「不适用（原因）」；
-> 尚未查清时写「未搞清楚（原因）」。两者不要混用。无需将每个问题都写入报告，但应逐项检查。
+> When investigating each section, use the matching questions to check coverage. When the project truly does not involve an item, write "不适用（原因）" (not applicable, with reason);
+> when you have not figured it out yet, write "未搞清楚（原因）" (not figured out, with reason). Do not mix the two. You do not need to write every question into the report, but check each one.
 >
-> **敏感信息边界**：不打开真实 `.env`、`secrets.*`、`credentials.*`、包管理器认证文件、私钥或云凭据文件，也不运行 `env` / `printenv`。
-> 配置只从 `.env.example` / `.env.sample`、示例配置和加载代码取证；报告环境变量只写变量名、用途、是否必填和加载位置，不写真实值或敏感默认值。
+> **Sensitive-information boundary**: do not open real `.env`, `secrets.*`, `credentials.*`, package-manager auth files, private keys, or cloud credential files, and do not run `env` / `printenv`.
+> Take config evidence only from `.env.example` / `.env.sample`, example config, and loading code. When reporting environment variables, write only variable name, purpose, whether required, and where it is loaded; never real values or sensitive defaults.
 
 ---
 
-## 0. 通用启发
+## 0. General heuristics
 
-- **「如果有」原则**：每个问题都隐含 `if any`。项目不涉及某项时无需补写内容，但要说明未发现或不适用，避免读者误以为漏查。
-- **看依据，不看名字**：判断"这是不是入口 / 这是不是核心"时，要给出依据（依赖图、import 关系、被谁调用）。
-  仅凭文件名 `main.py` 就断言入口可能误判（很多项目入口在 `cmd/`、`bin/` 或框架约定的位置）。
-- **"应该" 是危险词**：写报告时要么是"我看了 X，确认是 Y"，要么是"我没看到，假设是 Y"。不要写"应该是 Y"这种模糊说法。
-
----
-
-## 1. 项目定位与功能
-
-- README 第一段在说什么？项目自我定位是什么？
-- 有没有 demo 截图、动图、示例命令、示例请求？这些直观体现"它做什么"。
-- 是面向终端用户（产品）、面向开发者（库 / 框架 / SDK）、面向运维（工具），还是面向特定行业？
-- 项目 README / 官网 / package 描述里是否明确划过"不做什么"（non-goals）？
-- 主要输入是什么？（HTTP 请求 / CLI 参数 / 文件 / 消息 / 事件 / 数据库变更…）
-- 主要输出是什么？（响应 / 落库 / 写文件 / 发消息 / 推送…）
-- 有几条核心用户流程？最常被使用的是哪条？
-
-**功能地图**（对应模板 1.4，每个核心功能都要落到这几问）：
-- 这个功能**怎么被触发**？（CLI 命令 / HTTP 请求 / 函数调用 / 定时 / 事件）
-- **入口在哪**？（具体文件:行）
-- **核心实现在哪**？（真正干活的函数 / 类，给路径）
-- **输入输出**：进来是什么形态、出去是什么形态？
-- **是否已在源码确认**？还是仅凭 README 声称（后者要标注未验证）？
+- **"If any" principle**: every question implicitly means `if any`. When the project does not involve an item, there is no need to invent content, but say it was not found or does not apply, so the reader does not think you skipped it.
+- **Go by evidence, not names**: when judging "is this the entry point / is this the core", give evidence (dependency graph, import relationships, who calls it).
+  Asserting the entry point from the file name `main.py` alone can be wrong (many projects put the entry point in `cmd/`, `bin/`, or a framework-convention location).
+- **"Should" is a dangerous word**: in the report, write either "I read X and confirmed it is Y" or "I did not see it; I assume it is Y". Do not write vague statements like "it should be Y".
 
 ---
 
-## 2. 整体架构
+## 1. Positioning and features
 
-- 这是一个**单进程**还是**多进程 / 多服务**项目？依据是什么？（比如有没有多个 `main`、`Procfile`、k8s manifest 里多个 Deployment）
-- 是单仓单包，还是 monorepo？monorepo 的话，包之间依赖关系是什么？
-- 模块之间通信方式：进程内函数调用 / 内部 HTTP / gRPC / 消息队列 / 共享数据库？每种各举一个具体调用点。
-- 有没有清晰的"分层"？例如 controller → service → repository / handler → usecase → repo / pages → api → lib。
-- 项目和外部的边界在哪里？外部依赖（数据库、缓存、第三方 API、SSO、对象存储等）通过哪些"出口"被访问？这些出口集中在哪几个文件 / 模块？
-- 是否存在显式的"事件总线 / 任务队列 / 调度器"？如果有，事件的生产者和消费者分别在哪？
-- 是否使用了**插件 / 扩展机制**？插件是怎么注册和发现的？
+- What does the first paragraph of the README say? How does the project describe itself?
+- Are there demo screenshots, GIFs, example commands, or example requests? These show directly "what it does".
+- Is it for end users (a product), developers (a library / framework / SDK), ops (a tool), or a specific industry?
+- Does the README / website / package description explicitly state "what it does not do" (non-goals)?
+- What are the main inputs? (HTTP requests / CLI arguments / files / messages / events / database changes ...)
+- What are the main outputs? (responses / database writes / files written / messages sent / push notifications ...)
+- How many core user flows are there? Which one is used most?
 
-**控制流**（对应模板 2.5，数据流回答"数据去哪"，控制流回答"谁在驱动、何时结束、出错怎么办"）：
-- **主入口如何调度**：拿到请求 / 命令后怎么分发到具体处理逻辑？（路由表 / 命令分发 / 任务队列）
-- **主循环 / 状态机**：有没有长驻主循环、事件循环、状态机？状态怎么迁移？没有就是"单次执行后退出"。
-- **异常如何冒泡**：错误从底层往上怎么传？有没有统一错误处理 / 兜底？
-- **任务何时结束**：正常终止条件是什么？（请求返回 / 命令跑完 / 收到停止信号）
-- **失败处理**：有没有重试 / 回滚 / 降级 / 熔断？在哪实现？没有就明确写"无"。
-
----
-
-## 3. 技术栈
-
-- 语言版本从哪里读到的？（pinned 在 `.nvmrc` / `.python-version` / `go.mod` / `pyproject.toml` 等）
-- 核心框架是什么？是怎么用的？（例如：Spring Boot 用 starter、Express 自己组合中间件、FastAPI + Pydantic 风格…）
-- 数据库选型：是 SQL（哪个方言）还是 NoSQL？通过 ORM 还是裸 SQL？连接池在哪初始化？
-- 有没有缓存层？是 Redis 这种独立服务，还是进程内（如 lru_cache、caffeine）？
-- 有没有消息队列？生产 / 消费在哪？是否使用了 outbox / dead-letter？
-- 关键三方库要列**对架构有形塑作用**的，工具类小库不必列。例如：`prisma`、`celery`、`sqlalchemy`、`zod`、`grpcio`、`langchain`、
-  `react-query` 这种是要列的；`lodash`、`pydantic`、`requests` 之类常规库视情况。
+**Feature map** (template section 1.4; ask these for every core feature):
+- **How is the feature triggered**? (CLI command / HTTP request / function call / schedule / event)
+- **Where is the entry point**? (specific file:line)
+- **Where is the core implementation**? (the function / class that does the real work, with path)
+- **Input and output**: what shape comes in, what shape goes out?
+- **Is it verified in the source**, or only claimed by the README (mark the latter as unverified)?
 
 ---
 
-## 4. 代码结构与核心实现
+## 2. Overall architecture
 
-### 目录结构与文件地图（对应模板 4.1 / 4.2）
-- 顶层目录怎么划分？是按层（controller/service/repo）、按业务领域、还是 monorepo 按包？依据是什么？
-- 哪些目录是"重点"——入口、核心算法、对外接口、数据模型分别落在哪几个目录？
-- 有没有一眼就该忽略的目录（生成代码、vendored 依赖、构建产物）？
-- 能不能用一句话说清"想找 X 就去 Y 目录"？这正是要画进报告的**目录地图**。
+- Is this a **single-process** or **multi-process / multi-service** project? What is the evidence? (e.g. multiple `main`s, a `Procfile`, multiple Deployments in k8s manifests)
+- Single repo with a single package, or a monorepo? If a monorepo, what are the dependencies between packages?
+- How do modules communicate: in-process function calls / internal HTTP / gRPC / message queue / shared database? Give one concrete call site for each.
+- Is there clear "layering"? e.g. controller → service → repository / handler → usecase → repo / pages → api → lib.
+- Where is the boundary between the project and the outside? Through which "exits" are external dependencies (database, cache, third-party APIs, SSO, object storage, etc.) accessed? Which files / modules are these exits concentrated in?
+- Is there an explicit "event bus / task queue / scheduler"? If so, where are the event producers and consumers?
+- Is there a **plugin / extension mechanism**? How are plugins registered and discovered?
 
-### 程序入口
-- 启动命令是什么？看 `package.json` 的 `scripts.start`、`Makefile` 的 `run` target、`Procfile`、
-  `Dockerfile` 的 `CMD`、`pyproject.toml` 的 `[project.scripts]`。
-- 启动后做了哪些初始化？按时序列出：配置加载 → DI 容器 / 框架 → 数据库连接 → 路由注册 → 监听端口 / 等待消息。
-
-### 数据模型
-- 实体定义在哪？（ORM model / proto / TypeScript interface / Pydantic schema）
-- 有没有 migration 目录？migration 工具是什么？
-- 核心实体之间的关系（1:1、1:N、N:N）是怎么表达的？外键还是中间表？
-- 是否区分"数据库实体"和"领域模型 / DTO / API Schema"？转换发生在哪？
-
-### 核心算法 / 复杂逻辑
-- **找"项目独有的"部分**：每个项目都会有 1~3 处"如果改坏了，整个项目就废了"的核心代码。可能是：
-  - 调度 / 排序 / 匹配算法
-  - 状态机 / 工作流引擎
-  - 解析器 / 编译器 / DSL
-  - 推理 / 渲染管线
-  - 复杂的 SQL / 查询构建
-  - 并发 / 锁 / 事务边界
-- 找到后，描述**思路**，不要直接贴大段代码。必要时贴 10~30 行最关键的片段。
-
-### 对外接口
-- HTTP 路由：通过 framework decorator（FastAPI / Flask）、配置文件（`routes.rb`）、还是显式注册（Express `app.get`）？
-- gRPC / GraphQL：proto / schema 文件在哪？
-- CLI 命令：用什么库？（Click / Cobra / Commander / yargs / argparse）每个子命令对应哪个函数？
-- SDK 公开 API：`__init__.py` / `index.ts` / `mod.rs` 的 re-export 是什么？
+**Control flow** (template section 2.5; data flow answers "where does the data go", control flow answers "what drives execution, when does it end, what happens on error"):
+- **How the main entry dispatches**: after receiving a request / command, how is it dispatched to the handling logic? (route table / command dispatch / task queue)
+- **Main loop / state machine**: is there a long-running main loop, event loop, or state machine? How do states change? If none, it "exits after a single run".
+- **How errors propagate**: how do errors pass upward from lower layers? Is there unified error handling / a catch-all?
+- **When the task ends**: what is the normal termination condition? (request returns / command finishes / stop signal received)
+- **Failure handling**: is there retry / rollback / fallback / circuit breaking? Where is it implemented? If none, write "无" (none) explicitly.
 
 ---
 
-## 5. 端到端流程追踪（最重要）
+## 3. Tech stack
 
-挑流程时优先级：
-1. **用户感知最强的流程**（典型一次请求、CLI 主命令）
-2. **跨模块最多的流程**（最能体现架构）
-3. **最容易出错的流程**（事务、外部调用、状态变更）
-
-追踪时每一跳都要回答：
-- **从哪进，从哪出**：调用点 → 被调用函数。
-- **数据形态变化**：进来时是 HTTP body / proto / 字符串，出去时是什么？
-- **关键决策**：if 分支、状态机迁移、配置驱动的行为。
-- **副作用**：写库 / 发消息 / 发外部请求 / 写文件 / 写日志。
-- **错误分支**：异常往哪冒泡？是否有 try/catch、是否落到统一错误处理？
-- **并发性**：是同步、异步、并行、还是排队？
-
-> 如果一条流程跨越十几个文件，说明项目耦合较紧——这本身就是一条值得写进"技术债"的观察。
+- Where did you read the language version? (pinned in `.nvmrc` / `.python-version` / `go.mod` / `pyproject.toml`, etc.)
+- What is the core framework, and how is it used? (e.g. Spring Boot with starters, Express composing its own middleware, FastAPI + Pydantic style ...)
+- Database choice: SQL (which dialect) or NoSQL? Through an ORM or raw SQL? Where is the connection pool initialized?
+- Is there a cache layer? A separate service like Redis, or in-process (e.g. lru_cache, caffeine)?
+- Is there a message queue? Where are production / consumption? Is an outbox / dead-letter queue used?
+- For key third-party libraries, list those that **shape the architecture**; small utility libraries need not be listed. For example, `prisma`, `celery`, `sqlalchemy`, `zod`, `grpcio`, `langchain`,
+  and `react-query` should be listed; common libraries such as `lodash`, `pydantic`, and `requests` depend on the case.
 
 ---
 
-## 6. 配置、依赖与运行
+## 4. Code structure and core implementation
 
-- 配置加载顺序：示例配置 / 配置代码中的公开非敏感默认值 → 环境变量 → 命令行参数？哪个优先级最高？不要为确认顺序读取真实环境文件。
-- 有没有 `.env.example` / `config.example.*`？这是新人最先看的文件之一。
-- 不同环境（dev / staging / prod）之间切换通过什么**变量名**？（如 `NODE_ENV`、`APP_ENV`、`PROFILE`；不读取或报告真实值）
-- 哪些外部服务**必须**有项目才能启动？哪些是可选的（缺失时降级）？
-- 构建：单一命令能跑通吗？需要 docker / 本地工具链 / 私有镜像源吗？
-- CI/CD：仓库里有 `.github/workflows`、`.gitlab-ci.yml`、`Jenkinsfile`、`buildkite.yml` 之类吗？典型流水线是什么？
-- 日志：用了什么库？输出到 stdout 还是文件？是否结构化？日志级别在哪配？
-- 监控：是否打了 metrics？是否接入了 OpenTelemetry / Prometheus client？
-- 错误追踪：Sentry / Bugsnag 这种是否有初始化代码？
+### Directory structure and file map (template sections 4.1 / 4.2)
+- How are the top-level directories divided? By layer (controller/service/repo), by business domain, or by package in a monorepo? What is the evidence?
+- Which directories "matter": which directories hold the entry point, core algorithms, external interfaces, and data models?
+- Are there directories that should obviously be ignored (generated code, vendored dependencies, build output)?
+- Can you say in one sentence "to find X, go to directory Y"? That is exactly the **directory map** to draw in the report.
 
----
+### Program entry
+- What is the start command? Look at `scripts.start` in `package.json`, the `run` target in the `Makefile`, the `Procfile`,
+  `CMD` in the `Dockerfile`, `[project.scripts]` in `pyproject.toml`.
+- What initialization happens after startup? List it in time order: config loading → DI container / framework → database connection → route registration → listen on port / wait for messages.
 
-## 7. 工程实践与质量
+### Data models
+- Where are entities defined? (ORM model / proto / TypeScript interface / Pydantic schema)
+- Is there a migrations directory? What is the migration tool?
+- How are relationships between core entities (1:1, 1:N, N:N) expressed? Foreign keys or join tables?
+- Does the code distinguish "database entities" from "domain models / DTOs / API schemas"? Where does the conversion happen?
 
-- 测试目录在哪？测试用什么框架运行？覆盖率如何？
-- 测试和实现是 colocate 还是 separated？
-- 有没有 fixture / factory / 测试容器（testcontainers）？
-- linter / formatter / type checker 的配置在哪？是否在 CI 强制？
-- 仓库里有没有 ADR（架构决策记录）、设计文档、CHANGELOG？
-- TODO / FIXME / HACK / XXX 注释分布如何？集中在哪些目录？
-- 认证：用户身份从哪传入（cookie / header / token）？在哪个中间件 / 拦截器被处理？
-- 授权：检查权限的逻辑分散在 controller 里，还是统一在某层？
-- 敏感数据：从配置加载代码、忽略规则和文件跟踪状态判断密钥、密码、token 如何管理。若发现 `.env`、`secrets.yml` 等疑似误提交文件，只报告**路径与风险**，不要打开或输出内容。
+### Core algorithms / complex logic
+- **Find the parts unique to the project**: every project has 1-3 places of core code where "if this breaks, the whole project is useless". They might be:
+  - scheduling / ranking / matching algorithms
+  - state machines / workflow engines
+  - parsers / compilers / DSLs
+  - inference / rendering pipelines
+  - complex SQL / query building
+  - concurrency / locks / transaction boundaries
+- Once found, describe the **idea**; do not paste large blocks of code. Paste the 10-30 most important lines only when needed.
 
----
-
-## 8. 项目类型专项分析
-
-> 对应模板第 8 章。根据项目类型（CLI / Web / SDK / Agent / MCP / DevTool）
-> 去 [project-type-checklists.md](project-type-checklists.md) 走对应的专项追问点。判不出类型就写"未匹配到专项类型"。
-
----
-
-## 9. 综合评价（亮点 / 适合度 / 二次开发）
-
-> 对应模板第 9 章。基于前面看到的**事实**回答，不要凭印象。
-
-- **亮点**：这个项目有没有"最巧妙 / 最有特色 / 最值得学习"的设计？（精巧的抽象 / 独特算法 / 干净的扩展机制 / 聪明的工程取舍…）它**妙在哪**、在哪个 `path:line`、
-  为什么别人难做到这么好？亮点要落到具体源码，**不能泛泛说"架构清晰"**。
-- **优点（决策视角）**：从源码 / 架构看到的强项是什么？（设计清晰 / 测试完善 / 扩展点明确 / 文档齐全…）
-- **局限**：看到的短板是什么？（耦合紧 / 缺测试 / 文档过时 / 强绑定某框架…）
-- **适合 / 不适合场景**：什么场景直接用合适？什么场景不建议用、为什么？
-- **是否值得二次开发**：代码可读性、模块化、扩展点、技术债规模如何？若值得，从哪切入；若不值得，替代方案是什么？
+### External interfaces
+- HTTP routes: through framework decorators (FastAPI / Flask), config files (`routes.rb`), or explicit registration (Express `app.get`)?
+- gRPC / GraphQL: where are the proto / schema files?
+- CLI commands: which library? (Click / Cobra / Commander / yargs / argparse) Which function does each subcommand map to?
+- SDK public API: what do the re-exports in `__init__.py` / `index.ts` / `mod.rs` contain?
 
 ---
 
-## 10. 未搞清楚 / 假设 / 已知问题
+## 5. End-to-end flow tracing (most important)
 
-调研结束前的最后一道工序——把以下内容主动整理出来：
+Priority when picking flows:
+1. **The flow users notice most** (a typical request, the main CLI command)
+2. **The flow that crosses the most modules** (shows the architecture best)
+3. **The flow most likely to fail** (transactions, external calls, state changes)
 
-- 哪些章节里你写了"据 X 推测 / 可能 / 应该"？把这些句子的前提条件抽出来。
-- 哪些代码读起来很奇怪、不合常理（不一定是坏味道，可能是你不了解的业务约束）？
-- 哪些目录 / 文件你没去看？说明"未覆盖区域"，让读者知道盲区。
-- README 和实际代码不一致的地方？
-- TODO / FIXME 中是否有明显未完成的功能？
+For every hop while tracing, answer:
+- **Where it comes in, where it goes out**: call site → called function.
+- **How the data shape changes**: it comes in as an HTTP body / proto / string; what does it go out as?
+- **Key decisions**: if branches, state-machine transitions, config-driven behavior.
+- **Side effects**: database writes / messages sent / external requests / files written / logs written.
+- **Error branches**: where do exceptions propagate to? Is there try/catch, does it reach unified error handling?
+- **Concurrency**: synchronous, asynchronous, parallel, or queued?
+
+> If one flow spans more than a dozen files, the project is tightly coupled; that by itself is an observation worth writing into "技术债" (technical debt).
+
+---
+
+## 6. Configuration, dependencies, and running
+
+- Config loading order: example config / public non-sensitive defaults in config code → environment variables → command-line arguments? Which has the highest priority? Do not read real environment files to confirm the order.
+- Is there a `.env.example` / `config.example.*`? This is one of the first files a newcomer looks at.
+- Which **variable names** switch between environments (dev / staging / prod)? (e.g. `NODE_ENV`, `APP_ENV`, `PROFILE`; do not read or report real values)
+- Which external services are **required** for the project to start? Which are optional (degrade when missing)?
+- Build: does a single command work? Does it need docker / a local toolchain / a private registry?
+- CI/CD: does the repo have `.github/workflows`, `.gitlab-ci.yml`, `Jenkinsfile`, `buildkite.yml`, or similar? What is the typical pipeline?
+- Logging: which library? Output to stdout or files? Structured or not? Where is the log level configured?
+- Monitoring: are metrics emitted? Is an OpenTelemetry / Prometheus client integrated?
+- Error tracking: is there initialization code for something like Sentry / Bugsnag?
+
+---
+
+## 7. Engineering practice and quality
+
+- Where is the test directory? Which framework runs the tests? What is the coverage?
+- Are tests colocated with the implementation or separated?
+- Are there fixtures / factories / test containers (testcontainers)?
+- Where is the linter / formatter / type checker configured? Is it enforced in CI?
+- Does the repo have ADRs (architecture decision records), design docs, a CHANGELOG?
+- How are TODO / FIXME / HACK / XXX comments distributed? Which directories do they cluster in?
+- Authentication: where does user identity come in (cookie / header / token)? Which middleware / interceptor handles it?
+- Authorization: is permission-checking logic scattered across controllers or unified in one layer?
+- Sensitive data: judge how keys, passwords, and tokens are managed from config-loading code, ignore rules, and file tracking status. If you find files that look committed by mistake, such as `.env` or `secrets.yml`, report only the **path and the risk**; do not open them or output their contents.
+
+---
+
+## 8. Project-type analysis
+
+> Template chapter 8. Based on the project type (CLI / Web / SDK / Agent / MCP / DevTool),
+> go through the matching questions in [project-type-checklists.md](project-type-checklists.md). If no type can be determined, write "未匹配到专项类型" (no specific type matched).
+
+---
+
+## 9. Overall assessment (highlights / fit / further development)
+
+> Template chapter 9. Answer based on the **facts** you saw earlier, not impressions.
+
+- **Highlights**: does the project have a "cleverest / most distinctive / most worth-learning" design? (an elegant abstraction / a unique algorithm / a clean extension mechanism / a smart engineering trade-off ...) **What is clever about it**, at which `path:line`,
+  and why do others find it hard to do this well? Highlights must be tied to specific source code; **do not write a generic "clear architecture"**.
+- **Strengths (decision view)**: what strengths do you see in the source / architecture? (clear design / thorough tests / well-defined extension points / complete docs ...)
+- **Limitations**: what weaknesses do you see? (tight coupling / missing tests / outdated docs / hard dependency on a framework ...)
+- **Suitable / unsuitable scenarios**: in which scenarios is using it directly appropriate? In which is it not recommended, and why?
+- **Worth further development or not**: how are code readability, modularity, extension points, and technical debt? If worth it, where to start; if not, what the alternative is.
+
+---
+
+## 10. Unclear parts / assumptions / known issues
+
+The last step before finishing the investigation: actively collect the following:
+
+- In which sections did you write "据 X 推测 / 可能 / 应该" (inferred from X / possibly / should)? Pull out the preconditions behind those sentences.
+- Which code reads strangely or seems unreasonable (not necessarily a code smell; it may be a business constraint you do not know about)?
+- Which directories / files did you not look at? State the "uncovered areas" so the reader knows the blind spots.
+- Where do the README and the actual code disagree?
+- Do any TODO / FIXME comments point to clearly unfinished features?

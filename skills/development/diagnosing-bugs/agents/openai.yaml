@@ -1,4 +1,3 @@
 interface:
   display_name: "Diagnosing Bugs"
-  short_description: "用可复现的反馈循环诊断 bug 和性能回退。"
-  default_prompt: "使用 $diagnosing-bugs 诊断这个问题：先建立能稳定暴露问题的反馈循环，再复现、缩小范围并定位根因。"
+  short_description: "Diagnose hard bugs and regressions"

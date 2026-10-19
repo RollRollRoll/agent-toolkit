@@ -1,76 +1,58 @@
 ---
 name: create-questionnaire
-description: 生成一份交给知情人填写的 Markdown 问卷，用于补齐用户无法独立确认的信息和决策。
+description: Turn a decision you can't fully answer into a questionnaire for someone else to fill in.
 disable-model-invocation: true
 ---
 
-# Create Questionnaire — 知情人问卷生成
+Turn something the user can't answer alone into a **questionnaire**: a Markdown document they hand to one person to fill in async, or fill out together over a meeting. The recipient holds knowledge the user lacks; the questionnaire pulls it out of them.
 
-把用户无法独立确认的事项整理成 Markdown 问卷。用户可以异步发送给知情人填写，
-也可以在会议中共同完成。问卷只负责获取收件人掌握、而用户缺少的信息。
+**Grill the send, not the subject.** Interview the user only about the _send_, which they can always answer: who it goes to, and what they need back. The questions in the document then target the **gap** between what the recipient knows and what the user needs.
 
-起草前只向用户确认两件他能够回答的事：问卷发给谁，以及希望获得什么。
-问题应集中在收件人掌握的信息缺口上，不要求用户猜测自己本来就不知道的主题细节。
 
-1. **发给谁？** 一次交换问清收件人的角色、专长，以及与用户的关系。这决定问卷的语气，
-   以及文档必须自带多少上下文。**完成判据**：你说得出收件人是谁，以及他知道而用户不知道的是什么。
+1. **Who is it going to?** Ask, in one exchange, the recipient's role, expertise, and relationship to the user. This fixes the questionnaire's tone and how much context it must carry. Done when you know who the recipient is and what they know that the user doesn't.
 
-2. **要拿回什么？** 一次交换问清用户独自解决不了、必须从这个人身上拿到的**具体**决策或事实。
-   「了解一下他们的技术栈」不够具体；「确定能否直接调用其 API，还是必须交换文件」才是可用目标。
-   **完成判据**：你手上有一份具体清单——用户填完这份问卷后，必须能做出哪些决定、确认哪些事实。
-   清单里出现"还有一些""大概几条"这类未展开项时，追问到逐条具体再进入步骤 3；不得先起草再回头补。
+2. **What do you need back?** Ask, in one exchange, the specific decisions or facts the user can't resolve alone and needs from this person. Done when you have a concrete list of what the user must walk away able to do or decide.
 
-3. **写问卷。** 按下面的文档结构起草，问题对准步骤 1~2 摸清的那段缺口，写到当前目录的
-   `questionnaire-<slug>.md`（slug 取自主题；用户指定了路径就用用户的），然后报告路径。
-   **完成判据**：文件已存在，且步骤 2 清单里的每一项都有问题覆盖。
+3. **Write the questionnaire.** Draft questions aimed at the gap from steps 1–2, following the Document structure below. Write it to `questionnaire-<slug>.md` in the current directory (slug from the topic; use the user's path if they gave one) and report the path. Done when the file exists and every item the user named in step 2 is covered by a question.
 
-## 文档结构
+## Document structure
 
-这是一份探询式问卷：用户缺少上下文，收件人拥有上下文。按重要性排序问题，
-因为异步填写可能只完成一部分。问题较多时按主题拆成 `##` 小节，组内仍按重要性排序。
-总题数控制在 12 题以内；如果一个答案不会影响问卷目的所对应的决策，就删掉该问题。
+Frame the document as a **discovery questionnaire**: the user lacks context, the recipient holds it. Order questions most-important-first, since async means you may only get one pass, and group them under `##` headings by theme once there are more than a handful. Write it using the template below.
 
 <questionnaire-template>
 
-# <问卷标题>
+# <Questionnaire title>
 
-**目的：** 说明问卷要解决的问题，以及答案将支持哪项决策。
+**Purpose:** why this questionnaire exists and the decision riding on it.
 
-**发件人：** <用户> — **收件人：** <收件人> — **答案的用途：** <会被用到哪里>
+**From:** <the user>, **To:** <the recipient>, **How your answers will be used:** <where they go>
 
-## 背景
+## Context
 
-用一段话交代收件人作答所需的背景，以足够回答问题为限。
+One paragraph orienting a recipient who wasn't in the user's head. Enough to answer well, not a page.
 
-## 如何作答
+## How to answer
 
-截止时间与大致工作量。说明部分作答和"不知道"同样有用：不确定的地方标出来，不要直接跳过。
+Deadline and rough effort. Partial answers and "I don't know" are useful: flag anything you're unsure of rather than skipping it.
 
-## <主题小节标题>
+## <Theme heading>
 
-每个主题使用一个 `##` 小节，组内按重要性排序。每个问题只问一件事，下面紧跟空引用块作为答题位。
-只有问题容易被误解或草率作答时，才补一行斜体的「为什么重要」。避免诱导性前提，
-也不要把用户的猜测写成既定事实。
+One `##` section per theme. Under each, its questions, most-important-first. Every question is one idea, never compound, with an answer stub directly beneath, and a one-line _why this matters_ only where the question could be misread or invite a throwaway answer.
 
-### 系统上线时预计要扛多大流量？
+<question-example>
+### What load is the system expected to handle at launch?
 
-*为什么重要：它决定我们现在就按突发流量做容量，还是先放一放。*
-
->
-
-### <下一个问题>
+_Why this matters: it decides whether we provision for burst traffic now or defer it._
 
 >
+</question-example>
 
-## 还有什么？
+## Anything else?
 
-兜底：有没有什么我们没问到、但你觉得我们应该知道的？
+A closing catch-all: anything we didn't ask that we should know?
 
 </questionnaire-template>
 
-## 语言
+## Language
 
-问卷写给**收件人**看，默认中文；用户说明收件人使用其他语言时，整份文档用那种语言写，
-包括小节标题。
-
-只产出问卷：不要顺手去执行问卷背后的那个决策，也不要替用户把问卷发出去。
+The questionnaire is written for the **recipient**. Write it in Chinese by default, including the template's headings and labels. If the user says the recipient uses another language, write the whole document in that language, headings included.

@@ -1,82 +1,82 @@
-# 平台 Runner 选择与隔离边界
+# Platform runner choice and isolation boundaries
 
-一次盲测只使用一个平台。用户明确指定 Claude Code 或 Codex 时服从；未指定时，以当前宿主、目标 Skill 的安装来源和可执行 CLI 判断，仍无法确定才询问。
-某平台预检或运行失败后保留证据并停止，不静默切换另一平台。
+One blind test uses only one platform. When the user explicitly names Claude Code or Codex, follow that. When they do not, decide from the current host, where the target skill is installed, and which CLI is executable; ask only if you still cannot tell.
+If a platform's preflight or run fails, keep the evidence and stop. Do not silently switch to the other platform.
 
 ## Claude Code
 
-Runner：`scripts/run-headless.py`。
+Runner: `scripts/run-headless.py`.
 
-### 预检与初始化
+### Preflight and init
 
 ```bash
-python3 <skill目录>/scripts/run-headless.py doctor --claude claude
+python3 <skill dir>/scripts/run-headless.py doctor --claude claude
 
-python3 <skill目录>/scripts/run-headless.py init \
-  --sandbox <沙箱绝对路径> \
-  --run-dir <编排目录绝对路径> \
-  --report-dir <项目绝对路径>/skill-test-reports/<被测-id> \
-  --skill-name <被测-id> \
+python3 <skill dir>/scripts/run-headless.py init \
+  --sandbox <sandbox absolute path> \
+  --run-dir <orchestration dir absolute path> \
+  --report-dir <project absolute path>/skill-test-reports/<target-id> \
+  --skill-name <target-id> \
   --tools "Skill,Read,Write,Edit,Glob,Grep" \
-  --allowed-tools "Skill(<被测-id>),Read(/**),Write(/**),Edit(/**)" \
+  --allowed-tools "Skill(<target-id>),Read(/**),Write(/**),Edit(/**)" \
   --timeout 600 --max-turns 10
 ```
 
-初始化成功后在沙箱执行 `git init`，再把目标 Skill 完整复制到 `沙箱/.claude/skills/<被测-id>/`。
+After init succeeds, run `git init` in the sandbox, then copy the full target skill to `sandbox/.claude/skills/<target-id>/`.
 
-被测场景确实需要 Bash 时才把它加入 `--tools`，并显式列出逐条只读命令规则；禁止 `Bash`、`Bash(*)`、`Bash(git:*)` 等宽规则。
+Add Bash to `--tools` only when the scenario under test really needs it, and list explicit per-command read-only rules. Broad rules such as `Bash`, `Bash(*)`, and `Bash(git:*)` are forbidden.
 
-### 驱动与报告
+### Driving and report
 
 ```bash
-python3 <skill目录>/scripts/run-headless.py start --run-dir <编排目录> --prompt-file <首轮文件>
-python3 <skill目录>/scripts/run-headless.py resume --run-dir <编排目录> --prompt-file <续轮文件>
-python3 <skill目录>/scripts/run-headless.py report-path --run-dir <编排目录>
+python3 <skill dir>/scripts/run-headless.py start --run-dir <orchestration dir> --prompt-file <first-turn file>
+python3 <skill dir>/scripts/run-headless.py resume --run-dir <orchestration dir> --prompt-file <next-turn file>
+python3 <skill dir>/scripts/run-headless.py report-path --run-dir <orchestration dir>
 ```
 
 ### Fail-closed
 
-- `--tools` 限制内建工具，`--allowedTools` 只免除权限提示；两者不可混为一谈。
-- 固定使用 `--permission-mode dontAsk`，未预授权动作直接拒绝。
-- MCP 用 `--strict-mcp-config` 与空配置隔离，设置源只保留受控 project 层。
-- Bash 开启时强制 Claude Code OS sandbox，禁止 unsandboxed fallback。
-- 禁止 `--dangerously-skip-permissions`。
+- `--tools` restricts built-in tools; `--allowedTools` only skips permission prompts. Do not confuse the two.
+- Always use `--permission-mode dontAsk`, so actions that were not pre-authorized are refused outright.
+- Isolate MCP with `--strict-mcp-config` and an empty config, and keep only the controlled project layer as a settings source.
+- When Bash is enabled, force the Claude Code OS sandbox and forbid the unsandboxed fallback.
+- `--dangerously-skip-permissions` is forbidden.
 
 ## Codex
 
-Runner：`scripts/run-codex-headless.py`。
+Runner: `scripts/run-codex-headless.py`.
 
-### 预检与初始化
+### Preflight and init
 
 ```bash
-python3 <skill目录>/scripts/run-codex-headless.py doctor --codex codex
+python3 <skill dir>/scripts/run-codex-headless.py doctor --codex codex
 
-python3 <skill目录>/scripts/run-codex-headless.py init \
-  --sandbox <沙箱绝对路径> \
-  --run-dir <编排目录绝对路径> \
-  --report-dir <项目绝对路径>/skill-test-reports/<被测-id> \
-  --skill-name <被测-id> \
+python3 <skill dir>/scripts/run-codex-headless.py init \
+  --sandbox <sandbox absolute path> \
+  --run-dir <orchestration dir absolute path> \
+  --report-dir <project absolute path>/skill-test-reports/<target-id> \
+  --skill-name <target-id> \
   --sandbox-mode workspace-write \
   --timeout 600 --max-turns 10
 ```
 
-只读场景改用 `--sandbox-mode read-only`。禁止 `danger-full-access`。初始化成功后在沙箱执行 `git init`，
-再把目标 Skill 完整复制到 `沙箱/.agents/skills/<被测-id>/`；首轮自然语言任务显式写 `$<被测-id>`。
+For read-only scenarios use `--sandbox-mode read-only` instead. `danger-full-access` is forbidden. After init succeeds, run `git init` in the sandbox,
+then copy the full target skill to `sandbox/.agents/skills/<target-id>/`. The first natural-language task explicitly writes `$<target-id>`.
 
-### 驱动与报告
+### Driving and report
 
 ```bash
-python3 <skill目录>/scripts/run-codex-headless.py start --run-dir <编排目录> --prompt-file <首轮文件>
-python3 <skill目录>/scripts/run-codex-headless.py resume --run-dir <编排目录> --prompt-file <续轮文件>
-python3 <skill目录>/scripts/run-codex-headless.py report-path --run-dir <编排目录>
+python3 <skill dir>/scripts/run-codex-headless.py start --run-dir <orchestration dir> --prompt-file <first-turn file>
+python3 <skill dir>/scripts/run-codex-headless.py resume --run-dir <orchestration dir> --prompt-file <next-turn file>
+python3 <skill dir>/scripts/run-codex-headless.py report-path --run-dir <orchestration dir>
 ```
 
 ### Fail-closed
 
-- runner 只允许 `read-only` 或 `workspace-write` sandbox，并固定 `approval_policy=never`；越出 sandbox 的动作失败，不进入交互审批。
-- runner 使用隔离 HOME 隐藏用户级 `.agents/skills`，同时显式保留原 `CODEX_HOME` 只供 CLI 身份使用。
-- 固定使用 `--ignore-user-config`、`--ignore-rules`、`--strict-config` 并关闭 web search；沙箱内不得复制 `.codex/`、
-  hooks、rules、插件或 MCP 配置。
-- Codex 没有 Claude Code 的 `--tools/--allowedTools` 等价白名单。报告必须如实记录 sandbox 只能约束文件、命令和网络边界，不能伪称已按工具名精确白名单化。
-- 系统或组织托管配置仍可能生效；发现额外 Skill、hook、MCP 或权限影响时标注证据缺口。
-- 禁止 `--dangerously-bypass-approvals-and-sandbox`。
+- The runner allows only the `read-only` or `workspace-write` sandbox and fixes `approval_policy=never`. Actions outside the sandbox fail; they do not go to interactive approval.
+- The runner uses an isolated HOME to hide user-level `.agents/skills`, while explicitly keeping the original `CODEX_HOME` only for CLI identity.
+- Always use `--ignore-user-config`, `--ignore-rules`, `--strict-config`, and turn off web search. Do not copy `.codex/`,
+  hooks, rules, plugins, or MCP config into the sandbox.
+- Codex has no allowlist equivalent to Claude Code's `--tools/--allowedTools`. The report must state truthfully that the sandbox only constrains file, command, and network boundaries, and must not claim the run was allowlisted precisely by tool name.
+- System or organization managed config may still apply. When you find extra skills, hooks, MCP, or permissions affecting the run, mark the evidence gap.
+- `--dangerously-bypass-approvals-and-sandbox` is forbidden.

@@ -1,14 +1,17 @@
 # agent-toolkit
 
-个人 agent 工具资源仓库，用于管理自己创建的 `skill`、`mcp`、`command` 和 `hook`。
+中文 | [English](README.en.md)
+
+个人 agent 工具资源仓库，用于管理自己创建的 `skill`。
 
 以个人知识库为主，重点是让资源清晰、独立、可维护。
 Claude Code 通过 `.claude-plugin/` 发布，Codex 通过 `.codex-plugin/` 和
-`.agents/plugins/` 发布；两平台直接加载根目录 `skills/` 下的同一套 Skill，
-不随插件自动加载 SSH MCP。
+`.agents/plugins/` 发布；两平台直接加载根目录 `skills/` 下的同一套 Skill。
 
-SSH MCP 配置仍保留在 `mcp/ssh-mcp.json`，仅供手动配置时使用。该文件不在
-Claude Code 和 Codex 的插件默认发现位置，也未被插件清单引用。
+Skill 文件（`SKILL.md`、`references/`、`agents/openai.yaml`）统一用英文编写；
+明确要求中文产出的 skill（如 `codebase-analyzer`、`test-skill` 的报告，
+`re-explain`、`create-questionnaire`）仍输出中文。本 README 提供中文版和
+[英文版](README.en.md)。
 
 ## Skill 一览
 
@@ -56,7 +59,7 @@ Claude Code 和 Codex 的插件默认发现位置，也未被插件清单引用�
 |---|---|---|---|
 | `code-review` | 模型可触发 | 要审一段改动守不守规范、做的是不是 issue / spec 要的东西 | 双轴审查：标准轴（成文规范 + Fowler 坏味道基线）与规格轴各派并行 subagent，结果并排不合并 |
 | `finish-branch` | 模型可触发 | 开发完了，分支 / worktree 该怎么收口 | 清理调试代码、跑最终测试，再由用户拍板合并 / 保留 / 开 PR / 丢弃 |
-| `pr` | 模型可触发 | 要写 PR 正文 | 用最小的可视化说明改动，给出改动前后的证据，判断能否低成本回滚与影响范围 |
+| `pr` | 模型可触发 | 要写 PR 正文 | 用最小的可视化说明改动，给出改动前后的证据，判断是单向门还是双向门（能否回退）以及影响范围 |
 | `git-commit-push` | 模型可触发 | 要解冲突，或把已完成的改动拆成原子提交并推送 | 语义解冲突；或检查敏感信息与异常差异后拆成原子提交，确认后推送 |
 
 ### 帮人想清楚一件事
@@ -151,25 +154,18 @@ agent-toolkit/
     plugin.json
   .agents/plugins/
     marketplace.json
-  mcp/
-    ssh-mcp.json
   skills/
     development/<skill-id>/
       SKILL.md
       references/
       scripts/
     support/<skill-id>/
-  commands/
-  hooks/
 ```
 
 - `.claude-plugin/`：Claude Code 插件与市场清单。
 - `.codex-plugin/`：Codex 插件清单。
 - `.agents/plugins/`：Codex 仓库级 marketplace 清单。
-- `mcp/ssh-mcp.json`：保留的 SSH MCP 手动配置，不随两平台插件自动加载。
 - `skills/`：两平台共用的完整 Skill，成员与职责见上面的「Skill 一览」。
-- `commands/`：存放自定义 command。
-- `hooks/`：存放 hook 定义或说明。
 
 ## 新增 Skill
 
@@ -179,10 +175,11 @@ agent-toolkit/
 2. `SKILL.md` 的 frontmatter 写清 `name`（与目录名一致）和 `description`
    （决定模型认不认得出该用它）；只给人用的入口加 `disable-model-invocation: true`。
    若它会被别的 skill 调用，正文还要写明调用契约（传入 / 取回 / 不做什么）。
-3. `description` 统一用「动词描述能力」模版（Action + Object）：
+3. `description` 用英文书写，统一用「动词描述能力」模版（Action + Object）：
    动词开头、紧跟宾语、一句话说清做什么、句号收尾，
-   不用介词或时间状语开场（对 / 把 / 用 / 在…时 / 从 / 通过），也不加分类标签前缀。
-   `agents/openai.yaml` 的 `short_description` 同样遵守这条模版。
+   不用介词或时间状语开场（如 When / For / By / Using），也不加分类标签前缀。
+   `agents/openai.yaml` 的 `short_description` 同样用英文并遵守这条模版。
+   从上游移植的 skill 例外：`description` 和 `short_description` 可以直接沿用上游原文，便于以后同步。
 4. 随插件发布时：
    - 更新 `.claude-plugin/plugin.json` 的 `skills` 数组（路径含目录名，
      如 `./skills/development/tdd`）；
@@ -190,7 +187,7 @@ agent-toolkit/
      （它按目录扫描，新增 skill 无需改这一项）；
    - 同步递增 `.claude-plugin/plugin.json`、`.claude-plugin/marketplace.json`
      与 `.codex-plugin/plugin.json` 的版本。
-5. 在本文件的「Skill 一览」里补一行：什么时候用、它做什么。
+5. 在 `README.md` 和 `README.en.md` 的「Skill 一览」里各补一行：什么时候用、它做什么。
 
 ## 当前非目标
 

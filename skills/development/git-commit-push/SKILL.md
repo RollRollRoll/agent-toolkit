@@ -1,195 +1,196 @@
 ---
 name: git-commit-push
-description: 解决进行中的 merge、rebase 或 cherry-pick 冲突，或将已完成的改动整理成原子提交，并在用户确认后推送。
+description: Resolve an in-progress git merge, rebase, or cherry-pick conflict, or organize finished changes into atomic commits and push them after the user confirms.
 ---
 
-# Git Commit & Push — 冲突解决与提交推送
+# Git Commit & Push: Conflict Resolution, Commit, and Push
 
-## 目标
+## Goal
 
-安全完成两类相邻工作：
+Safely finish two related kinds of work:
 
-- 对进行中的 merge / rebase / cherry-pick，追溯冲突双方的原始意图，逐处完成语义合并、验证并在确认后继续操作。
-- 对普通工作区改动，整理成一个或多个**单一逻辑变更**，确保每个提交可运行、可审查、可回滚，再把确认过的提交推送到用户指定的远端。
+- For an in-progress merge / rebase / cherry-pick, find the original intent of both sides of each conflict, merge each one semantically, verify, and continue the operation after confirmation.
+- For ordinary working-tree changes, organize them into one or more commits that each hold a **single logical change**, so every commit runs, can be reviewed, and can be reverted. Then push the confirmed commits to the remote the user names.
 
-只处理**已经开始的冲突操作**、提交与推送。不要自行发起或中止 merge / rebase / cherry-pick，不要顺手创建 PR、清理工作树、扩大实现范围或重写已发布历史。
+Only handle **conflict operations that have already started**, commits, and pushes. Do not start or abort a merge / rebase / cherry-pick yourself. Do not also create a PR, clean up the working tree, widen the implementation scope, or rewrite published history.
 
-## 调用契约
+## Invocation contract
 
-这是 agent-toolkit 的一个能力单元，可由用户直接触发，也可被其他 skill 调用。
+This is a capability unit of agent-toolkit. The user can trigger it directly, and other skills can call it.
 
-**传入**
+**Inputs**
 
-- **目标动作**：解决进行中的冲突 / 提交 / 推送（可组合）。
-- **目标 remote 与分支**：有多个 remote 时必须指明，不默认全部推送。
-- **验证命令**（可选）：每个提交批次要跑的测试、构建或静态检查。
+- **Target action**: resolve an in-progress conflict / commit / push (can be combined).
+- **Target remote and branch**: required when there are several remotes. Do not push to all of them by default.
+- **Verification commands** (optional): the tests, build, or static checks to run for each commit batch.
 
-**取回**
+**Returns**
 
-- 当前分支与最终工作区状态；冲突操作类型、已解决文件与关键意图取舍。
-- 每个新提交的短 ID 与标题、每个 remote 的推送结果。
-- 未提交 / 未推送 / 未验证 / 被排除的内容，以及已建议但尚未处理的 `.gitignore` 项。
+- Current branch and final working-tree state; the conflict operation type, resolved files, and key intent trade-offs.
+- Short ID and subject of each new commit, and the push result for each remote.
+- What is uncommitted / unpushed / unverified / excluded, and any `.gitignore` entries suggested but not yet handled.
 
-**职责边界**
+**Responsibility boundaries**
 
-- 不发起或中止 merge / rebase / cherry-pick；不强推、不改写已发布历史；不创建 PR、不清理工作树。
-- 不自动 stash、丢弃或覆盖用户改动；不在未确认前执行 commit / push / continue。
+- Do not start or abort a merge / rebase / cherry-pick; do not force-push or rewrite published history; do not create PRs or clean up the working tree.
+- Do not automatically stash, discard, or overwrite user changes; do not run commit / push / continue before confirmation.
 
-**边界**：开发过程中"每完成一个任务就代码 + 测试 + 进度一起原子提交"属于调用方自己的闸门动作，
-由它自己完成，不走这个 skill。这个 skill 用于独立的分批提交、推送，以及进行中的冲突解决。
+**Boundary**: during development, the "after each task, commit code + tests + progress together atomically" step is the caller's own gate action.
+The caller does it itself, not through this skill. This skill is for standalone batched commits, pushes, and resolving in-progress conflicts.
 
-## 工作流
+## Workflow
 
-### 1. 只读预检
+### 1. Read-only preflight
 
-先读取仓库内适用的 `AGENTS.md`、`CLAUDE.md`、贡献指南和提交规范，然后检查：
+First read the applicable `AGENTS.md`, `CLAUDE.md`, contribution guide, and commit conventions in the repo, then check:
 
-- 确认位于 Git 仓库，并获取仓库根目录。
-- 使用 `git status --short --branch` 检查暂存、未暂存、未跟踪和分支状态。
-- 使用 `git branch --show-current` 确认当前分支；若为 detached HEAD，判断是否由已识别的 rebase 引起，其他 detached HEAD 状态停止并让用户决定目标分支。
-- 使用 `git diff --name-only --diff-filter=U`、`git ls-files -u` 和 `git status` 检查未解决冲突，并识别进行中的 merge、
-  rebase 或 cherry-pick。
-- 使用 `git remote -v`、分支 upstream 和 push 配置识别可用远端；不要只凭远端名猜测目标。
-- 检查当前分支与本地已知 upstream 的领先 / 落后关系，同时说明远端跟踪信息可能尚未刷新。
+- Confirm you are in a Git repository and get the repository root.
+- Use `git status --short --branch` to check staged, unstaged, untracked, and branch state.
+- Use `git branch --show-current` to confirm the current branch. If HEAD is detached, decide whether a recognized rebase caused it; for any other detached HEAD state, stop and let the user choose the target branch.
+- Use `git diff --name-only --diff-filter=U`, `git ls-files -u`, and `git status` to check for unresolved conflicts and identify an in-progress merge,
+  rebase, or cherry-pick.
+- Use `git remote -v`, the branch upstream, and push config to identify available remotes; do not guess the target from the remote name alone.
+- Check whether the current branch is ahead of or behind its locally known upstream, and note that remote-tracking info may not be fresh.
 
-按预检结果路由：
+Route on the preflight result:
 
-- 存在未合并条目或已识别的进行中操作：若用户明确要求解决冲突，完整读取并执行 [冲突解决流程](references/conflict-resolution.md)；若用户只要求提交或推送，
-  先报告操作类型和冲突文件，取得扩展到冲突解决的授权后再编辑。
-- 存在未合并条目却无法识别对应操作：停止并询问这些条目的来源，不猜测应该继续哪种 Git 操作。
-- 没有进行中操作但本地已知 upstream 位于当前分支之前：停止并让用户选择后续集成方式；不自动 pull、merge 或 rebase。
-- 没有冲突：继续审查候选内容。
+- Unmerged entries or a recognized in-progress operation exist: if the user explicitly asked to resolve conflicts, read and follow the whole [conflict resolution process](references/conflict-resolution.md). If the user only asked to commit or push,
+  first report the operation type and conflicting files, and get permission to extend the scope to conflict resolution before editing.
+- Unmerged entries exist but no matching operation can be identified: stop and ask where these entries came from. Do not guess which Git operation to continue.
+- No in-progress operation, but the locally known upstream is ahead of the current branch: stop and let the user choose how to integrate. Do not pull, merge, or rebase automatically.
+- No conflicts: go on to review the candidate content.
 
-冲突流程完成后若 Git 已经生成 merge / rebase / cherry-pick 提交，不要再把它们重新包装成重复提交；用户还要求推送时直接进入安全推送，否则报告结果并结束。
-若操作完成后仍有独立的普通工作区改动，只把这些剩余改动送入下述提交流程。
+If Git has already created merge / rebase / cherry-pick commits when the conflict process finishes, do not wrap them again in duplicate commits. If the user also asked to push, go straight to safe push; otherwise report the result and stop.
+If separate ordinary working-tree changes remain after the operation finishes, send only those remaining changes into the commit process below.
 
-### 2. 审查全部候选内容
+### 2. Review all candidate content
 
-同时审查已暂存、未暂存和未跟踪内容，不能只看 `git diff`。保留入场时的暂存状态，不要自动 unstage、
-stash、丢弃或覆盖用户改动。
+Review staged, unstaged, and untracked content together; do not look at `git diff` alone. Keep the staging state you found on entry. Do not automatically unstage,
+stash, discard, or overwrite user changes.
 
-重点检查：
+Check in particular:
 
-- **敏感信息**：密钥、token、密码、私钥、证书、连接串、`.env`、凭据文件和包含秘密的配置。
-- **无用内容**：日志、缓存、临时文件、编辑器文件、构建产物、覆盖率结果和意外生成的大文件。
-- **无关改动**：不属于本次目标、来源不明或用户已有的修改。
-- **异常差异**：大面积格式化、整文件换行符变化、意外二进制文件、重命名或删除。
-- **换行与权限**：结合 `.gitattributes`、`git ls-files --eol`、`git diff --summary` 和
-  `git diff --check` 检查 EOL、可执行位和文件模式变化。
+- **Sensitive data**: keys, tokens, passwords, private keys, certificates, connection strings, `.env`, credential files, and config containing secrets.
+- **Junk content**: logs, caches, temp files, editor files, build output, coverage results, and large files generated by accident.
+- **Unrelated changes**: changes outside this goal, of unknown origin, or that the user already had.
+- **Unusual diffs**: large-scale reformatting, whole-file line-ending changes, unexpected binary files, renames, or deletions.
+- **Line endings and permissions**: use `.gitattributes`, `git ls-files --eol`, `git diff --summary`, and
+  `git diff --check` to check EOL, executable bits, and file mode changes.
 
-不要在输出中展示秘密值；只报告文件路径、疑似类型和处理建议。发现敏感信息时立即停止，不得暂存或提交：
+Never show secret values in output; report only the file path, suspected type, and suggested handling. When you find sensitive data, stop immediately and do not stage or commit:
 
-1. 提醒用户移除或替换秘密，并按需轮换已暴露凭据。
-2. 建议把本地秘密文件和无用生成物加入 `.gitignore`。
-3. 若文件已经被 Git 跟踪，明确说明仅加入 `.gitignore` 不会停止跟踪，询问用户如何处理。
-4. 若秘密可能已经进入历史，说明历史清理属于单独的高风险任务；不要在这个 skill 中自动执行。
+1. Tell the user to remove or replace the secret, and rotate exposed credentials as needed.
+2. Suggest adding local secret files and junk output to `.gitignore`.
+3. If the file is already tracked by Git, state clearly that adding it to `.gitignore` alone will not stop tracking it, and ask the user how to handle it.
+4. If the secret may already be in history, explain that cleaning history is a separate high-risk task; do not do it automatically in this skill.
 
-对可能本就需要纳入版本控制的生成文件或权限变化，不要武断排除；先向用户确认意图。
+For generated files or permission changes that may legitimately belong in version control, do not exclude them on your own judgment; confirm intent with the user first.
 
-### 3. 设计原子提交
+### 3. Design atomic commits
 
-按"修改目的"而不是文件类型分组。代码、对应测试和必要文档通常属于同一个逻辑提交。
+Group by "purpose of the change", not by file type. Code, its tests, and necessary docs usually belong in the same logical commit.
 
-每个计划提交都必须满足：
+Every planned commit must:
 
-- 只表达一个完整、独立、容易理解的逻辑变更。
-- 不依赖尚未提交的后续改动才能构建或运行。
-- 能单独审查，也能在需要时单独回滚。
-- 包含证明该变更的测试或验证；无法验证时明确说明原因。
+- Express only one complete, self-contained, easy-to-understand logical change.
+- Build and run without depending on later changes that are not yet committed.
+- Be reviewable on its own, and revertible on its own when needed.
+- Include the tests or verification that prove the change; when it cannot be verified, state why.
 
-若候选改动包含不同实现逻辑，拆成多次提交。若同一文件混有多个逻辑，按 hunk 精确暂存；无法安全拆分时
-停止并说明阻碍，不要为了凑原子提交而改写用户代码。不要盲目使用 `git add .` 或 `git add -A`。
+If the candidate changes contain different implementation logic, split them into several commits. If one file mixes several logical changes, stage exact hunks. If they cannot be split safely,
+stop and explain the blocker. Do not rewrite user code just to get atomic commits. Do not blindly use `git add .` or `git add -A`.
 
-为每个批次给出：
+For each batch, give:
 
-1. 修改目的。
-2. 包含的文件或 hunk。
-3. 拟用提交标题；复杂提交同时给出正文。
-4. 对应验证命令。
+1. Purpose of the change.
+2. Files or hunks included.
+3. Proposed commit subject; for complex commits, also the body.
+4. Matching verification command.
 
-### 4. 编写提交信息
+### 4. Write commit messages
 
-优先遵循仓库既有提交规范。若仓库没有约定，使用简短、明确、可搜索的标题，直接说明"做了什么"及其目的；
-只有仓库本来使用 Conventional Commits 时才沿用其格式。
+Follow the repo's existing commit conventions first. If the repo has none, use a short, clear, searchable subject that states directly "what was done" and why.
+Use the Conventional Commits format only when the repo already uses it.
 
-避免 `update`、`fix bug`、`misc changes`、`调整代码` 等模糊描述。复杂提交必须添加正文，至少说明下列
-必要信息中的两项：背景 / 原因、关键实现决策、行为影响或兼容性、风险与验证方式。正文解释"为什么"，
-不要把 diff 文件列表重复一遍。
+Avoid vague descriptions such as `update`, `fix bug`, `misc changes`, `tweak code`. Complex commits must have a body that gives at least two of the following:
+background / reason, key implementation decisions, behavior impact or compatibility, risks and how it was verified. The body explains "why";
+do not repeat the diff's file list.
 
-示例：
+Example:
 
 ```text
-fix(config): 避免缺失字段时覆盖现有设置
+fix(config): avoid overwriting existing settings when fields are missing
 
-导入部分配置时只更新显式声明的字段，保留本机未声明设置。
-这样可以避免跨设备同步时意外清空平台专属配置。
+When importing a partial config, update only the explicitly declared fields
+and keep local settings that are not declared. This prevents cross-device
+sync from accidentally wiping platform-specific settings.
 ```
 
-### 5. 取得一次明确授权
+### 5. Get one explicit authorization
 
-在任何 `git merge --continue`、`git rebase --continue`、`git cherry-pick --continue`、
-`git commit` 或 `git push` 前，向用户展示并确认：
+Before any `git merge --continue`, `git rebase --continue`, `git cherry-pick --continue`,
+`git commit`, or `git push`, show the user and confirm:
 
-- 当前分支。
-- 若处于冲突流程：操作类型、每个冲突的意图判断与解决结果、取舍、验证结果和准备执行的 continue 命令。
-- 每个提交批次及完整提交信息。
-- 将运行的验证及尚未验证内容。
-- 目标 remote、源分支和目标分支。
-- 是否需要设置 upstream。
+- The current branch.
+- If in the conflict process: the operation type, the intent judgment and resolution for each conflict, trade-offs, verification results, and the continue command to be run.
+- Each commit batch with its full commit message.
+- The verification to be run and what remains unverified.
+- Target remote, source branch, and target branch.
+- Whether an upstream needs to be set.
 
-一个确认可以覆盖已完整列出的操作序列；若 rebase / cherry-pick 继续后出现新冲突，或范围、解决决定、提交信息、分支、remote 发生变化，重新确认。当前确认不能预先覆盖尚未出现的冲突。
+One confirmation can cover a fully listed sequence of operations. If a new conflict appears after continuing a rebase / cherry-pick, or the scope, a resolution decision, a commit message, the branch, or the remote changes, confirm again. The current confirmation cannot cover conflicts that have not appeared yet.
 
-有多个 remote 时，必须询问推送到哪一个或哪些 remote，不能默认全部推送。pull 同理：只有用户明确要求 pull
-时才执行，并先让用户选择准确的 remote 和分支；不要使用隐含来源的 pull，也不要把多个 remote 自动合并。
+When there are several remotes, you must ask which remote or remotes to push to; never push to all by default. The same goes for pull: run it only when the user explicitly asks to pull,
+and first have the user choose the exact remote and branch. Do not use a pull with an implicit source, and do not merge several remotes automatically.
 
-### 6. 分批暂存、验证并提交
+### 6. Stage, verify, and commit batch by batch
 
-对每个获批批次依次执行：
+For each approved batch, in order:
 
-1. 只暂存该批次的明确路径或 hunk。
-2. 使用 `git diff --cached --stat`、`git diff --cached --summary`、
-   `git diff --cached --check` 和完整 staged diff 复核范围。
-3. 再次确认暂存区没有秘密、无用文件、异常 EOL / 权限，也没有混进其他批次的逻辑变更。
-4. 运行该批次的相关测试、构建或静态检查；测试环境含有后续未提交改动时，说明验证并非隔离结果，
-   不要声称该提交已被独立验证。
-5. 仅在检查通过后创建提交，然后核对提交 ID、标题和剩余工作区状态。
+1. Stage only the explicit paths or hunks of that batch.
+2. Use `git diff --cached --stat`, `git diff --cached --summary`,
+   `git diff --cached --check`, and the full staged diff to recheck the scope.
+3. Confirm again that the index has no secrets, junk files, unusual EOL / permissions, and no logical changes from other batches.
+4. Run the relevant tests, build, or static checks for the batch. If the test environment contains later uncommitted changes, state that the verification is not isolated,
+   and do not claim the commit was verified on its own.
+5. Create the commit only after the checks pass, then check the commit ID, subject, and remaining working-tree state.
 
-若暂存内容与获批计划不一致，停止并重新展示差异。验证失败时不要提交"红灯"状态，也不要擅自修改实现；
-报告失败并让用户决定返回开发还是调整范围。
+If the staged content does not match the approved plan, stop and show the diff again. If verification fails, do not commit a "red" state and do not change the implementation on your own;
+report the failure and let the user decide whether to go back to development or adjust the scope.
 
-### 7. 安全推送
+### 7. Safe push
 
-推送前重新检查当前分支、upstream、待推送提交和工作区状态。使用明确 remote 与 refspec 的命令，避免裸
-`git push` 意外触发非预期配置；没有 upstream 时，只有在用户确认后才设置。
+Before pushing, recheck the current branch, upstream, commits to push, and working-tree state. Use commands with an explicit remote and refspec, and avoid bare
+`git push`, which can trigger unexpected config. When there is no upstream, set one only after the user confirms.
 
-- 不默认推送 tags、其他分支或所有 remote。
-- 多个获批 remote 按顺序推送，并分别记录成功或失败；部分成功时如实报告，不重写已成功远端。
-- 推送因 non-fast-forward、远端更新或策略拒绝时立即停止。请用户先选择并完成合并 / rebase 等集成动作，
-  不要自动 pull、merge、rebase 或强推。
-- 不使用 `--force` 或 `--force-with-lease`。任何历史改写必须脱离本流程，作为单独高风险任务明确评估和授权。
-- rebase 解决完成后若远端分支只能通过强推更新，报告本地已完成状态和推送阻碍后停止；不要因为 rebase 已获授权就推导出强推授权。
-- 已推送提交需要修正时，默认创建新的修正提交，不使用 amend、reset 或 rebase 改写已发布历史。
+- Do not push tags, other branches, or all remotes by default.
+- Push to several approved remotes in order and record success or failure for each. On partial success, report it as it is; do not rewrite remotes that already succeeded.
+- When a push is rejected for non-fast-forward, remote updates, or policy, stop immediately. Ask the user to choose and finish an integration step such as merge / rebase first.
+  Do not pull, merge, rebase, or force-push automatically.
+- Do not use `--force` or `--force-with-lease`. Any history rewrite must leave this process and be assessed and authorized explicitly as a separate high-risk task.
+- If, after a rebase is resolved, the remote branch can only be updated by force-push, report the finished local state and the push blocker, then stop. Do not infer force-push permission from the rebase permission.
+- When a pushed commit needs fixing, create a new fix commit by default; do not use amend, reset, or rebase to rewrite published history.
 
-### 8. 报告结果
+### 8. Report the result
 
-完成后报告：
+When done, report:
 
-- 当前分支和最终工作区状态。
-- 冲突操作类型、已解决文件、关键意图取舍，以及 merge / rebase / cherry-pick 是否完成。
-- 每个新提交的短 ID 与标题。
-- 每个 remote 的推送结果及目标 ref。
-- 未提交、未推送、未验证或被排除的内容。
-- 已建议加入 `.gitignore` 但尚未处理的文件或模式。
+- Current branch and final working-tree state.
+- Conflict operation type, resolved files, key intent trade-offs, and whether the merge / rebase / cherry-pick finished.
+- Short ID and subject of each new commit.
+- Push result and target ref for each remote.
+- What is uncommitted, unpushed, unverified, or excluded.
+- Files or patterns suggested for `.gitignore` but not yet handled.
 
-不得把提交成功等同于推送成功，也不得在部分失败时笼统报告"已完成"。
+Never treat a successful commit as a successful push, and never report a blanket "done" when something partly failed.
 
-## 安全边界
+## Safety boundaries
 
-- 不提交或输出敏感信息。
-- 不把不同实现逻辑塞进一个提交。
-- 不靠删除冲突标记、整文件选 `ours` / `theirs` 或让测试通过来替代语义判断。
-- 不自动发起、跳过或中止 merge / rebase / cherry-pick；用户要求这类动作时单独说明影响并取得授权。
-- 不在用户确认解决摘要和验证结果前执行任何 continue 命令。
-- 不自动 stash、丢弃、清理或覆盖用户改动。
-- 不修改已经推送的历史，不强推。
-- 不在用户未确认当前分支、提交批次和远端目标时执行 commit 或 push。
+- Do not commit or output sensitive data.
+- Do not put different implementation logic into one commit.
+- Do not replace semantic judgment with deleting conflict markers, taking `ours` / `theirs` for whole files, or making the tests pass.
+- Do not automatically start, skip, or abort a merge / rebase / cherry-pick; when the user asks for one of these, explain the impact separately and get authorization.
+- Do not run any continue command before the user confirms the resolution summary and verification results.
+- Do not automatically stash, discard, clean, or overwrite user changes.
+- Do not change history that has already been pushed, and do not force-push.
+- Do not commit or push before the user confirms the current branch, commit batches, and remote target.

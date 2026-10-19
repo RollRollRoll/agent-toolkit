@@ -1,5 +1,5 @@
 interface:
   display_name: "Triage"
-  short_description: "按 triage 状态机分类、验证并补齐 issue 或 PR。"
+  short_description: "Move issues through triage roles"
 policy:
   allow_implicit_invocation: false

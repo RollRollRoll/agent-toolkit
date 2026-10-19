@@ -1,60 +1,59 @@
-# 什么时候该 mock
+# When to Mock
 
-只在系统边界上使用 mock：
+Mock at **system boundaries** only:
 
-- 外部 API（支付、邮件等）
-- 数据库（有时候——**优先用测试库**）
-- 时间 / 随机性
-- 文件系统（有时候）
+- External APIs (payment, email, etc.)
+- Databases (sometimes - prefer test DB)
+- Time/randomness
+- File system (sometimes)
 
-以下对象使用真实实现：
+Don't mock:
 
-- 你自己的类 / 模块
-- 内部协作者
-- 任何你控制得了的东西
+- Your own classes/modules
+- Internal collaborators
+- Anything you control
 
-## 为可 mock 而设计
+## Designing for Mockability
 
-在系统边界上，把接口设计得容易 mock：
+At system boundaries, design interfaces that are easy to mock:
 
-**1. 用依赖注入**
+**1. Use dependency injection**
 
-把外部依赖**传进去**，而不是在内部把它造出来：
+Pass external dependencies in rather than creating them internally:
 
 ```typescript
-// 容易 mock
+// Easy to mock
 function processPayment(order, paymentClient) {
   return paymentClient.charge(order.total);
 }
 
-// 难 mock
+// Hard to mock
 function processPayment(order) {
   const client = new StripeClient(process.env.STRIPE_KEY);
   return client.charge(order.total);
 }
 ```
 
-**2. 宁可用 SDK 风格的接口，也不要一个通用 fetcher**
+**2. Prefer SDK-style interfaces over generic fetchers**
 
-给**每个外部操作各写一个具体函数**，而不是写一个带条件逻辑的通用函数：
+Create specific functions for each external operation instead of one generic function with conditional logic:
 
 ```typescript
-// GOOD: 每个函数都能独立 mock
+// GOOD: Each function is independently mockable
 const api = {
   getUser: (id) => fetch(`/users/${id}`),
   getOrders: (userId) => fetch(`/users/${userId}/orders`),
   createOrder: (data) => fetch('/orders', { method: 'POST', body: data }),
 };
 
-// BAD: mock 的时候得在 mock 里面写条件逻辑
+// BAD: Mocking requires conditional logic inside the mock
 const api = {
   fetch: (endpoint, options) => fetch(endpoint, options),
 };
 ```
 
-SDK 那种写法意味着：
-
-- 每个 mock 只返回一种具体形状
-- 测试准备里没有条件逻辑
-- 一眼看得出某个测试打了哪些端点
-- 每个端点各有类型安全
+The SDK approach means:
+- Each mock returns one specific shape
+- No conditional logic in test setup
+- Easier to see which endpoints a test exercises
+- Type safety per endpoint

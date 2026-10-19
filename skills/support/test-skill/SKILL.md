@@ -1,106 +1,106 @@
 ---
 name: test-skill
-description: 在隔离沙箱中盲测目标 skill，通过 headless 运行收集证据，并产出可逐步追溯的中文复盘报告。
+description: Blind-test a target skill in an isolated sandbox, collect evidence through headless runs, and produce a step-by-step traceable retrospective report in Chinese.
 ---
 
-# Test Skill — skill 盲测复盘
+# Test Skill: blind-test retrospective for a skill
 
-## 目标
+## Goal
 
-在隔离沙箱中驱动一次多轮 headless 会话。被测进程只看到自然的用户任务，不知道自己正在被测试。运行结束后，把每个语义步骤与目标 `SKILL.md` 的指令逐项对齐，产出可复核的中文报告。
+Drive one multi-turn headless session in an isolated sandbox. The process under test sees only a natural user task and does not know it is being tested. After the run, align each semantic step with the instructions in the target `SKILL.md`, item by item, and produce a verifiable report. Write the report in Chinese.
 
-先按 [platform-runners.md](references/platform-runners.md) 选择 Claude Code 或 Codex runner，
-再用同一个 runner 完成该次盲测的全部轮次。不要自行拼接 `claude -p` 或 `codex exec`；运行器负责超时、会话 ID、逐轮状态、JSONL、stderr、参数传递和唯一报告路径。
+First choose the Claude Code or Codex runner according to [platform-runners.md](references/platform-runners.md),
+then use that same runner for every turn of this blind test. Do not assemble `claude -p` or `codex exec` yourself; the runner handles timeouts, session IDs, per-turn state, JSONL, stderr, argument passing, and the unique report path.
 
-## 流程
+## Process
 
 ```text
-阶段 0  定位与 CLI 预检
-阶段 1  创建隔离目录并清单化指令
-阶段 2  铺设 fixture 与注入目标 skill
-阶段 3  生成剧本并取得成本确认
-阶段 4  驱动盲测会话
-阶段 5  重建时间线并双侧判定
-阶段 6  写入持久报告
+Phase 0  Locate and preflight the CLI
+Phase 1  Create isolated directories and inventory the instructions
+Phase 2  Lay down fixtures and inject the target skill
+Phase 3  Write the script and get cost confirmation
+Phase 4  Drive the blind-test session
+Phase 5  Rebuild the timeline and judge both sides
+Phase 6  Write the persistent report
 ```
 
-### 阶段 0 · 定位与 CLI 预检
+### Phase 0 · Locate and preflight the CLI
 
-1. 定位目标 `SKILL.md`。支持仓库 id、文件路径和已安装 skill 名；存在多个候选时请用户指认，不要猜测。
-2. 记下三个绝对路径：这个 skill 目录、发起测试时的项目目录、会话 scratchpad。后续每次工具调用都直接使用绝对路径；不要依赖 shell 变量、当前目录或上一次 Bash 调用的状态。
-3. 完整读取 [platform-runners.md](references/platform-runners.md)，按用户指定平台选择 runner；用户未指定时，
-   以当前宿主和目标安装来源为判断依据，仍无法判断才询问。只执行该平台的 `doctor` 预检，不发起模型调用。预检失败即停，不切换到另一平台，也不删除隔离参数降级运行。
+1. Locate the target `SKILL.md`. Accept a repo id, a file path, or an installed skill name. If there are multiple candidates, ask the user to pick one; do not guess.
+2. Record three absolute paths: this skill's directory, the project directory the test was started from, and the session scratchpad. Use absolute paths directly in every later tool call; do not rely on shell variables, the current directory, or state from a previous Bash call.
+3. Read [platform-runners.md](references/platform-runners.md) in full and choose the runner for the platform the user specified. If the user did not specify one,
+   decide from the current host and where the target is installed; ask only if you still cannot tell. Run only that platform's `doctor` preflight, and make no model calls. If the preflight fails, stop. Do not switch to the other platform, and do not drop isolation flags to run in a degraded mode.
 
-### 阶段 1 · 创建隔离目录并清单化指令
+### Phase 1 · Create isolated directories and inventory the instructions
 
-4. 在 scratchpad 下规划两个尚不存在的同级目录：测试沙箱 `<运行名>/` 与编排目录 `<运行名>-run/`。
-   持久报告目录固定为发起测试项目下的 `skill-test-reports/<被测-id>/`，不得放进目标 skill 原目录。
-5. 按 [platform-runners.md](references/platform-runners.md) 的对应命令初始化运行；路径全部使用绝对路径，
-   权限或 sandbox 选择按场景取最小值。`init` 必须先成功，它会创建沙箱和编排目录并写入带 `platform` 或平台配置的 `run-config.json`。
-   随后由编排者在沙箱执行 `git init`；初始化仓库不需要交给被测进程。
-6. 通读目标 `SKILL.md` 全文。把可独立判定的行为要求拆为 R1..Rn，把纯背景和示例拆为 B1..Bm；frontmatter 中"不适用"限制也属于指令。
-   将清单写入编排目录 `checklist.md`，每条记录原文、章节和适用条件。
+4. Under the scratchpad, plan two sibling directories that do not exist yet: the test sandbox `<run-name>/` and the orchestration directory `<run-name>-run/`.
+   The persistent report directory is always `skill-test-reports/<target-id>/` under the project the test was started from. Never put it inside the target skill's own directory.
+5. Initialize the run with the matching command from [platform-runners.md](references/platform-runners.md). Use absolute paths everywhere,
+   and pick the minimum permissions or sandbox setting the scenario needs. `init` must succeed first; it creates the sandbox and orchestration directory and writes `run-config.json` with `platform` or the platform config.
+   Then the orchestrator runs `git init` in the sandbox; initializing the repo does not need to be handed to the process under test.
+6. Read the target `SKILL.md` in full. Split independently judgeable behavior requirements into R1..Rn, and pure background and examples into B1..Bm. "Do not use for" limits in the frontmatter are also instructions.
+   Write the inventory to `checklist.md` in the orchestration directory, recording each item's original text, section, and applicability condition.
 
-### 阶段 2 · 铺设 fixture 与注入目标 skill
+### Phase 2 · Lay down fixtures and inject the target skill
 
-7. 只在沙箱中铺设场景 fixture。fixture 和文件名不得透露测试意图。
-8. 按平台注入目标 skill 的完整副本：Claude Code 使用 `沙箱/.claude/skills/<被测-id>/`，
-   Codex 使用 `沙箱/.agents/skills/<被测-id>/`。对应平台目录只允许出现这个受控副本和确有必要的空项目配置；不得复制原项目的 settings、插件、hooks、
-   rules 或 MCP 配置。Codex 的首轮自然语言任务显式使用 `$<被测-id>`，Claude Code 自然地点名目标 skill。
-9. 编排产物只能放在同级编排目录，不能放进沙箱。被测进程的 cwd 始终是沙箱。
+7. Lay down scenario fixtures only in the sandbox. Fixtures and file names must not reveal the testing intent.
+8. Inject a full copy of the target skill for the platform: Claude Code uses `sandbox/.claude/skills/<target-id>/`,
+   Codex uses `sandbox/.agents/skills/<target-id>/`. The platform directory may contain only this controlled copy and any empty project config that is strictly necessary; do not copy the original project's settings, plugins, hooks,
+   rules, or MCP config. For Codex, the first natural-language task explicitly uses `$<target-id>`; for Claude Code, name the target skill naturally.
+9. Orchestration artifacts go only in the sibling orchestration directory, never in the sandbox. The cwd of the process under test is always the sandbox.
 
-### 阶段 3 · 生成剧本并取得成本确认
+### Phase 3 · Write the script and get cost confirmation
 
-10. 按 [persona-template.md](references/persona-template.md) 生成 `编排目录/persona.md`。保留现有隐藏痛点模型，不额外扩展人设维度。
-11. 向用户呈现场景、剧本要点、预计轮数，以及 `run-config.json` 中的实际工具边界和成本量级。取得明确确认后才执行 `start`；成本确认门不可跳过。
-12. 将首轮自然语言任务写入 `编排目录/turn-001.txt`。被测进程收到的任何 prompt 都不得包含"测试、评估、复盘、检查你"等措辞；自然地点名目标 skill 是允许的。
+10. Generate `orchestration-dir/persona.md` following [persona-template.md](references/persona-template.md). Keep the existing hidden-pain-point model; do not add more persona dimensions.
+11. Present to the user the scenario, the key points of the script, the expected number of turns, and the actual tool boundaries and cost range from `run-config.json`. Run `start` only after explicit confirmation; the cost confirmation gate cannot be skipped.
+12. Write the first natural-language task to `orchestration-dir/turn-001.txt`. No prompt the process under test receives may contain wording such as "test, evaluate, retrospective, check you" (测试、评估、复盘、检查你); naming the target skill naturally is allowed.
 
-### 阶段 4 · 驱动盲测会话
+### Phase 4 · Drive the blind-test session
 
-13. 首轮仅用本次已选 runner 执行 `start --run-dir <编排目录绝对路径> --prompt-file <编排目录绝对路径>/turn-001.txt`，
-    完整命令见 [platform-runners.md](references/platform-runners.md)。
+13. For the first turn, run only the runner chosen for this run: `start --run-dir <orchestration-dir absolute path> --prompt-file <orchestration-dir absolute path>/turn-001.txt`.
+    See [platform-runners.md](references/platform-runners.md) for the full command.
 
-    运行器把 transcript、stderr、`session-id` 和逐轮字节范围写入编排目录，不写入沙箱。
+    The runner writes the transcript, stderr, `session-id`, and per-turn byte ranges to the orchestration directory, not the sandbox.
 
-14. 解析本轮新增 transcript。若输出在等待用户输入，按剧本生成回复，写入下一个 `turn-NNN.txt`，
-    再用同一 runner 执行 `resume --run-dir <编排目录绝对路径> --prompt-file <编排目录绝对路径>/turn-NNN.txt`。
+14. Parse the transcript added in this turn. If the output is waiting for user input, write a reply according to the script into the next `turn-NNN.txt`,
+    then run `resume --run-dir <orchestration-dir absolute path> --prompt-file <orchestration-dir absolute path>/turn-NNN.txt` with the same runner.
 
-    运行器自行从 `session-id` 恢复会话，不要在 shell 中保存 `SID`。
-    剧本未覆盖的问题可按人设即兴，但必须追记进 `persona.md` 附录。
+    The runner resumes the session from `session-id` itself; do not keep a `SID` in the shell.
+    You may improvise in persona for questions the script does not cover, but you must append them to the appendix of `persona.md`.
 
-15. 满足任一条件即停：被测进程收尾；达到 `max_turns`；单轮超时；CLI、权限或会话校验失败。失败后不得在同一运行目录继续或覆盖记录；保留样本进入分析。若确需重跑，
-    创建全新的沙箱与编排目录，并重新取得成本确认。
-16. 需要查看可靠状态时执行 `status --run-dir <编排目录绝对路径>`，以 `run-state.json` 为准，不从 shell 变量推断。
+15. Stop when any of these happens: the process under test wraps up; `max_turns` is reached; a single turn times out; a CLI, permission, or session check fails. After a failure, do not continue in or overwrite records in the same run directory; keep the sample for analysis. If a rerun is truly needed,
+    create a brand-new sandbox and orchestration directory and get cost confirmation again.
+16. When you need reliable state, run `status --run-dir <orchestration-dir absolute path>`. Treat `run-state.json` as authoritative; do not infer state from shell variables.
 
-### 阶段 5 · 重建时间线并双侧判定
+### Phase 5 · Rebuild the timeline and judge both sides
 
-17. 先读 [judging-criteria.md](references/judging-criteria.md)，再解析编排目录的 `transcript-run.jsonl`。
-    遇到未知事件类型或损坏行时记录并跳过，不得让整个分析中断。
-18. 核对 transcript 中实际触发的 skill 名与来源是否为沙箱注入副本。若不是，或来源无法确认且会影响结论，把结果标为无效或存疑，不得伪装成有效盲测。
-19. 双侧判定：每个语义步骤三选一——`依据 Rx`、`偏离 Rx`、`无依据`；每条指令四选一——`已遵守`、`被违反`、`被跳过`、`未触发`。
-20. transcript 超过约 200k 字符时，按对话轮切分给子 agent；每段必须同时提供完整 checklist 和判定标准，最后统一口径。
+17. Read [judging-criteria.md](references/judging-criteria.md) first, then parse `transcript-run.jsonl` in the orchestration directory.
+    When you hit an unknown event type or a corrupt line, record it and skip it; do not let it abort the whole analysis.
+18. Check that the skill name and source actually triggered in the transcript are the copy injected into the sandbox. If not, or if the source cannot be confirmed and that would affect the conclusion, mark the result invalid or doubtful; do not pass it off as a valid blind test.
+19. Judge both sides: each semantic step gets one of three labels, `依据 Rx` (based on Rx), `偏离 Rx` (deviates from Rx), or `无依据` (no basis); each instruction gets one of four labels, `已遵守` (followed), `被违反` (violated), `被跳过` (skipped), or `未触发` (not triggered). Use the Chinese labels in the report.
+20. If the transcript is longer than about 200k characters, split it by conversation turn across subagents. Give every chunk the full checklist and the judging criteria, then reconcile the results into one consistent standard at the end.
 
-### 阶段 6 · 写入持久报告
+### Phase 6 · Write the persistent report
 
-21. 按 [report-template.md](references/report-template.md) 写六节中文报告。
-    先用同一 runner 执行 `report-path --run-dir <编排目录绝对路径>`，原子预留唯一文件名。
+21. Write the six-section report in Chinese following [report-template.md](references/report-template.md).
+    First run `report-path --run-dir <orchestration-dir absolute path>` with the same runner to atomically reserve a unique file name.
 
-    把报告写入命令返回的路径；重复调用会返回同一路径。同日多次运行由时间与 `run_id` 区分，不得覆盖旧报告。
+    Write the report to the path the command returns; calling it again returns the same path. Multiple runs on the same day are distinguished by time and `run_id`; never overwrite an old report.
 
-22. 报告中的原始证据路径必须指向编排目录的 `transcript-run.jsonl`、`stderr.log`、`run-state.json`、
-    `checklist.md` 和 `persona.md`，不能指向沙箱。提醒用户 scratchpad 会被清理，如需长期留存应复制原始证据。
+22. Raw evidence paths in the report must point to `transcript-run.jsonl`, `stderr.log`, `run-state.json`,
+    `checklist.md`, and `persona.md` in the orchestration directory, not the sandbox. Remind the user that the scratchpad gets cleaned up and they should copy the raw evidence if they need to keep it long term.
 
-## Fail-closed 边界
+## Fail-closed boundaries
 
-- 两个平台的权限模型不同，必须完整遵守 [platform-runners.md](references/platform-runners.md) 的对应边界，
-  不把 Claude Code 的工具白名单语义套到 Codex，也不把 Codex sandbox 语义套到 Claude Code。
-- 禁止 `--dangerously-skip-permissions` 和 `--dangerously-bypass-approvals-and-sandbox`，
-  禁止绕过 runner 直接运行 headless CLI，禁止为兼容旧 CLI 删除隔离参数。
-- 系统或组织托管策略仍可能生效；发现相关 hook、插件、MCP、skills 或权限影响时必须写入报告。无法确认实际加载来源且会影响结论时，结果标为无效或存疑。
+- The two platforms have different permission models. Follow the matching boundaries in [platform-runners.md](references/platform-runners.md) in full.
+  Do not apply Claude Code's tool allowlist semantics to Codex, and do not apply Codex sandbox semantics to Claude Code.
+- `--dangerously-skip-permissions` and `--dangerously-bypass-approvals-and-sandbox` are forbidden.
+  Running a headless CLI directly without the runner is forbidden, and so is dropping isolation flags for compatibility with an old CLI.
+- System or organization managed policies may still apply. If you find hooks, plugins, MCP, skills, or permissions from them affecting the run, record it in the report. If the actual load source cannot be confirmed and that would affect the conclusion, mark the result invalid or doubtful.
 
-## 红线
+## Red lines
 
-- **盲测**：被测进程的一切输入不得透露测试意图。
-- **零侵入**：不得修改目标 skill 原目录；持久报告只能写入独立的 `skill-test-reports/`。
-- **隔离**：checklist、persona、transcript、stderr、状态文件不得进入沙箱。
-- **成本确认**：用户确认之前不得执行 `start` 或任何真实 headless 轮次。
+- **Blind**: no input to the process under test may reveal the testing intent.
+- **Zero intrusion**: do not modify the target skill's own directory; the persistent report may only be written to the separate `skill-test-reports/`.
+- **Isolation**: the checklist, persona, transcript, stderr, and state files must not enter the sandbox.
+- **Cost confirmation**: do not run `start` or any real headless turn before the user confirms.

@@ -1,7 +1,7 @@
 {
   "name": "agent-toolkit",
   "version": "1.1.0",
-  "description": "个人 agent 工具集：可复用中文开发工作流 skills",
+  "description": "Personal agent toolkit: reusable development workflow skills.",
   "author": {
     "name": "kgfan"
   },
@@ -17,8 +17,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Agent Toolkit",
-    "shortDescription": "中文 Agent 开发工作流与代码库调研工具集",
-    "longDescription": "涵盖需求拷问、spec 与工单产出、TDD 红绿闭环、双轴代码审查、bug 诊断、工作区隔离与分支收尾等开发能力单元，以及代码库调研、一手来源调研、原型验证、Skill 盲测与配置同步等独立工具。",
+    "shortDescription": "Agent workflows for software development and codebase research.",
+    "longDescription": "Covers development building blocks: requirement grilling, specs and tickets, TDD red-green loops, two-axis code review, bug diagnosis, workspace isolation, and branch wrap-up. Also includes standalone tools for codebase research, first-party source research, prototyping, blind skill testing, and config sync.",
     "developerName": "kgfan",
     "category": "Productivity",
     "capabilities": [
@@ -26,9 +26,9 @@
       "Write"
     ],
     "defaultPrompt": [
-      "调研当前代码库并给我一份结构化中文报告。",
-      "把这个想法拷问透，出一份 spec 和一组工单。",
-      "照这份 spec 把功能实现出来并提交。"
+      "Research the current codebase and give me a structured report.",
+      "Grill this idea thoroughly, then produce a spec and a set of tickets.",
+      "Implement the feature from this spec and commit it."
     ]
   }
 }

@@ -1,5 +1,5 @@
 interface:
   display_name: "Grill Demand"
-  short_description: "通过深入访谈补齐 spec 所需共识，并记录 ADR 和术语。"
+  short_description: "Grill a design and write its docs"
 policy:
   allow_implicit_invocation: false

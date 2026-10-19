@@ -1,56 +1,58 @@
-# 溯源判定标准
+# Traceability judging criteria
 
-本文档是 test-skill 阶段 5 的唯一判定口径。多次测试、多个分析者（含分段子 agent）都以此为准，保证结论可比。
+This document is the only judging standard for test-skill Phase 5. Every test run and every analyst (including subagents that handle one chunk) uses it, so conclusions stay comparable.
 
-## 语义步骤的定义
+The labels below go into the Chinese report verbatim. Each one has an English gloss the first time it appears; use only the Chinese label in the report.
 
-**一步 = 被测 agent 的一次有意图的动作**：
+## What a semantic step is
 
-- 提出一个澄清问题（一条消息问了三个问题 = 三步）；
-- 调用一次工具（一次 Read / Write / Bash 各算一步）；
-- 给出一段结论性输出（呈现方案、总结、交付物说明）。
+**One step = one intentional action by the agent under test**:
 
-thinking 块**不单独成步**，只用来辅助判断相邻动作的意图（如"它为什么跳过了这一节"）。
+- asking one clarifying question (one message that asks three questions = three steps);
+- calling one tool (one Read, one Write, one Bash each count as one step);
+- giving one piece of conclusive output (presenting a plan, a summary, a description of a deliverable).
 
-## 步骤侧判定（每步三选一）
+Thinking blocks are **not steps on their own**. Use them only to help judge the intent of nearby actions (for example, "why did it skip this section").
 
-### `依据 Rx`
+## Step-side judgment (pick one of three per step)
 
-该步骤对应指令 Rx，且做法与指令要求相符。
+### `依据 Rx` (based on Rx)
 
-- 正例：skill 要求"一次只问一个问题"，agent 单独发了一个问题 → `依据 Rx`。
-- 边界例：agent 问了澄清问题，但一条消息连问三个，而指令要求一次一个 → **不是** `依据 Rx`，判 `偏离 Rx`——动作方向对、执行方式违背。
+The step corresponds to instruction Rx, and what the agent did matches what the instruction requires.
 
-### `偏离 Rx`
+- Positive example: the skill requires "ask only one question at a time", and the agent sends a single question → `依据 Rx`.
+- Edge case: the agent asks clarifying questions, but asks three in one message while the instruction requires one at a time → **not** `依据 Rx`; judge it `偏离 Rx`. The direction of the action is right, but the way it was carried out breaks the instruction.
 
-该步骤明显对应指令 Rx 的适用情境，但做法违背或变形。
+### `偏离 Rx` (deviates from Rx)
 
-- 正例：skill 要求"先呈现方案再动手"，agent 直接开始产出交付物 → 对"先呈现"指令判 `偏离 Rx`。
-- 边界例：指令要求"报告写入 docs/ 目录"，agent 写到了仓库根目录 → `偏离 Rx`（做了但位置错），同时该指令在指令侧记 `被违反`。
+The step clearly falls in the situation instruction Rx applies to, but what the agent did breaks or distorts it.
 
-### `无依据`
+- Positive example: the skill requires "present the plan before starting work", and the agent goes straight to producing the deliverable → judge the "present first" instruction `偏离 Rx`.
+- Edge case: the instruction requires "write the report into the docs/ directory", and the agent writes it to the repo root → `偏离 Rx` (it did the work, but in the wrong place), and on the instruction side that instruction is recorded as `被违反`.
 
-skill 未要求此动作，agent 自由发挥。
+### `无依据` (no basis)
 
-- 正例：skill 没提 git，agent 主动 `git status` 检查环境 → `无依据`。
-- 注意：`无依据` 本身不是贬义——可能暴露 skill 缺失的指令（agent 不得不自行补位），也可能只是正常通用能力。归类哪种由报告"设计诊断"节判断，这里只如实标注。
+The skill does not ask for this action; the agent acted on its own.
 
-## 指令侧判定（每条指令四选一）
+- Positive example: the skill does not mention git, and the agent runs `git status` on its own to check the environment → `无依据`.
+- Note: `无依据` is not negative in itself. It may expose an instruction the skill is missing (the agent had to fill the gap), or it may just be normal general ability. The report's "design diagnosis" section decides which; here, just label it accurately.
 
-- **`已遵守`**：存在至少一个 `依据 Rx` 步骤，且无同指令的 `偏离` 步骤。
-- **`被违反`**：存在 `偏离 Rx` 步骤（哪怕其余时候遵守——一次违反即记违反，细节写说明栏）。
-- **`被跳过`**：场景满足该指令的适用条件（见 checklist.md 的"适用条件"栏），但整个执行中没有任何对应动作。
-- **`未触发`**：场景根本未到达该指令的适用条件。
-  - 区分示例：指令"用户提供多个子系统需求时先建议拆分"——测试场景只有单一需求 → `未触发`（不是 `被跳过`，agent 没做是对的）。
+## Instruction-side judgment (pick one of four per instruction)
 
-## 置信度规则
+- **`已遵守` (followed)**: there is at least one `依据 Rx` step, and no `偏离` step for the same instruction.
+- **`被违反` (violated)**: there is a `偏离 Rx` step (even if it was followed the rest of the time; one violation counts as violated, and the details go in the notes column).
+- **`被跳过` (skipped)**: the scenario meets the instruction's applicability condition (see the "applicability condition" column in checklist.md), but no corresponding action happens anywhere in the run.
+- **`未触发` (not triggered)**: the scenario never reaches the instruction's applicability condition.
+  - Distinguishing example: the instruction is "when the user brings requirements for several subsystems, first suggest splitting them", and the test scenario has only one requirement → `未触发` (not `被跳过`; the agent was right not to do it).
 
-- 任何判定拿不准时，标注 **`存疑`** 并附 transcript 原文引用（行号或轮次），不要硬判。
-- 依赖 thinking 内容做出的意图推断，须在说明栏注明"依据 thinking"。
-- transcript 中 thinking 缺失的段落，意图推断类判定一律降为 `存疑`。
+## Confidence rules
 
-## 汇总统计口径
+- Whenever you are unsure about a judgment, mark it **`存疑`** (doubtful) and attach a quote from the transcript (line number or turn). Do not force a judgment.
+- When an intent inference relies on thinking content, note "based on thinking" (依据 thinking) in the notes column.
+- For parts of the transcript where thinking is missing, downgrade every intent-inference judgment to `存疑`.
 
-- **遵守率 = 已遵守 ÷（已遵守 + 被违反 + 被跳过）**，`未触发` 不计入分母。
-- `存疑` 判定单列，不并入任何状态计数。
-- 背景条目（B1..Bm）不参与任何统计。
+## Summary statistics
+
+- **Compliance rate = 已遵守 ÷ (已遵守 + 被违反 + 被跳过)**. `未触发` is not counted in the denominator.
+- List `存疑` judgments separately; do not merge them into any status count.
+- Background items (B1..Bm) do not count in any statistic.

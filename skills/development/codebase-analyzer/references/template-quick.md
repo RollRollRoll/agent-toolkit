@@ -1,45 +1,61 @@
-# 项目调研报告模板 · 快速概览档
+# Report template: quick overview tier
 
-> 这是「快速概览」的输出骨架，目标是让读者在约 1 分钟内理解项目用途、基本结构和一条核心流程。
-> 适用：用户说"快速看看 / 简单了解 / 大概是啥"。
-> 需要更详细请改用 [template-standard.md](template-standard.md) 或 [template-deep.md](template-deep.md)。
+> This is the output skeleton for the **quick overview**. The goal is that the reader understands the project's purpose, basic structure, and one core flow in about 1 minute.
+> Use it when the user says "take a quick look / brief intro / roughly what is it".
+> For more detail, use [template-standard.md](template-standard.md) or [template-deep.md](template-deep.md) instead.
 >
-> **要求**：
-> - 全文控制在**半屏到一屏**，不要展开成长报告。
-> - 关键结论仍要给**源码路径**，不准凭名字 / README 猜。
-> - 没查清的，一句"未搞清楚 X"带过即可，不单列章节。
+> **Requirements**:
+> - Keep the whole report to **half a screen to one screen**; do not grow it into a long report.
+> - Key conclusions still need a **source path**; do not guess from names / the README.
+> - For anything you did not figure out, one line "未搞清楚 X" (X not figured out) is enough; no separate section.
+>
+> **How to fill this template** (same rules in all three templates):
+> - Everything below the `---` line is the report skeleton. Headings, bold field labels, and table headers are **fixed Chinese strings**: copy them verbatim.
+> - `{{...}}` placeholders describe what goes there, in English. Replace each one with Chinese content.
+> - Blockquotes starting with `> Guidance:` are instructions for you. Do not copy them into the report.
+> - English meaning of the fixed headings:
+>
+> | Heading | Meaning |
+> |---|---|
+> | `项目速览` | Project at a glance (report title) |
+> | `一句话定义` | One-sentence definition |
+> | `核心价值` | Core value |
+> | `技术栈与形态` | Tech stack and form |
+> | `目录地图（精简）` | Directory map (trimmed) |
+> | `最核心的一条流程` | The single most central flow |
+> | `想深入可以看` | Where to look to go deeper |
 
 ---
 
-# 项目速览：{{项目名}}
+# 项目速览：{{project name}}
 
-> **调研对象**：`{{绝对路径或仓库地址}}` ｜ **时间**：{{YYYY-MM-DD}}
+> **调研对象**：`{{absolute path or repository URL}}` ｜ **时间**：{{YYYY-MM-DD}}
 
 ## 一句话定义
-{{这个项目做什么、给谁用}}
+{{what the project does and who it is for}}
 
 ## 核心价值
-{{解决了什么痛点}}
+{{which pain point it solves}}
 
 ## 技术栈与形态
-- **架构风格**：{{单体 / 微服务 / CLI / 库 / 事件驱动 …}}
-- **主要技术栈**：{{语言 + 关键框架 + 数据库，一行列完}}
-- **运行形态**：{{长驻 server / 一次性 CLI / 定时任务 / SDK / 前端 …}}
-- **代码规模感**：{{行数量级 / 模块数 / 是否单仓多包}}
+- **架构风格**：{{monolith / microservices / CLI / library / event-driven ...}}
+- **主要技术栈**：{{language + key frameworks + database, all on one line}}
+- **运行形态**：{{long-running server / one-shot CLI / scheduled job / SDK / frontend ...}}
+- **代码规模感**：{{order of magnitude of lines / number of modules / monorepo or not}}
 
 ## 目录地图（精简）
 
 ```text
-{{根目录}}/
-├── {{dir1}}/   # {{职责}}
-├── {{dir2}}/   # {{职责}}
-└── …           # 只列 5~10 个最重要的目录
+{{root directory}}/
+├── {{dir1}}/   # {{responsibility}}
+├── {{dir2}}/   # {{responsibility}}
+└── …           # {{list only the 5-10 most important directories}}
 ```
 
 ## 最核心的一条流程
-{{挑用户感知最强的一条，3~5 句文字串起来：从哪触发 → 经过哪个关键文件（带路径） → 最终产出什么。不必逐跳展开。}}
+{{pick the flow users notice most and connect it in 3-5 sentences: where it is triggered → which key file it passes through (with path) → what it finally produces. No need to go hop by hop.}}
 
 ## 想深入可以看
-- {{要理解架构 → 看哪个目录 / 文件}}
-- {{要理解核心逻辑 → 看 `path`}}
+- {{to understand the architecture → which directory / file to read}}
+- {{to understand the core logic → read `path`}}
 - 需要更完整的分析可切换到**标准调研**或**深度报告**档。

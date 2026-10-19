@@ -1,4 +1,3 @@
 interface:
   display_name: "TDD"
-  short_description: "用红、绿、重构循环完成测试驱动开发。"
-  default_prompt: "使用 $tdd 以测试先行的方式完成这个改动：先确定 seam，再按纵向切片逐个走完红绿循环。"
+  short_description: "Test-driven red-green-refactor"

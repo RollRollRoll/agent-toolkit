@@ -1,92 +1,92 @@
-# 进行中的 Git 冲突解决流程
+# Resolving an in-progress Git conflict
 
-仅在已经存在 merge、rebase 或 cherry-pick 状态，且用户已授权解决冲突时使用本流程。目标是同时保留双方原始意图，而不是尽快消除冲突标记。
+Use this process only when a merge, rebase, or cherry-pick is already in progress and the user has authorized resolving the conflicts. The goal is to preserve the original intent of both sides, not to get rid of the conflict markers as fast as possible.
 
-## 1. 锁定操作状态与目标
+## 1. See the current state and the goal
 
-先记录以下事实：
+First record these facts:
 
-- `git status --short --branch` 与完整 `git status`。
-- `git diff --name-only --diff-filter=U` 列出的冲突文件。
-- `git ls-files -u` 中每个路径实际存在的 stage 1（共同基线）、stage 2（ours）和 stage 3（theirs）。删除 / 修改、
-  重命名和新增 / 新增冲突不一定同时拥有三个 stage。
-- 当前 `HEAD`，以及存在时的 `MERGE_HEAD`、`REBASE_HEAD`、`CHERRY_PICK_HEAD`。
-- 用户原始命令或当前对话中说明的操作目标。
+- `git status --short --branch` and the full `git status`.
+- The conflicting files listed by `git diff --name-only --diff-filter=U`.
+- Which of stage 1 (common base), stage 2 (ours), and stage 3 (theirs) actually exist for each path in `git ls-files -u`. Delete/modify,
+  rename, and add/add conflicts do not necessarily have all three stages.
+- The current `HEAD`, and `MERGE_HEAD`, `REBASE_HEAD`, `CHERRY_PICK_HEAD` when they exist.
+- The goal of the operation, as stated in the user's original command or in the current conversation.
 
-只读识别 `.git` 中的操作状态，不编辑 sequencer、rebase todo、MERGE_MSG 等内部控制文件。
+Identify the operation state in `.git` read-only. Do not edit internal control files such as the sequencer, the rebase todo, or MERGE_MSG.
 
-如果无法确定操作类型或目标，先把证据和缺口告诉用户。没有"这次合并 / 变基想达到什么"的目标，就没有选择不兼容意图的依据。
+If you cannot determine the operation type or goal, tell the user the evidence and the gaps first. Without a goal ("what is this merge / rebase meant to achieve"), there is no basis for choosing between incompatible intents.
 
-## 2. 为每个冲突追溯原始意图
+## 2. Find the primary sources for each conflict
 
-对每个冲突路径建立一份简短决策记录：
+Understand deeply why each change was made, and what the original intent was. Build a short decision record for each conflicting path:
 
-1. 查看共同基线、ours 和 theirs 的实际内容；必要时使用 `git show :1:<path>`、`:2:<path>`、`:3:<path>`，不要假设三个 stage 都存在。
-2. 查看相关提交标题与正文、路径历史、必要的 blame，以及引入双方改动的 diff。提交信息解释不够时，再查关联 PR、issue、ticket、设计文档或规范。
-3. 分别写清双方改变了什么行为、为什么改变、依赖哪些相邻代码和测试。
-4. 判断冲突属于内容、删除 / 修改、重命名、文件路径迁移、生成文件还是新增 / 新增；文件级冲突不能只按文本 hunk 处理。
+1. Look at the actual content of the common base, ours, and theirs. Use `git show :1:<path>`, `:2:<path>`, `:3:<path>` when needed, and do not assume all three stages exist.
+2. Read the related commit messages (subject and body), the path history, blame where needed, and the diffs that introduced each side's change. When the commit messages do not explain enough, check the PRs, the original issues/tickets, design docs, or specs.
+3. Write down separately, for each side, what behavior it changed, why, and which nearby code and tests it depends on.
+4. Decide whether the conflict is content, delete/modify, rename, file path move, generated file, or add/add. A file-level conflict cannot be handled only as text hunks.
 
-注意 ours / theirs 的语义：
+Watch the meaning of ours / theirs:
 
-- merge 中，ours 通常是当前 `HEAD`，theirs 是正在合入的一侧。
-- rebase 中，ours 通常是变基目标一侧，theirs 是当前正在重放的提交。不要把"ours 等于用户分支"当成通用规律。
+- In a merge, ours is usually the current `HEAD`, and theirs is the side being merged in.
+- In a rebase, ours is usually the side being rebased onto, and theirs is the commit currently being replayed. Do not treat "ours is the user's branch" as a general rule.
 
-优先使用拥有该意图的一手来源。找不到依据时保留不确定性，并让用户选择；不要用代码看起来更新、提交时间更晚或改动更多作为取舍理由。
+Prefer the primary source that owns the intent. When you find no basis, keep the uncertainty and let the user choose. Do not use "the code looks newer", "the commit is later", or "it changes more" as a reason to pick a side.
 
-## 3. 逐 hunk 做语义合并
+## 3. Resolve each hunk semantically
 
-按以下优先级解决每个 hunk：
+Resolve each hunk in this order of priority:
 
-1. 双方意图兼容时，组合成同时满足两边目的的最小结果。
-2. 双方意图不兼容时，选择符合本次 merge / rebase / cherry-pick 明确目标的一侧，并记录放弃了什么。
-3. 现有证据无法决定时，停止该 hunk 并询问用户，不发明第三种新行为。
+1. Preserve both intents where possible: combine them into the smallest result that serves both purposes.
+2. Where incompatible, pick the one matching the stated goal of this merge / rebase / cherry-pick and note the trade-off.
+3. When the evidence cannot decide, stop on that hunk and ask the user. Do **not** invent new behaviour.
 
-编辑时遵守：
+While editing:
 
-- 只修改冲突及其直接集成所需代码，不顺手重构相邻实现。
-- 除非意图证据明确要求整文件采用一侧，否则不要使用整文件 `--ours` 或 `--theirs` 覆盖。
-- 删除冲突标记后重新通读完整函数、类型、配置段和相邻测试；文本能解析不代表语义已合并。
-- 对删除 / 修改冲突，确认"删除的原因"与"修改的目的"谁仍成立；需要迁移修改时，把意图迁到新的权威位置，而不是机械保留旧文件。
-- 对生成文件，先确认仓库约定的生成源和生成命令；修改源文件后按项目流程再生，不手工拼接产物。
+- Change only the conflict and the code directly needed to integrate it. Do not refactor nearby code while you are there.
+- Do not overwrite whole files with `--ours` or `--theirs` unless the intent evidence clearly requires taking one side for the whole file.
+- After removing the conflict markers, reread the full function, type, config section, and nearby tests. Text that parses does not mean the semantics are merged.
+- For a delete/modify conflict, check which still holds: the reason for the deletion or the purpose of the modification. If the modification needs to move, move its intent to the new authoritative location instead of mechanically keeping the old file.
+- For a generated file, first confirm the repo's generation source and generation command. Change the source, then regenerate following the project's process; do not hand-splice the output.
 
-每解决一个文件后：
+After resolving each file:
 
-1. 检查残留冲突标记；若文件本身合法包含类似文本，人工区分。
-2. 查看完整文件和针对共同基线的差异，核对决策记录中的双方意图是否都已覆盖。
-3. 只暂存这个已核对路径；不要使用 `git add .` 或 `git add -A`。
-4. 确认 `git ls-files -u -- <path>` 已无条目，再进入下一个文件。
+1. Check for leftover conflict markers. If the file legitimately contains similar text, tell them apart by hand.
+2. Look at the full file and its diff against the common base, and check that both intents in the decision record are covered.
+3. Stage only this checked path. Do not use `git add .` or `git add -A`.
+4. Confirm `git ls-files -u -- <path>` has no entries before moving to the next file.
 
-## 4. 验证合并后的整体行为
+## 4. Verify the merged behavior as a whole
 
-所有文件解决后先确认：
+After all files are resolved, first confirm:
 
-- `git diff --name-only --diff-filter=U` 和 `git ls-files -u` 均为空。
-- staged diff 只包含冲突解决及必要集成修改，没有吞掉一侧的无关改动。
-- 关键调用方、类型、配置引用、重命名路径和测试与新的整体状态一致。
+- `git diff --name-only --diff-filter=U` and `git ls-files -u` are both empty.
+- The staged diff contains only conflict resolutions and necessary integration changes, and has not swallowed unrelated changes from one side.
+- Key callers, types, config references, renamed paths, and tests are consistent with the new overall state.
 
-发现并运行项目真实的自动化检查，通常依次包括类型检查、目标测试、受影响测试、完整测试和格式检查。格式化若改变文件，再复查差异并重跑受影响验证。
+Discover the project's **automated checks** and run them, typically typecheck, then targeted tests, affected tests, the full test suite, and format. If formatting changes files, review the diff again and rerun the affected checks.
 
-只修复冲突集成直接造成的问题。验证暴露出与双方原始意图无关的新功能需求时，停止并作为后续普通改动报告，不把它塞进冲突解决。
+Fix only problems caused directly by integrating the conflict (anything the merge broke). If verification exposes a new feature need unrelated to either side's original intent, stop and report it as a follow-up ordinary change; do not fold it into the conflict resolution.
 
-测试失败、依赖缺失或环境不可用时，报告实际命令、错误原因和未验证范围；不要把"冲突条目为空"表述成解决已经正确。
+If tests fail, dependencies are missing, or the environment is unavailable, report the actual command, the cause of the error, and what was not verified. Do not describe "no conflict entries left" as the resolution being correct.
 
-## 5. 确认并继续 Git 操作
+## 5. Confirm and continue the Git operation
 
-执行 continue 前向用户展示：
+Before running continue, show the user:
 
-- 当前操作类型与目标。
-- 每个文件采用的意图、兼容处理和不可兼容取舍。
-- staged diff 范围。
-- 已运行检查及结果、未验证内容。
-- 准备执行的准确命令：`git merge --continue`、`git rebase --continue` 或 `git cherry-pick --continue`。
-- 对提交序列、分支历史和后续推送的可能影响。
+- The current operation type and goal.
+- For each file, the intent adopted, how compatible intents were combined, and the trade-offs for incompatible ones.
+- The scope of the staged diff.
+- The checks that were run and their results, and what was not verified.
+- The exact command about to run: `git merge --continue`, `git rebase --continue`, or `git cherry-pick --continue`.
+- The possible effect on the commit sequence, branch history, and later pushes.
 
-得到明确确认后只执行与当前状态匹配的 continue 命令。不要用普通 `git commit` 绕过 rebase / cherry-pick 的 sequencer。
+After explicit confirmation, run only the continue command that matches the current state. Do not use a plain `git commit` to bypass the rebase / cherry-pick sequencer.
 
-continue 后重新执行本流程的状态检查：
+After continuing, rerun this process's state checks:
 
-- 出现新的冲突时，从第 1 步开始处理，并为新解决结果重新取得确认。
-- 操作完成时检查最终 `git status`、提交历史和分支领先 / 落后状态。
-- rebase 后若推送需要强推，停止并报告；这个 skill 不强推。
+- If new conflicts appear, start again from step 1, and get confirmation again for the new resolution.
+- When the operation finishes, check the final `git status`, the commit history, and how far the branch is ahead / behind.
+- If pushing after a rebase would need a force push, stop and report it; this skill does not force push.
 
-不要自动执行 `--abort`、`--skip`、reset 或 checkout 覆盖。用户要求这些动作时，把它们作为新的高风险操作，说明将丢弃或跳过的内容并另行取得确认。
+Do not run `--abort`, `--skip`, reset, or an overwriting checkout on your own. If the user asks for one of these, treat it as a new high-risk operation: explain what will be discarded or skipped and get separate confirmation.

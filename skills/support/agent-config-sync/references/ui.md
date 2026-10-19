@@ -1,13 +1,13 @@
-# 本地审阅界面
+# Local review UI
 
-## 默认交互入口
+## Default interaction entry point
 
-用户未明确偏好时，先询问是否启动本地前端页面，并等待用户选择。用户同意后启动界面，并以前端作为主要操作入口；页面可用时不要同时通过对话逐项提问。只有用户明确希望自动打开浏览器时才使用 `--open`。
+If the user has not stated a preference, first ask whether to start the local web UI and wait for their choice. If the user agrees, start the UI and use it as the main place to work; while the page is available, do not also ask item-by-item questions in the conversation. Use `--open` only when the user explicitly wants the browser opened automatically.
 
-用户拒绝，或 UI 启动失败、页面不可访问、当前环境无法操作页面时，简要说明原因并降级为逐项问答，不要反复尝试启动 UI。问答使用与界面相同的 `keep`、`take`、`union`、`set`、
-`exclude` 决策规则。
+If the user declines, or the UI fails to start, the page is unreachable, or the current environment cannot operate the page, briefly explain why and fall back to item-by-item Q&A. Do not keep retrying the UI. The Q&A uses the same `keep`, `take`, `union`, `set`,
+`exclude` decision rules as the UI.
 
-先生成导入计划，再启动界面：
+Generate the import plan first, then start the UI:
 
 ```bash
 aiconfig import inspect \
@@ -16,26 +16,26 @@ aiconfig import inspect \
 aiconfig ui --plan .agent-config/import-plan.yaml --output agent-config.yaml
 ```
 
-界面提供以下能力：
+The UI can:
 
-- 展示全部来源、自动去重结果、冲突、敏感字段和越界字段。
-- 按目标和状态筛选，并逐项选择 `keep`、`take`、`union`、`set` 或 `exclude`。
-- 根据条目状态、本机路径和 Schema 默认值给出保留或剔除建议及理由，但不自动替用户修改决策；冲突项只建议先解决冲突，不替用户选择来源。
-- 桌面端滚动配置项列表时，右侧详情保持在当前视口内；选择条目不会把页面跳回详情区顶部。
-- 把决策即时写回导入计划，冲突全部解决后预览事实 YAML、Codex TOML 与 Claude JSON。
-- 下载预览，或生成 `agent-config.yaml`；已有文件必须再次确认，覆盖前自动备份。
-- 联网读取 Codex 与 Claude Code 配置 Schema 的字段说明、类型、允许值和默认值。
+- Show all sources, auto-deduplicated results, conflicts, sensitive fields, and out-of-scope fields.
+- Filter by target and status, and choose `keep`, `take`, `union`, `set`, or `exclude` item by item.
+- Suggest keeping or excluding an item, with a reason, based on its status, local paths, and schema defaults, without changing the user's decisions automatically. For conflicts it only suggests resolving the conflict first; it does not pick a source for the user.
+- On desktop, keep the details panel on the right within the current viewport while the config item list scrolls; selecting an item does not jump the page back to the top of the details area.
+- Write decisions back into the import plan immediately, and once all conflicts are resolved, preview the source-of-truth YAML, Codex TOML, and Claude JSON.
+- Download the preview, or generate `agent-config.yaml`. An existing file needs a second confirmation and is backed up automatically before being overwritten.
+- Fetch field descriptions, types, allowed values, and defaults online from the Codex and Claude Code config schemas.
 
-## 网络与缓存
+## Network and caching
 
-- Codex Schema：`https://developers.openai.com/codex/config-schema.json`
-- Claude Code Schema：`https://json.schemastore.org/claude-code-settings.json`
-- Schema 默认缓存 24 小时，位置为 `~/.config/aiconfig/docs-cache.json`。
-- 刷新失败但存在旧缓存时，界面标记"离线缓存"；没有缓存时显示错误，不编造字段说明。
-- 点击官方 Schema 链接会打开外部网页，但不会在 URL 中携带配置路径或配置值。
+- Codex schema: `https://developers.openai.com/codex/config-schema.json`
+- Claude Code schema: `https://json.schemastore.org/claude-code-settings.json`
+- Schemas are cached for 24 hours by default, at `~/.config/aiconfig/docs-cache.json`.
+- If a refresh fails but an old cache exists, the UI marks it "离线缓存" (offline cache). With no cache, it shows an error and does not make up field descriptions.
+- Clicking an official schema link opens an external web page, but the URL never carries config paths or config values.
 
-## 本地安全边界
+## Local security boundaries
 
-服务只监听 `127.0.0.1`，并为每次启动生成随机会话令牌。令牌进入浏览器后保存在当前标签页会话中，并从地址栏移除；所有本地 API 都要求令牌。界面资源不依赖 CDN，不上传导入计划，也不提供远程部署模式。
+The server listens only on `127.0.0.1` and generates a random session token on every start. Once the token reaches the browser, it is stored in the current tab's session and removed from the address bar; every local API requires the token. UI assets do not depend on a CDN, the import plan is never uploaded, and there is no remote deployment mode.
 
-默认端口为 `8765`；端口冲突时可指定其他端口，或使用 `--port 0` 自动分配。按 `Ctrl-C` 停止服务。只有用户明确希望打开浏览器时才使用 `--open`。
+The default port is `8765`. On a port conflict you can choose another port, or use `--port 0` to assign one automatically. Press `Ctrl-C` to stop the server. Use `--open` only when the user explicitly wants the browser opened.

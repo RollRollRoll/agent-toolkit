@@ -1,17 +1,17 @@
 ---
 name: implement
-description: 按照已有 spec 或工单完成实现、验证和代码审查。
+description: "Implement a piece of work based on a spec or set of tickets."
 disable-model-invocation: true
 ---
 
-完成 spec 或工单中约定的实现。
+Implement the work described by the user in the spec or tickets.
 
-用户传入工单引用时，先从 issue tracker 取回工单，说出它的标题再开始。引用有歧义就问用户。
+If the user passes a ticket reference, fetch it from the issue tracker and state its title before starting. If the reference is ambiguous, ask.
 
-条件允许时用 Skill 工具调用 `tdd`，并在事先约定的 seam 上编写测试。
+Call the Skill tool with "tdd" where possible, at pre-agreed seams.
 
-实现过程中定期运行类型检查和相关测试文件；结束前运行一次全量测试。
+Run typechecking regularly, single test files regularly, and the full test suite once at the end.
 
-实现完成后，用 Skill 工具调用 `code-review` 审查本次改动。
+Once done, call the Skill tool with "code-review" to review the work.
 
-将完成的改动提交到当前分支。
+Commit your work to the current branch.

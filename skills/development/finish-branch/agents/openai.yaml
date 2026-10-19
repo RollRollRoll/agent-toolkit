@@ -1,4 +1,4 @@
 interface:
   display_name: "Finish Branch"
-  short_description: "检查、清理并验证当前分支，再确认后续处置。"
-  default_prompt: "使用 $finish-branch 收尾当前分支：检查状态、清理调试残留、完成最终验证，再让我决定如何处置。"
+  short_description: "Check, clean up, and verify the current branch, then confirm what to do with it."
+  default_prompt: "Use $finish-branch to wrap up the current branch: check its state, clean up debugging leftovers, run final verification, then let me decide what to do with it."

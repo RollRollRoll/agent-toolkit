@@ -1,23 +1,23 @@
-# 故障排查
+# Troubleshooting
 
-- `CONFIG_FILE_NOT_FOUND`：切换到包含 `agent-config.yaml` 的目录，或传 `--config`。
-- `CONFIG_YAML_INVALID`：修复 YAML 语法。
-- `CONFIG_SCHEMA_INVALID`：按报错路径修复声明结构。
-- `UNSUPPORTED_API_VERSION`：使用 `agent-config/v1`。
-- `INVALID_CONDITION`：检查 `when` 条件和值域。
-- `VARIABLE_NOT_FOUND`：定义变量或提供匹配 overlay / 环境变量。
-- `VARIABLE_CYCLE`：打断变量循环引用。
-- `MERGE_TYPE_CONFLICT`：不要在对象、数组之间隐式切换类型。
-- `INVALID_ARRAY_OPERATION`：只对数组使用 `$append` / `$prepend`。
-- `CLAUDE_FIELD_OUT_OF_SCOPE`：从 `settings.json` 声明中删除范围外字段。
-- `IMPORT_SOURCE_NOT_FOUND` / `IMPORT_SOURCE_INVALID`：检查来源路径、目标前缀以及 TOML / JSON 语法。
-- `IMPORT_PLAN_NOT_FOUND` / `IMPORT_PLAN_INVALID`：重新运行 `import inspect`，或修复计划结构和 JSON Pointer。
-- `IMPORT_PLAN_EXISTS` / `IMPORT_OUTPUT_EXISTS`：先审阅已有文件；明确同意覆盖后才使用 `--force`。
-- `IMPORT_CONFLICT_UNRESOLVED`：为每个冲突选择 `take`、`union`、`set` 或 `exclude`。
-- `IMPORT_DECISION_INVALID`：检查动作所需的 `source`、`selectedValue`，以及数组 `union` 的适用范围。
-- `DOC_PATH_INVALID` / `DOC_TARGET_INVALID`：检查配置项 JSON Pointer 和目标名称。
-- `DOC_LOOKUP_FAILED`：检查网络连接；存在旧 Schema 缓存时界面会自动降级使用并标记。
-- `UI_SERVER_FAILED`：检查端口范围和占用情况，或使用 `aiconfig ui --port 0`。
-- `UI_TOKEN_REQUIRED`：从当前 `aiconfig ui` 输出的网址重新打开界面。
-- `TARGET_FILE_MODIFIED`：目标在上次应用后被修改；先审阅差异，明确同意覆盖后才用 `--force`。
-- `TARGET_WRITE_FAILED` / `BACKUP_FAILED`：检查目标目录权限和磁盘空间。
+- `CONFIG_FILE_NOT_FOUND`: switch to a directory that contains `agent-config.yaml`, or pass `--config`.
+- `CONFIG_YAML_INVALID`: fix the YAML syntax.
+- `CONFIG_SCHEMA_INVALID`: fix the declaration structure at the path in the error.
+- `UNSUPPORTED_API_VERSION`: use `agent-config/v1`.
+- `INVALID_CONDITION`: check the `when` conditions and their allowed values.
+- `VARIABLE_NOT_FOUND`: define the variable, or provide a matching overlay / environment variable.
+- `VARIABLE_CYCLE`: break the circular variable reference.
+- `MERGE_TYPE_CONFLICT`: do not implicitly switch types between object and array.
+- `INVALID_ARRAY_OPERATION`: use `$append` / `$prepend` only on arrays.
+- `CLAUDE_FIELD_OUT_OF_SCOPE`: remove the out-of-scope field from the `settings.json` declaration.
+- `IMPORT_SOURCE_NOT_FOUND` / `IMPORT_SOURCE_INVALID`: check the source path, the target prefix, and the TOML / JSON syntax.
+- `IMPORT_PLAN_NOT_FOUND` / `IMPORT_PLAN_INVALID`: rerun `import inspect`, or fix the plan structure and JSON Pointers.
+- `IMPORT_PLAN_EXISTS` / `IMPORT_OUTPUT_EXISTS`: review the existing file first; use `--force` only after explicit agreement to overwrite.
+- `IMPORT_CONFLICT_UNRESOLVED`: choose `take`, `union`, `set`, or `exclude` for every conflict.
+- `IMPORT_DECISION_INVALID`: check the `source` or `selectedValue` the action needs, and whether `union` applies (arrays only).
+- `DOC_PATH_INVALID` / `DOC_TARGET_INVALID`: check the config item's JSON Pointer and the target name.
+- `DOC_LOOKUP_FAILED`: check the network connection; if an old schema cache exists, the UI falls back to it automatically and marks it.
+- `UI_SERVER_FAILED`: check the port range and whether the port is in use, or use `aiconfig ui --port 0`.
+- `UI_TOKEN_REQUIRED`: reopen the UI from the URL printed by the current `aiconfig ui`.
+- `TARGET_FILE_MODIFIED`: the target was modified after the last apply; review the diff first, and use `--force` only after explicit agreement to overwrite.
+- `TARGET_WRITE_FAILED` / `BACKUP_FAILED`: check the target directory permissions and disk space.

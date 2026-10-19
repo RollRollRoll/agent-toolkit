@@ -1,38 +1,32 @@
-# `RESOURCES.md` 格式
+# RESOURCES.md Format
 
-`RESOURCES.md` 收录这个主题下经过筛选的可信来源。讲解中的事实依据应来自这里列出的资料，
-实践经验则可以参考其中列出的社群。
+`RESOURCES.md` is the curated set of trusted sources for this topic. Knowledge for explainers should be drawn from here, not from parametric guesses. Wisdom comes from the communities listed here.
 
-## 结构
+## Structure
 
 ```md
-# {主题} Resources
+# {Topic} Resources
 
 ## Knowledge
 
-- [书：《The Science and Practice of Strength Training》，Zatsiorsky & Kraemer](https://example.com)
-  关于训练编排与适应的基础文本。什么时候用：任何涉及周期化、恢复、强度区间的问题。
-- [文章："How Much Should I Train?"，Greg Nuckols（Stronger By Science）](https://example.com)
-  关于训练量界标的循证综述。什么时候用：每个肌群每周的组数目标。
+- [Book: _The Science and Practice of Strength Training_ by Zatsiorsky & Kraemer](https://example.com)
+  Foundational text on programming and adaptation. Use for: anything to do with periodisation, recovery, intensity zones.
+- [Article: "How Much Should I Train?" by Greg Nuckols (Stronger By Science)](https://example.com)
+  Evidence-based review of volume landmarks. Use for: weekly set targets per muscle group.
 
 ## Wisdom (Communities)
 
 - [r/weightroom](https://reddit.com/r/weightroom)
-  信噪比高的 subreddit，对"健身房玄学"管得很严。什么时候用：训练计划评点、平台期排障。
-- 线下：{健身房名} 每周二的力量课
-  什么时候用：动作的实时教练反馈。
+  High-signal subreddit, moderated against bro-science. Use for: programme critique, plateau troubleshooting.
+- Local: Tuesday strength class at {gym name}
+  Use for: real-time coaching feedback on lifts.
 ```
 
-## 规则
+## Rules
 
-- **只收高可信的。** 优先一手来源、公认的专家、经过同行评议的工作，以及**管理严格**的社群。
-  **一份资源如果是包装成教育的营销，就别放进来。**
-- **每一条都要注解。** 一个光秃秃的链接三个月后毫无用处。**加一行**：它讲什么、什么时候该去拿它。
-- **按 Knowledge / Wisdom 分组。** 这对应 [SKILL.md](../SKILL.md) 里的理念。
-  一份资源只出现在其中一组里，完全没问题。
-- **明确把缺口摆出来。** 如果使命需要的某个方面没有好资源，
-  就写一节 `## Gaps` 列出缺什么。**这会驱动之后的检索。**
-- **狠狠地剪。** 一份后来发现是错的、浅的、或偏离使命的资源**应该被删掉，而不是被埋着**。
-  **五份锐利的来源，胜过三十份平庸的。**
-- **把用户对社群的偏好记下来。** 如果用户表示不想加入社群，**在这里记一句**，
-  免得之后的会话反复提议。
+- **High-trust only.** Prefer primary sources, recognised experts, peer-reviewed work, and communities with strong moderation. If a resource is marketing dressed as education, leave it out.
+- **Annotate every entry.** A bare link is useless in three months. Add one line: what it covers and when to reach for it.
+- **Group by Knowledge / Wisdom.** Mirrors the philosophy in [SKILL.md](../SKILL.md). It is fine for a resource to appear in only one group.
+- **Surface gaps explicitly.** If no good resource exists for an area the mission needs, write a `## Gaps` section listing what is missing. This drives future search.
+- **Prune ruthlessly.** A resource that turned out to be wrong, shallow, or off-mission should be removed, not buried. Better five sharp sources than thirty mediocre ones.
+- **Record community preferences.** If the user has opted out of joining communities, note it here so future sessions don't keep proposing them.

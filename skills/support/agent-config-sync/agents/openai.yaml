@@ -1,4 +1,4 @@
 interface:
   display_name: "Agent Config Sync"
-  short_description: "统一整理并安全同步 Codex 和 Claude Code 配置。"
-  default_prompt: "使用 $agent-config-sync 整理现有 Codex 和 Claude Code 配置。先询问我是否启动本地界面；界面不可用时再通过问答确认，最后生成并验证 agent-config.yaml。"
+  short_description: "Consolidate and safely sync Codex and Claude Code configuration."
+  default_prompt: "Use $agent-config-sync to organize the existing Codex and Claude Code configuration. First ask me whether to start the local UI; if the UI is unavailable, confirm through Q&A instead, then generate and validate agent-config.yaml."

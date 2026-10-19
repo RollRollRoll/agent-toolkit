@@ -1,5 +1,5 @@
 interface:
   display_name: "Teach"
-  short_description: "在工作区中通过持续课程学习技能或概念。"
+  short_description: "Learn a concept in a guided workspace"
 policy:
   allow_implicit_invocation: false

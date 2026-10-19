@@ -1,5 +1,5 @@
 interface:
   display_name: "Wayfinder"
-  short_description: "将大型工作规划成一组相互关联的决策工单。"
+  short_description: "Map a large effort as decision tickets"
 policy:
   allow_implicit_invocation: false

@@ -1,79 +1,92 @@
-# 复盘报告模板
+# Retrospective report template
 
-报告全中文，六节齐全，按本模板成文。示例行仅示意格式，成文时删去。
+Write the whole report in Chinese, with all six sections, following this template. The fixed headings, field labels, table headers, and judgment labels below stay in Chinese exactly as written (English glosses are listed after the template). Placeholders in `<...>` and the example rows only show the format: replace them with Chinese content, and delete the example rows when writing.
 
 ```markdown
-# <被测 skill> 盲测复盘报告
+# <target skill> 盲测复盘报告
 
 - 测试日期：YYYY-MM-DD
 - 被测平台：<Claude Code | Codex>
-- 被测版本：<SKILL.md 路径 + 所在 git 提交号（若在仓库中）>
-- 实际加载来源：<沙箱注入路径；若无法确认则写明证据缺口>
-- 运行 ID：<run-config.json 中的 run_id>
-- 沙箱路径：<绝对路径>
-- 编排目录：<绝对路径>
+- 被测版本：<SKILL.md path + git commit it is at (if in a repo)>
+- 实际加载来源：<sandbox injection path; if it cannot be confirmed, state the evidence gap>
+- 运行 ID：<run_id from run-config.json>
+- 沙箱路径：<absolute path>
+- 编排目录：<absolute path>
 
 ## 1. 测试概要
 
-- 测试场景：<一段话>
-- 剧本要点：模拟用户身份、真实意图、隐藏痛点（此处可以明说）
-- 实际轮数 / 时长：<N 轮，约 M 分钟>
-- 执行边界：<Claude：tools + allowed_tools；Codex：sandbox_mode + approval_policy>
-- 设置 / 扩展隔离：<Claude：setting_sources + strict MCP；Codex：isolated_home + ignore_user_config/rules + web_search；托管策略影响>
-- 异常事件：<超时 / 权限拒绝 / 报错，无则写"无">
+- 测试场景：<one paragraph>
+- 剧本要点：<simulated user identity, real intent, hidden pain point (you may state them openly here)>
+- 实际轮数 / 时长：<N turns, about M minutes>
+- 执行边界：<Claude: tools + allowed_tools; Codex: sandbox_mode + approval_policy>
+- 设置 / 扩展隔离：<Claude: setting_sources + strict MCP; Codex: isolated_home + ignore_user_config/rules + web_search; effect of managed policies>
+- 异常事件：<timeouts / permission denials / errors; if none, write "无">
 
 ## 2. 步骤溯源表
 
 | # | 轮次 | 步骤描述 | 判定 | 说明 |
 |---|------|----------|------|------|
-| 1 | 1 | 提出澄清问题："这个 dashboard 给谁看？" | 依据 R3 | R3 要求先问受众 |
-| 2 | 1 | 同一消息内追问第二个问题 | 偏离 R4 | R4 要求一次只问一个 |
-| 3 | 2 | Read 沙箱内 notes.md | 无依据 | skill 未要求读现有文件 |
+| 1 | 1 | Asks a clarifying question: "Who is this dashboard for?" | 依据 R3 | R3 requires asking about the audience first |
+| 2 | 1 | Asks a second question in the same message | 偏离 R4 | R4 requires one question at a time |
+| 3 | 2 | Reads notes.md in the sandbox | 无依据 | The skill does not ask to read existing files |
 
-（每个语义步骤一行，覆盖全部轮次；`存疑` 判定在说明栏注明并附原文引用。）
+(One row per semantic step, covering all turns. For a `存疑` judgment, say so in the notes column and attach a quote.)
 
 ## 3. 指令覆盖统计
 
-- 指令总数：n（另有背景条目 m 条，不参与统计）
+- 指令总数：n (plus m background items, not counted)
 - 遵守率：已遵守 ÷（已遵守 + 被违反 + 被跳过）= XX%
-- 已遵守：R1、R3、…
-- 被违反：R4（一次消息连问三题，见步骤 2）、…
-- 被跳过：R7（场景适用但全程无对应动作）、…
-- 未触发：R9（场景未到达适用条件）、…
-- 存疑：R12（transcript 证据不足，见步骤 18）
+- 已遵守：R1, R3, ...
+- 被违反：R4 (asked three questions in one message, see step 2), ...
+- 被跳过：R7 (the scenario applied but there was no corresponding action at any point), ...
+- 未触发：R9 (the scenario never reached the applicability condition), ...
+- 存疑：R12 (not enough transcript evidence, see step 18)
 
 ## 4. 设计诊断
 
-（对每个问题指令给出失效原因假设，引用步骤与原文：）
+(For each problem instruction, give a hypothesis for why it failed, citing steps and the original text:)
 
-- **R4 被违反** —— 指令埋在长段落中间，且与 R3"尽快弄清需求"存在张力，agent 优先了效率。
-- **R7 被跳过** —— 表述是"建议做 X"而非"必须做 X"，约束力不足。
-- **未触发指令审视** —— R9/R10 属场景未覆盖，需另设场景补测；R11 在任何场景下都难以触发，疑似冗余。
-- **无依据步骤聚类** —— 步骤 3/8/15 都在自行探索项目上下文：skill 缺少"开始前先了解现状"类指令，agent 不得不补位。
+- **R4 被违反**: the instruction is buried in the middle of a long paragraph and is in tension with R3 "understand the requirements as soon as possible", so the agent put efficiency first.
+- **R7 被跳过**: it is phrased as "consider doing X" rather than "must do X", so it is not binding enough.
+- **未触发指令审视**: R9/R10 were not covered by the scenario and need another scenario to test; R11 is hard to trigger in any scenario and may be redundant.
+- **无依据步骤聚类**: steps 3/8/15 all explore the project context on their own. The skill lacks an instruction like "understand the current state before starting", so the agent had to fill the gap.
 
 ## 5. 修改建议
 
-（按优先级排列，措辞落到对 SKILL.md 的具体编辑动作：）
+(Order by priority, and phrase each one as a concrete edit to SKILL.md:)
 
-1. 【高】R4 从第 3 节段落中抽出，改为独立编号列表项，措辞改"必须一次只问一个"。
-2. 【中】新增指令：任务开始前先列出现有相关文件（依据：无依据步骤聚类）。
-3. 【低】评估删除 R11（连续多场景未触发后再定）。
+1. 【高】Pull R4 out of the section 3 paragraph into its own numbered list item, and reword it as "must ask only one question at a time".
+2. 【中】Add an instruction: list the existing relevant files before starting the task (basis: the cluster of no-basis steps).
+3. 【低】Consider deleting R11 (decide after it stays untriggered across several scenarios).
 
 ## 6. 附录
 
-- 沙箱产物清单：<文件列表>
+- 沙箱产物清单：<file list>
 - 剧本全文（含即兴追记附录）
-- 指令清单：<编排目录>/checklist.md
-- 原始 transcript：<编排目录>/transcript-run.jsonl
-- stderr：<编排目录>/stderr.log
-- 逐轮状态：<编排目录>/run-state.json
+- 指令清单：<orchestration dir>/checklist.md
+- 原始 transcript：<orchestration dir>/transcript-run.jsonl
+- stderr：<orchestration dir>/stderr.log
+- 逐轮状态：<orchestration dir>/run-state.json
   ⚠️ 沙箱与编排目录都位于会话级临时空间，如需长期留存原始证据请自行拷贝。
 ```
 
-## 成文要求
+## English glosses for the fixed Chinese text
 
-- 步骤溯源表必须覆盖全部语义步骤，不得抽样。
-- 指令覆盖统计中每条指令（R1..Rn）必须出现且仅出现在一个状态清单里（`存疑` 单列除外）。
-- 修改建议每条都要能直接执行（改哪节、怎么改），禁止"建议优化表述"这类空话。
-- 不写矫饰文风：有直白表达就用直白表达，不用隐喻和华丽辞藻替代陈述。写"这条指令依然重要"，不写"这条指令依然有一席之地"。隐喻会带来作者没选、也控制不了的联想，读者要多花力气解读。
-- 报告必须写入 runner 的 `report-path` 返回值，不能写入被测 skill 原目录或覆盖既有文件。
+- Title: `<target skill> 盲测复盘报告` = "<target skill> blind-test retrospective report".
+- Header fields: 测试日期 = test date; 被测平台 = platform under test; 被测版本 = version under test; 实际加载来源 = actual load source; 运行 ID = run ID; 沙箱路径 = sandbox path; 编排目录 = orchestration directory.
+- Section headings: 1. 测试概要 = test summary; 2. 步骤溯源表 = step traceability table; 3. 指令覆盖统计 = instruction coverage statistics; 4. 设计诊断 = design diagnosis; 5. 修改建议 = suggested changes; 6. 附录 = appendix.
+- Section 1 fields: 测试场景 = test scenario; 剧本要点 = script key points; 实际轮数 / 时长 = actual turns / duration; 执行边界 = execution boundaries; 设置 / 扩展隔离 = settings / extension isolation; 异常事件 = abnormal events; 无 = none.
+- Section 2 table headers: 轮次 = turn; 步骤描述 = step description; 判定 = judgment; 说明 = notes.
+- Section 3 fields: 指令总数 = total instructions; 遵守率 = compliance rate. The status labels (已遵守, 被违反, 被跳过, 未触发, 存疑) and step labels (依据 Rx, 偏离 Rx, 无依据) are defined in [judging-criteria.md](judging-criteria.md).
+- Section 4 items: 未触发指令审视 = review of untriggered instructions; 无依据步骤聚类 = cluster of no-basis steps.
+- Section 5 priorities: 【高】 = high; 【中】 = medium; 【低】 = low.
+- Section 6 fields: 沙箱产物清单 = sandbox artifact list; 剧本全文（含即兴追记附录） = full script (including the improvised-answers appendix); 指令清单 = instruction inventory; 原始 transcript = raw transcript; 逐轮状态 = per-turn state.
+- The ⚠️ line: "The sandbox and orchestration directory both live in session-scoped temporary space; copy the raw evidence yourself if you need to keep it long term."
+
+## Writing requirements
+
+- The step traceability table must cover every semantic step; do not sample.
+- In the instruction coverage statistics, every instruction (R1..Rn) must appear in exactly one status list (except `存疑`, which is listed separately).
+- Every suggested change must be directly actionable (which section to change and how). Empty advice such as "consider improving the wording" is forbidden.
+- No ornate prose: when a plain statement exists, use it instead of metaphors and flowery wording. Write "this instruction still matters" (这条指令依然重要), not "this instruction still has a place at the table" (这条指令依然有一席之地). Metaphors bring associations the author did not choose and cannot control, and the reader has to work harder to decode them.
+- The report must be written to the path returned by the runner's `report-path`. It must not be written into the target skill's own directory or overwrite an existing file.

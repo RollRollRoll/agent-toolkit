@@ -1,95 +1,95 @@
 ---
 name: finish-branch
-description: 收尾当前分支或 worktree：清理调试残留、完成最终验证，再由用户决定合并、保留、创建 PR 或放弃。
+description: "Wrap up the current branch or worktree: clean up debugging leftovers, run final verification, then let the user decide whether to merge, keep, open a PR, or discard."
 ---
 
-# Finish Branch — 开发收尾
+# Finish Branch: Wrapping Up Development
 
-## 目标
+## Goal
 
-一段开发**实现完成**后，给当前分支 / worktree **收尾**：先只读预检状态，再清理调试残留并跑最终测试，
-最后给出「合并 / 本地保留 / 创建 PR / 丢弃」选项，由用户决定破坏性操作和对外操作。
+After a stretch of development is **implemented**, **wrap up** the current branch / worktree: first run a read-only state preflight, then clean up debugging leftovers and run the final tests,
+and finally offer the options "merge / keep locally / create PR / discard", leaving destructive and external actions to the user.
 
-适用于开发完成后清理残留、执行最终验证，并决定分支去向的场景。建立工作区不在其职责范围内。
+Use it after development is done, to clean up leftovers, run final verification, and decide where the branch goes. Setting up a workspace is not its job.
 
-## 调用契约
+## Invocation contract
 
-**传入**
+**Inputs**
 
-- **最终验证命令**：项目约定的完整验收怎么跑。
-- **本次开发范围**（可选）：用于判断哪些调试残留是本次引入的；不给就只清能确认的部分。
-- **调用来源**（可选）：被其他 skill 调用时说明来源——清理若产生代码改动，必须退回调用方重做整体验收。
+- **Final verification command**: how to run the project's full acceptance check.
+- **Scope of this development** (optional): used to judge which debugging leftovers were introduced by this work; if not given, clean only what can be confirmed.
+- **Caller** (optional): when called by another skill, state the caller. If the cleanup produces code changes, control must go back to the caller to redo the overall acceptance check.
 
-**取回**
+**Returns**
 
-- 状态预检结论（分支 / worktree / 暂存与未跟踪状态、与主干的领先落后）。
-- 清理了什么、最终测试结果、用户选定的收尾方式与**已执行的动作**。
-- 未获授权的动作停在该动作之前并如实报告，不代替用户决定。
+- Preflight conclusion (branch / worktree / staged and untracked state, ahead/behind relative to the main branch).
+- What was cleaned up, final test results, the wrap-up option the user chose, and **the actions actually taken**.
+- For an unauthorized action, stop before it and report truthfully; do not decide for the user.
 
-**职责边界**
+**Responsibility boundaries**
 
-- 测试没过不收尾；不自动 commit / merge / push / 开 PR / 删分支 / 移除 worktree——每项单独取得确认。
-- 不自动 stash、`git clean` 或静默丢弃来制造"干净状态"。
-- 不建立工作区、不做代码审查——这个 skill 只做收尾。
+- Do not wrap up if tests fail. Do not automatically commit / merge / push / open a PR / delete a branch / remove a worktree; get confirmation for each one separately.
+- Do not automatically stash, `git clean`, or silently discard to create a "clean state".
+- Do not set up a workspace or do code review; this skill only wraps up.
 
-## 何时用 / 何时不用
+## When to use / when not to use
 
-**适用**：
+**Use it when**:
 
-- 一段开发完成、测试通过，要决定分支怎么处理。
-- 整体验收通过后的收尾。
-- 在 worktree 里干完活，要合并回去并清理 worktree。
+- A stretch of development is done and tests pass, and you need to decide what to do with the branch.
+- Wrapping up after the overall acceptance check passes.
+- You finished work in a worktree and want to merge it back and clean up the worktree.
 
-**不适用**：
+**Do not use it when**:
 
-- 开发尚未完成或测试未通过 —— 先完成开发并修复测试，再进入收尾。
-- 要建立隔离工作区 —— 不是这个 skill 的事。
+- Development is not finished or tests fail: finish development and fix the tests first, then wrap up.
+- You need to set up an isolated workspace: that is not this skill's job.
 
-## 核心流程（状态预检 → 清理调试残留 → 最终验证 → 给选项 → 授权执行）
+## Core flow (state preflight → clean up debugging leftovers → final verification → offer options → execute with authorization)
 
-1. **先做只读状态预检**：
-   - 确认当前分支、是否位于 worktree，以及暂存 / 未暂存 / 未跟踪状态。
-   - 入场时已有任何非忽略改动 → 展示摘要并停止，让用户决定；**不得先清理、提交、stash 或丢弃**，避免把用户改动混进收尾。
-2. **清理本次开发的调试残留**：
-   - 检查本次 diff 中的临时日志、调试打印、断点、临时开关和只为排查问题加入的代码。
-   - 只清理能确认由本次开发引入的残留；用途不明确时先问用户，不顺手改无关代码。
-   - 清理必须发生在最终测试之前，避免拿"清理前的绿灯"当成最终结果。
-3. **跑最终测试并确认全绿**：按项目约定执行完整验收。**不绿不收尾**——回去修，修完重新跑最终测试。
-4. **复核 repo / worktree 状态**：
-   - 清理产生改动 → 展示 diff，取得明确提交授权后再提交；提交后重新确认状态干净。
-   - 清理若产生了代码改动，必须退回调用方重新做整体验收，不能沿用清理前的 review 结论。
-   - 与主干的关系（领先 / 落后多少 commit）。
-5. **给出收尾选项**：
-   - **合并到主干**：merge 回主分支。
-   - **本地保留**：留在分支，暂不合并。
-   - **创建 PR**：推送并开 PR，PR 正文用 Skill 工具调用 `pr` 撰写。
-   - **丢弃**：放弃这段工作（删分支 / worktree）——**不可逆**。
-6. **取得对应授权后执行**：
-   - `git commit`、合并、push、创建 PR、删分支都必须在执行前取得用户对具体动作的明确确认。
-   - 即使代码已经合并或决定丢弃，`git worktree remove` 也要单独确认；不要把"选择合并"理解为同时授权移除工作树。
-   - 本地保留只报告分支 / worktree 路径和状态，不做隐含提交或清理。
+1. **Run a read-only state preflight first**:
+   - Confirm the current branch, whether you are in a worktree, and staged / unstaged / untracked state.
+   - If there are any non-ignored changes on entry, show a summary and stop, and let the user decide. **Do not clean up, commit, stash, or discard first**, so user changes do not get mixed into the wrap-up.
+2. **Clean up debugging leftovers from this development**:
+   - Check this diff for temporary logs, debug prints, breakpoints, temporary flags, and code added only to investigate a problem.
+   - Clean up only leftovers you can confirm this development introduced. When the purpose is unclear, ask the user first; do not touch unrelated code along the way.
+   - Cleanup must happen before the final tests, so a "green before cleanup" result is not taken as the final result.
+3. **Run the final tests and confirm all green**: run the full acceptance check the project defines. **Not green, no wrap-up**: go back and fix, then rerun the final tests.
+4. **Recheck repo / worktree state**:
+   - If cleanup produced changes, show the diff and get explicit commit authorization before committing; after committing, confirm the state is clean again.
+   - If cleanup produced code changes, control must go back to the caller to redo the overall acceptance check; the review conclusion from before cleanup cannot be reused.
+   - Relationship to the main branch (how many commits ahead / behind).
+5. **Offer the wrap-up options**:
+   - **Merge to main**: merge back into the main branch.
+   - **Keep locally**: leave it on the branch, do not merge yet.
+   - **Create PR**: push and open a PR; write the PR body by invoking `pr` with the Skill tool.
+   - **Discard**: abandon this work (delete the branch / worktree). **Irreversible**.
+6. **Execute after getting the matching authorization**:
+   - `git commit`, merge, push, creating a PR, and deleting a branch all need the user's explicit confirmation of the specific action before running.
+   - Even if the code is merged or discarding is decided, `git worktree remove` needs separate confirmation; do not read "chose merge" as also authorizing removal of the worktree.
+   - For keep locally, only report the branch / worktree path and state; do not make implicit commits or cleanups.
 
-## 安全闸门
+## Safety gates
 
-- **⚠️ 状态变更必须用户明确确认，不自动做**：提交、合并、push、创建 PR、删分支、丢弃、移除 worktree——遵循当前仓库 `CLAUDE.md` / `AGENTS.md` 与平台审批策略。
-- **测试没过不进收尾**：先回去修绿。
-- **测试必须晚于调试清理**：任何清理或修复都会使之前的测试结果失效，必须重跑。
-- **整体验收也会失效**：整体验收通过后若又清理出代码改动，必须重新审查。
-- **丢弃不可逆**：删分支前**二次确认**；移除 worktree 前也要明确确认。
-- **先检测再动手**：状态没看清（在错分支、漏了未提交改动）就操作，容易误伤。
-- **禁止隐式兜底**：不使用自动 stash、自动提交、`git clean` 或静默丢弃来制造"干净状态"。
+- **⚠️ State changes need explicit user confirmation, never automatic**: commit, merge, push, create PR, delete branch, discard, remove worktree. Follow the current repo's `CLAUDE.md` / `AGENTS.md` and the platform's approval policy.
+- **No wrap-up if tests fail**: go back and get them green first.
+- **Tests must come after debug cleanup**: any cleanup or fix invalidates earlier test results, so rerun them.
+- **The overall acceptance check also goes stale**: if cleanup produces code changes after the overall acceptance check passed, review again.
+- **Discarding is irreversible**: **confirm twice** before deleting a branch; also get explicit confirmation before removing a worktree.
+- **Detect before acting**: acting before the state is clear (wrong branch, missed uncommitted changes) can cause damage.
+- **No implicit fallbacks**: do not use automatic stash, automatic commits, `git clean`, or silent discards to create a "clean state".
 
-> 检验：将要执行的提交、合并、push、开 PR、删除或移除 worktree，是否都取得了对应动作的明确授权？缺一项就停在该项之前。
+> Check: does every commit, merge, push, PR, deletion, or worktree removal you are about to run have explicit authorization for that action? If one is missing, stop before it.
 
-## 常见错误
+## Common mistakes
 
-- 测试没过就收尾 / 合并。
-- 先跑测试，之后才删调试打印，却不重跑测试。
-- 入场已有脏改动仍开始清理，把用户改动混进收尾。
-- 整体验收后又改了代码，却直接沿用旧 review 结论去合并。
-- 发现未提交改动就自动 commit / stash，让流程继续。
-- 自动合并 / 自动 push / 自动开 PR —— 没让用户决定（危险操作）。
-- 合并获批后顺手移除 worktree —— 用户只确认了合并，没有确认移除。
-- 丢弃（删分支）不二次确认就执行。
-- 不检测状态就操作 —— 在错的分支 / 漏掉未提交改动。
-- 在这里建立工作区 —— 越界，这个 skill 只做收尾。
+- Wrapping up / merging when tests fail.
+- Running tests first, deleting debug prints afterwards, and not rerunning tests.
+- Starting cleanup when there were dirty changes on entry, mixing user changes into the wrap-up.
+- Changing code after the overall acceptance check and then merging on the old review conclusion.
+- Finding uncommitted changes and automatically committing / stashing to keep the flow going.
+- Automatically merging / pushing / opening a PR without letting the user decide (dangerous operation).
+- Removing the worktree after the merge is approved: the user only confirmed the merge, not the removal.
+- Discarding (deleting the branch) without a second confirmation.
+- Acting without checking state: on the wrong branch / missing uncommitted changes.
+- Setting up a workspace here: out of scope, this skill only wraps up.

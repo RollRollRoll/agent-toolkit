@@ -1,14 +1,14 @@
-# 合并规则
+# Merge rules
 
-overlay 按声明顺序应用，后命中的 overlay 优先：
+Overlays are applied in declaration order; a later matching overlay wins:
 
-- 对象递归合并。
-- 标量直接替换。
-- 数组默认整体替换。
-- `{$append: [...]}` 在原数组末尾追加。
-- `{$prepend: [...]}` 在原数组开头追加。
-- `{$delete: true}` 删除所在字段。
-- `null` 是普通值，不表示删除。
+- Objects merge recursively.
+- Scalars are replaced.
+- Arrays are replaced as a whole by default.
+- `{$append: [...]}` appends to the end of the existing array.
+- `{$prepend: [...]}` adds to the start of the existing array.
+- `{$delete: true}` deletes the field it is on.
+- `null` is an ordinary value; it does not mean delete.
 
-数组操作对象只能包含一个操作符，且目标必须是数组或不存在。对象与数组之间的隐式类型替换会报 `MERGE_TYPE_CONFLICT`，避免意外破坏配置结构。
+An array operation object may contain only one operator, and its target must be an array or not exist. An implicit type replacement between object and array raises `MERGE_TYPE_CONFLICT`, to avoid accidentally breaking the config structure.
 

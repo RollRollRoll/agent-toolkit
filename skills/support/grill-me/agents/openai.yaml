@@ -1,5 +1,5 @@
 interface:
   display_name: "Grill Me"
-  short_description: "通过连续追问检验并完善计划或设计。"
+  short_description: "Sharpen a plan through interview"
 policy:
   allow_implicit_invocation: false

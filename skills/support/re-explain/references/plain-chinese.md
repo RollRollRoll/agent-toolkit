@@ -1,67 +1,68 @@
-# 简明中文改写规则
+# Plain Chinese rewriting rules
 
-> 一套可逐条检查的中文表达规则，并附常见问题对照表。
+> A set of Chinese writing rules you can check one by one, plus a table of common problems.
 >
-> **适用范围**：重讲时的表达层。它约束"怎么说"，不改变"说什么"——事实、条件和限制一个都不能丢。
+> **Scope**: the wording layer of a re-explanation. It governs "how to say it", not "what to say": no fact, condition, or limit may be dropped.
+>
+> The example sentences stay in Chinese because the output is Chinese. "病" (bad) marks the sentence to avoid; "改" (good) marks the rewrite.
 
-## 十条规则
+## Ten rules
 
-### 1. 一句一个意思，30 字以内
+### 1. One idea per sentence, 30 characters max
 
-一个句子只承载一个判断。出现"并且""同时""此外""在……的情况下"时，先看能不能断句。
+Each sentence carries one judgment. When you see 并且 (and), 同时 (at the same time), 此外 (in addition), or 在……的情况下 (in the case of...), first check whether you can split the sentence.
 
-### 2. 主动语态，动词打头
+### 2. Active voice, start with the verb
 
-中文的被动句多数是从英文带过来的。写"系统会拒绝这个请求"，不写"该请求会被系统所拒绝"。
+Most Chinese passive sentences are carried over from English. Write "系统会拒绝这个请求" (the system rejects this request), not "该请求会被系统所拒绝" (this request will be rejected by the system).
 
-### 3. 一个概念只用一个词
+### 3. One word per concept
 
-全程锁死一种说法。同一段里"任务 / 作业 / job / task"混用，读者会以为是四个东西。
+Fix one term and use it throughout. If one paragraph mixes "任务 / 作业 / job / task", the reader will think they are four different things.
 
-### 4. 拆开名词堆
+### 4. Break up noun stacks
 
-三个以上名词连排就要拆。把定语变成动词句：
+Three or more nouns in a row must be broken up. Turn the modifiers into a verb clause:
 
-- 病：用户配置同步失败重试机制
-- 改：同步用户配置失败后，会自动重试
+- 病: 用户配置同步失败重试机制
+- 改: 同步用户配置失败后，会自动重试
 
-### 5. 删掉模糊限定
+### 5. Delete vague hedges
 
-"其实""基本上""某种程度上""可以认为""相对来说"——不承载信息，全删。真有不确定性，
-就把不确定的**条件**写出来：不是"基本上会成功"，而是"网络正常时会成功"。
+其实 (actually), 基本上 (basically), 某种程度上 (to some extent), 可以认为 (one could say), 相对来说 (relatively): they carry no information, so delete them all. If there really is uncertainty,
+write out the uncertain **condition**: not "基本上会成功" (it will basically succeed), but "网络正常时会成功" (it succeeds when the network is working).
 
-### 6. 少用"的"字套娃
+### 6. Avoid nested 的 chains
 
-一个句子里"的"超过三个，多半是定语套娃，拆成两句。
+If a sentence has more than three 的 (the possessive/attributive particle), it is probably a nested modifier chain. Split it into two sentences.
 
-- 病：这是一个用于处理用户上传的文件的解析失败的兜底的流程
-- 改：文件解析失败时走这个兜底流程。文件来自用户上传。
+- 病: 这是一个用于处理用户上传的文件的解析失败的兜底的流程
+- 改: 文件解析失败时走这个兜底流程。文件来自用户上传。
 
-### 7. 先解释，再比喻
+### 7. Explain first, then use an analogy
 
-比喻只能作为补充。先给准确解释，再说"打个比方"。
+An analogy can only be a supplement. Give the accurate explanation first, then say "打个比方" (to use an analogy).
 
-### 8. 具体优先于抽象
+### 8. Concrete over abstract
 
-能给数字就不给形容词，能给例子就不给定义。"很慢"改成"每次要 3 秒"；"结构复杂"改成
-"一次请求要经过 5 个服务"。
+Give a number instead of an adjective when you can, and an example instead of a definition. Change "很慢" (very slow) to "每次要 3 秒" (3 seconds each time); change "结构复杂" (complex structure) to
+"一次请求要经过 5 个服务" (one request goes through 5 services).
 
-### 9. 外来词首次出现给中文解释
+### 9. Explain foreign terms in Chinese the first time
 
-英文缩写、外来术语第一次出现时，用一个短句说明它是什么。项目里通用的除外（如 API、CI）。
+The first time an English abbreviation or foreign term appears, explain what it is in one short sentence. Terms common throughout the project are exempt (such as API, CI).
 
-### 10. 把结论放在句子前面
+### 10. Put the conclusion at the front of the sentence
 
-中文习惯把结论放句末，重讲时反过来。写"这条会失败，因为字段是空的"，不写"因为字段是
-空的，所以这条会失败"。
+Chinese habitually puts the conclusion at the end of the sentence; in a re-explanation, reverse that. Write "这条会失败，因为字段是空的" (this will fail, because the field is empty), not "因为字段是空的，所以这条会失败" (because the field is empty, this will fail).
 
-## 病句对照表
+## Bad/good sentence table
 
-| 病 | 改 | 违反 |
+| 病 (bad) | 改 (good) | Rule broken |
 |---|---|---|
 | 该配置项在被同步之前会先被校验器所校验 | 同步前先校验这个配置项 | 2 |
 | 其实基本上这个方案某种程度上是可行的 | 这个方案可行。前提是数据量不超过十万条 | 5 |
-| 这是一个负责任务调度的任务分发作业管理组件 | 这个组件负责分发任务 | 3、4 |
+| 这是一个负责任务调度的任务分发作业管理组件 | 这个组件负责分发任务 | 3, 4 |
 | 你可以把它理解成一个水管 | 它按顺序把消息传给下一个环节。打个比方，像一根水管 | 7 |
 | 性能会有比较明显的下降 | 每次请求会多花 200 毫秒 | 8 |
 | 由于缓存未命中且下游超时，因此这个请求最终失败了 | 这个请求失败了。原因是缓存没命中，下游又超时 | 10 |

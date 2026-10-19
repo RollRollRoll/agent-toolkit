@@ -1,250 +1,250 @@
-# 大项目并行调研策略
+# Parallel investigation strategy for large projects
 
-> 说明何时启用并行、如何切分任务、怎样给子 agent 提供上下文，以及如何聚合结果。
-
----
-
-## 何时启用并行
-
-满足以下**任一**条件，就应当切换到"先概览 → 再并行深入"的模式：
-
-- 顶层模块 / 服务数量 > 10
-- 源文件数量 > 500
-- 单仓多包（monorepo），且各包之间相对独立
-- 一次性写完报告会超过单次输出能力，或会丢失全局视角
-- 用户明确表达"项目很大，分阶段来"
-
-不满足这些条件时使用单 agent 顺序调研，中小项目通常会更连贯、更快。
+> Covers when to enable parallelism, how to split tasks, how to give subagents context, and how to aggregate results.
 
 ---
 
-## 分阶段输出节奏
+## When to enable parallelism
 
-> **仅适用于标准调研 / 深度报告档的大项目。** 若用户对大项目只要"快速概览"，直接出一页纸概览 + 目录地图 + 一条核心流程即可，不要进入下面的分阶段节奏。
+If **any** of the following holds, switch to the "overview first → then go deep in parallel" mode:
 
-对标准 / 深度档的大项目，无论是否启用并行，都按下面的节奏分阶段对用户输出，不要憋着一次性出完：
+- More than 10 top-level modules / services
+- More than 500 source files
+- A monorepo whose packages are relatively independent
+- Writing the report in one go would exceed a single output, or would lose the big picture
+- The user explicitly says "the project is large, do it in phases"
+
+When none of these holds, use a single agent investigating sequentially; for small and medium projects that is usually more coherent and faster.
+
+---
+
+## Phased output pacing
+
+> **Applies only to large projects in the standard investigation / deep report tiers.** If the user wants only a "quick overview" of a large project, produce the quick overview (one-sentence definition + directory map + one core flow) directly; do not enter the phased pacing below.
+
+For large projects in the standard / deep tiers, whether or not parallelism is enabled, output to the user in phases at the pace below; do not hold everything back for one big output:
 
 ```text
-阶段 1：先给"全局概览 + 目录地图"
-        ↓ 用户可在此调整方向 / 指定优先模块
-阶段 2：按模块逐个深入（可并行）
-        ↓ 每完成几个模块就向用户同步一次
-阶段 3：聚合 + 端到端流程串联
+Phase 1: give the "global overview + directory map" first
+        ↓ the user can adjust direction / name priority modules here
+Phase 2: go deep module by module (can be parallel)
+        ↓ sync with the user every few modules
+Phase 3: aggregate + connect the end-to-end flows
         ↓
-阶段 4：未搞清楚 / 假设 / 技术债 收尾
+Phase 4: wrap up with unclear parts / assumptions / technical debt
 ```
 
-**关键**：阶段 1 输出后**主动停一下**，告诉用户你的下一步计划，给用户机会调整顺序、指定关注点、或排除某些模块。
+**Key point**: after phase 1 output, **pause on your own initiative** and tell the user your next plan, giving them a chance to reorder, name focus areas, or exclude some modules.
 
-**最终输出目的地**：阶段 2~4 向用户同步的是**进度 + 概要**（全局概览、目录地图、"模块 / 章节 X 已就绪"），逐份成稿**不必逐一贴到终端**。等聚合出完整报告后，
-再按 SKILL「第 6 步：询问输出目的地」让用户选终端 / 文件 / 两者——选"文件"则完整全文写盘、终端只留路径 + 一页纸概览。这样既保留分阶段的进度感，又不在选"文件"时把全文刷满终端。
-
----
-
-## 并行切分原则
-
-### 1. 按"高内聚边界"切，不要按"行数均匀"切
-
-好的切分单位：
-
-- 一个独立服务 / 子应用
-- 一个独立子目录 + 显著独立的职责（如 `auth/`、`billing/`、`worker/`）
-- monorepo 里的一个包（`packages/foo`）
-- 一条独立的"流水线 / pipeline"（数据采集 / 训练 / 推理 / 评估）
-
-不好的切分：
-
-- 把 `src/` 平均分成 5 份按字母派给 5 个 agent —— 跨切片的耦合会让每个 agent 各自盲人摸象。
-- 把 "controllers"、"services"、"repositories" 各派一个 agent —— 同一业务域被切碎了，没人能完整看到一条流程。
-
-### 2. 流程类调研让一个 agent 全程跟下来
-
-端到端流程**绝对不要**切分给多个 agent。让单个 agent 把完整链路追完，哪怕跨多个目录。否则没人有完整心智模型。
-
-### 3. "公共底座"调研可以独立成 agent
-
-底层模块（如 `common/` `utils/` `infra/` `core/`）值得让一个 agent 专门梳理，因为它们会被其他模块大量引用，提前梳清楚能让其他模块的报告更准确。
+**Final output destination**: what you sync to the user during phases 2-4 is **progress + summaries** (global overview, directory map, "module / chapter X is ready"); **do not paste each draft to the terminal**. Once the complete report is aggregated,
+let the user pick terminal / file / both per SKILL.md "Step 6: Ask for the output destination". If they pick "file", write the full text to disk and leave only the path + one-page overview in the terminal. This keeps the sense of progress from phasing without flooding the terminal with the full text when "file" is chosen.
 
 ---
 
-## 派活模板（给子 agent 的 prompt）
+## Splitting principles
 
-如果当前环境提供"子 agent / 多 agent"工具，
-就用它把每个模块作为独立的只读调研任务派出去（Claude Code 使用 `Agent` + `subagent_type=Explore`；
-Codex 使用只读 `explorer` 或等价 agent thread；其他环境用各自等价机制）。**若当前环境没有这类工具，跳过本节，改为单 agent 顺序调研，
-并在报告里说明"未启用并行"。** 派活的 prompt 模板如下：
+### 1. Split along "high-cohesion boundaries", not by "even line counts"
+
+Good split units:
+
+- An independent service / sub-application
+- An independent subdirectory with a clearly separate responsibility (e.g. `auth/`, `billing/`, `worker/`)
+- One package in a monorepo (`packages/foo`)
+- An independent "pipeline" (data collection / training / inference / evaluation)
+
+Bad splits:
+
+- Dividing `src/` evenly into 5 parts alphabetically for 5 agents: coupling across slices leaves each agent seeing only a fragment.
+- One agent each for "controllers", "services", and "repositories": the same business domain gets chopped up, and nobody sees a complete flow.
+
+### 2. Have one agent follow a flow investigation all the way through
+
+**Never** split an end-to-end flow across several agents. Have a single agent trace the complete chain, even across many directories. Otherwise nobody has the complete mental model.
+
+### 3. "Shared foundation" investigation can be its own agent
+
+Low-level modules (e.g. `common/` `utils/` `infra/` `core/`) are worth a dedicated agent, because other modules reference them heavily; mapping them first makes the other modules' reports more accurate.
+
+---
+
+## Task brief template (prompt for subagents)
+
+If the current environment provides a "subagent / multi-agent" tool,
+use it to send each module out as a separate read-only investigation task (Claude Code uses `Agent` + `subagent_type=Explore`;
+Codex uses a read-only `explorer` or equivalent agent thread; other environments use their own equivalent). **If the current environment has no such tool, skip this section, investigate sequentially with a single agent,
+and state "未启用并行" (parallelism not enabled) in the report.** The brief template:
 
 ```text
-你是一个项目调研助手。请调研以下模块，并以中文返回**结构化的简报**，不要自己写完整报告（主 agent 会聚合）。
+You are a project investigation assistant. Investigate the module below and return a **structured brief in Chinese**. Do not write the full report yourself (the main agent will aggregate).
 
-【调研对象】
-- 项目根目录：{{absolute path}}
-- 本次调研模块路径：{{module path}}
-- 该模块在项目中的角色（已知信息）：{{e.g. "用户鉴权服务"}}
+[Target]
+- Project root: {{absolute path}}
+- Module path for this task: {{module path}}
+- The module's role in the project (known so far): {{e.g. "user authentication service"}}
 
-【你需要回答】
-1. 模块职责（一句话）
-2. 入口 / 对外暴露的接口（含文件路径）
-3. 依赖：
-   - 上游：谁会调用这个模块？
-   - 下游：这个模块会调用哪些其他模块或外部系统？
-4. 内部主要子组件 / 关键文件（不超过 8 个，每个一句话职责）
-5. 核心数据结构 / 关键算法（如果有，给路径和 10~20 行内的关键片段）
-6. 配置项（只写环境变量名、用途、是否必填和加载位置，不写真实值或敏感默认值）
-7. 测试现状（测试在哪、跑法）
-8. 未搞清楚 / 异常的地方（**必填**——空着说明没认真调研）
+[Answer these]
+1. Module responsibility (one sentence)
+2. Entry points / externally exposed interfaces (with file paths)
+3. Dependencies:
+   - Upstream: who calls this module?
+   - Downstream: which other modules or external systems does this module call?
+4. Main internal subcomponents / key files (no more than 8, one-sentence responsibility each)
+5. Core data structures / key algorithms (if any, with paths and key snippets of up to 10-20 lines)
+6. Config items (only environment variable name, purpose, whether required, and where loaded; no real values or sensitive defaults)
+7. Test status (where the tests are, how to run them)
+8. Unclear / anomalous points (**required**: leaving it empty means the investigation was not careful)
 
-【约束】
-- 只读，不要尝试运行项目
-- 不打开真实 `.env`、`secrets.*`、`credentials.*`、包管理器认证文件、私钥或云凭据文件，不运行 `env` / `printenv`；只检查示例配置、配置代码、文件名与跟踪状态
-- 不在简报、代码片段或中间消息中输出 token、密码、密钥及其他凭据值
-- 结论必须给出文件路径，不要凭名字猜
-- 不确定的地方明确写"未确认"，不要猜
-- 简报总长度控制在 ~600 字，关键路径优先
+[Constraints]
+- Read-only; do not try to run the project
+- Do not open real `.env`, `secrets.*`, `credentials.*`, package-manager auth files, private keys, or cloud credential files, and do not run `env` / `printenv`; check only example config, config code, file names, and tracking status
+- Do not output tokens, passwords, keys, or other credential values in the brief, code snippets, or intermediate messages
+- Conclusions must give file paths; do not guess from names
+- Where unsure, write "未确认" (not confirmed) explicitly; do not guess
+- Keep the brief to about 600 Chinese characters, key paths first
 ```
 
-派多个并行子 agent 时，**在同一条消息里发出所有 Agent 调用**，否则不会真并行。
+When dispatching several parallel subagents, **send all Agent calls in the same message**; otherwise they do not actually run in parallel.
 
 ---
 
-## 聚合时要做的事
+## What to do when aggregating
 
-子 agent 返回后，**不要**机械地把它们的简报拼起来。要：
+After the subagents return, **do not** mechanically stitch their briefs together. Instead:
 
-1. **统一术语**：不同 agent 可能用了不同的词（service / module / package），统一到报告里的一套词。
-2. **消除冲突**：A agent 说"鉴权在 X"，B agent 说"鉴权在 Y"——必须自己再去看一眼，不要把矛盾留给读者。
-3. **重新组织顺序**：子 agent 的调研顺序 ≠ 报告章节顺序。
-   按所选档模板（大项目通常是 [template-standard.md](template-standard.md) 或 [template-deep.md](template-deep.md)）的章节重新组织。
-4. **补端到端流程**：聚合阶段由主 agent 自己挑 1~2 条流程从头追完——这是最不能外包的部分。
-5. **合并"未搞清楚"**：把每个子 agent 的未确认列在报告的"未搞清楚"章节，并标注是哪个模块的。
-
----
-
-## 变体：按扩展条目并行（服务 Claude Code / Codex 插件与扩展项目）
-
-> 上面的并行按"业务模块"切；当项目是 Claude Code / Codex 插件、含大量 skill / command / hook / subagent / custom agent 时，
-> 改按"扩展条目"切。对应 [project-type-checklists.md](project-type-checklists.md) 的 g 类。
-
-### 何时启用
-- 深度报告档 + 命中 g 类（Claude Code / Codex 插件或扩展）+ 条目数较多（一次性逐条解读会撑满上下文）。
-
-### 切分方式
-- **按单个条目切**：一个 skill / command / hook / subagent 各派一个子 agent。
-- **分批**：一批不超过 5~6 个；在同一条消息里发出该批全部 Agent 调用才会真并行。
-
-### 给子 agent 的产出要求
-- 单条目**画像简报**（按 g 类「逐条画像模板」：是什么+触发条件 / 输入输出+副作用 / 内部关键逻辑带 `path:line` / 依赖与协作）。
-- 中文、结构化、~400 字，必填"未搞清楚 / 异常"一项。
-
-### 主 agent 职责
-- 聚合所有画像，统一术语、消除冲突。
-- **自己画整体装配图**——装配图需要全局视角，不外包给子 agent。
-
-### 退化
-- 当前环境无子 agent 工具时，退化为顺序逐条解读，并在报告注明"未启用并行"。
+1. **Unify terms**: different agents may use different words (service / module / package); unify them to one set of terms in the report.
+2. **Resolve conflicts**: agent A says "auth is in X", agent B says "auth is in Y". Check it yourself; do not leave the contradiction to the reader.
+3. **Reorder**: the subagents' investigation order ≠ the report's chapter order.
+   Reorganize by the chapters of the chosen tier's template (for large projects usually [template-standard.md](template-standard.md) or [template-deep.md](template-deep.md)).
+4. **Add the end-to-end flows**: during aggregation, the main agent picks 1-2 flows and traces them from start to finish itself. This is the part that can least be outsourced.
+5. **Merge the "unclear" lists**: put each subagent's unconfirmed items into the report's "未搞清楚" (unclear) chapter, marked with the module they came from.
 
 ---
 
-## 变体：按报告章节并行起草（深度档提速）
+## Variant: parallel by extension item (for Claude Code / Codex plugin and extension projects)
 
-> 前两种并行解决"采集"的并行（按模块 / 按扩展条目）；本变体解决**深度档"撰写"的并行**——把描述性章节拆给子 agent 并行起草，气脉章节主 agent 亲自写，并叠加分阶段流式输出。
-> 目标是**同时**压低墙钟和给出进度感。
+> The parallelism above splits by "business module". When the project is a Claude Code / Codex plugin with many skills / commands / hooks / subagents / custom agents,
+> split by "extension item" instead. Corresponds to type g in [project-type-checklists.md](project-type-checklists.md).
 
-### 何时启用
+### When to enable
+- Deep report tier + matches type g (Claude Code / Codex plugin or extension) + many items (interpreting them all at once would fill the context).
 
-同时满足才启用：
-- 输出深度 = **深度档**（标准 / 快速档不适用——报告短，并行不划算）；
-- 当前环境有子 agent 工具；
-- 项目**够大**（沿用本文开头「何时启用并行」的阈值：顶层模块 >10 / 源文件 >500 / 一次写完会超过单次输出能力）。
+### How to split
+- **One item per split**: one subagent for each skill / command / hook / subagent.
+- **In batches**: no more than 5-6 per batch; send all Agent calls of the batch in the same message for them to actually run in parallel.
 
-不满足就退化为主 agent 串行写（见末尾「退化」）。
+### Output required from subagents
+- A **profile brief** per item (following the type g "per-item profile template": what it is + trigger condition / input, output + side effects / internal key logic with `path:line` / dependencies and collaboration).
+- In Chinese, structured, about 400 Chinese characters, with a required "unclear / anomalous" item.
 
-### 章节分工
+### Main agent's responsibilities
+- Aggregate all profiles, unify terms, resolve conflicts.
+- **Draw the overall assembly diagram yourself**: it needs the global view, so do not outsource it to subagents.
 
-深度档「一页纸概览 + 10 章」按"是否需要全局视角"分两类：
+### Fallback
+- When the current environment has no subagent tool, fall back to interpreting items one by one sequentially, and note "未启用并行" (parallelism not enabled) in the report.
 
-**🔒 主 agent 亲自写**（控气脉，拆了必丢信息）：
-- 一页纸概览（含 ASCII 架构图）—— 需全局视角
-- 第 5 章端到端代表性流程 —— 由主 agent 完整追踪，不拆给多个 agent
-- 第 9 章 综合评价 / 亮点 —— 基于其他章节的事实，必须最后写
-- 第 10 章 未搞清楚 —— 汇总各子 agent 上报的盲区
+---
 
-**🔓 子 agent 并行起草**（描述性、对应局部证据）：
-- 第 1 章定位功能、第 2 章整体架构、第 3 章技术栈、第 4 章代码结构、第 6 章配置运行、第 7 章工程质量、第 8 章专项画像 / 场景表
+## Variant: parallel drafting by report chapter (deep-tier speedup)
 
-> **第 8 章的特例**：当第 8 章命中 g 类且扩展条目较多（会触发上一节「按扩展条目并行」）时，第 8 章改由主 agent 直接走那条路径（派画像子 agent + 自己画装配图），
-> **不要再套一层 chapter-drafter**，避免两个并行机制嵌套。无论哪种方式，**g 类装配图始终主 agent 自己画**。
+> The two kinds of parallelism above parallelize "collection" (by module / by extension item). This variant parallelizes **"writing" in the deep tier**: descriptive chapters are handed to subagents to draft in parallel, the chapters that hold the report together are written by the main agent itself, and phased streaming output is layered on top.
+> The goal is to cut wall-clock time **and** give a sense of progress **at the same time**.
 
-### 编排时间线
+### When to enable
+
+Enable only when all of these hold:
+- Output depth = **deep tier** (not the standard / quick tiers: their reports are short, so parallelism does not pay off);
+- The current environment has a subagent tool;
+- The project is **large enough** (use the thresholds from "When to enable parallelism" at the start of this file: more than 10 top-level modules / more than 500 source files / writing it in one go would exceed a single output).
+
+Otherwise fall back to the main agent writing serially (see "Fallback" at the end).
+
+### Chapter division
+
+The deep tier's "one-page overview + 10 chapters" fall into two groups by "whether a global view is needed":
+
+**🔒 Written by the main agent itself** (they hold the report together; splitting them loses information):
+- One-page overview (including the ASCII architecture diagram): needs the global view
+- Chapter 5, representative end-to-end flows: traced fully by the main agent, not split across agents
+- Chapter 9, overall assessment / highlights: based on facts from the other chapters, so it must be written last
+- Chapter 10, unclear parts: collects the blind spots reported by each subagent
+
+**🔓 Drafted by subagents in parallel** (descriptive, based on local evidence):
+- Chapter 1 positioning and features, chapter 2 overall architecture, chapter 3 tech stack, chapter 4 code structure, chapter 6 configuration and running, chapter 7 engineering quality, chapter 8 type profiles / scenario table
+
+> **Exception for chapter 8**: when chapter 8 matches type g and there are many extension items (which triggers the previous section, "Variant: parallel by extension item"), the main agent handles chapter 8 directly through that path (dispatch profile subagents + draw the assembly diagram itself);
+> **do not wrap another chapter-drafter around it**, to avoid nesting two parallel mechanisms. Either way, **the main agent always draws the type g assembly diagram itself**.
+
+### Orchestration timeline
 
 ```text
-① 采集证据（大项目沿用「按模块并行采集」；中等项目主 agent 自己采）
+① Collect evidence (large projects reuse "parallel collection by module"; medium projects: the main agent collects itself)
         ↓
-② 主 agent 立刻输出「一页纸概览初版 + 目录地图」→ 主动停一下
+② The main agent immediately outputs "first version of the one-page overview + directory map" → pauses on its own initiative
         ↓
-③ 并行（提速核心）：
-   ├─ 主 agent：亲自追第 5 章端到端流程
-   └─ 子 agents：并行起草 🔓 那 7 章
+③ In parallel (the core of the speedup):
+   ├─ Main agent: traces the chapter 5 end-to-end flows itself
+   └─ Subagents: draft the 7 🔓 chapters in parallel
         ↓
-④ 章节陆续返回 → 主 agent 逐章聚合、统一术语、消冲突、跨章核对
-   每完成一批 → 推送用户
+④ Chapters come back one after another → the main agent aggregates chapter by chapter, unifies terms, resolves conflicts, cross-checks chapters
+   After each batch completes → push to the user
         ↓
-⑤ 主 agent 收尾：写第 9 章、第 10 章，校正概览的架构图
+⑤ The main agent wraps up: writes chapters 9 and 10, corrects the overview's architecture diagram
         ↓
-⑥ 自检 → 问输出目的地
+⑥ Self-check → ask for the output destination
 ```
 
-**提速**来自 7 章并行 + 主 agent 追端到端与子 agent 起草重叠；**进度感**来自概览先出 + 边就绪边推。drafter 派发沿用"一批不超过 5~6 个、
-同一条消息内发出才真并行"——7 章可分两批。
+The **speedup** comes from drafting 7 chapters in parallel + overlapping the main agent's end-to-end tracing with subagent drafting; the **sense of progress** comes from putting out the overview first + pushing chapters as they become ready. Drafter dispatch follows "no more than 5-6 per batch,
+sent in the same message to actually run in parallel", so the 7 chapters can go in two batches.
 
-### 给子 agent 的产出要求（chapter-drafter 派活模板）
+### Output required from subagents (chapter-drafter brief template)
 
-与前两种派活的关键区别：**它返回成稿章节，不是简报**。
+The key difference from the two earlier briefs: **it returns a finished chapter, not a brief**.
 
 ```text
-你是项目调研助手。请起草调研报告的【第 X 章：{{章标题}}】，
-直接返回该章的中文 Markdown 成稿（主 agent 会聚合，不要写别的章）。
+You are a project investigation assistant. Draft [Chapter X: {{chapter title}}] of the investigation report,
+and return the finished chapter directly as Chinese Markdown (the main agent will aggregate; do not write other chapters).
 
-【项目根目录】{{绝对路径}}
-【证据摘要（导航用，不是全部真相）】
-  - 一句话定义 / 技术栈速记
-  - 目录地图 + 顶层模块清单（带路径）
-  - 入口位置、依赖清单要点
-【本章骨架】{{从 template-deep.md 摘出的该章子标题结构}}
+[Project root] {{absolute path}}
+[Evidence summary (for navigation, not the whole truth)]
+  - One-sentence definition / tech stack notes
+  - Directory map + list of top-level modules (with paths)
+  - Entry point locations, key points of the dependency list
+[Chapter skeleton] {{the subheading structure of this chapter, taken from template-deep.md}}
 
-【产出要求】
-  - 按本章骨架的子标题逐项填，产出成稿（不是简报）
-  - 证据摘要不足处，回到源码核实并深化——不准只转写摘要
-  - 每个论断带 `path:line`；不凭名字 / README 猜
-  - 不打开真实 `.env` 或疑似凭据文件；配置只写变量名、用途、是否必填和加载位置，不输出真实值或敏感默认值
-  - 区分「不适用（原因）」与「未搞清楚（原因）」
-  - 使用中文；篇幅与所选深度档一致
-【必填】本章「未搞清楚」清单（汇给主 agent 第 10 章）
+[Output requirements]
+  - Fill the chapter skeleton's subheadings one by one and produce a finished chapter (not a brief)
+  - Where the evidence summary falls short, go back to the source to verify and go deeper; do not just rewrite the summary
+  - Every claim carries `path:line`; do not guess from names / the README
+  - Do not open real `.env` or suspected credential files; for config write only variable name, purpose, whether required, and where loaded; never output real values or sensitive defaults
+  - Keep "不适用（原因）" (not applicable, with reason) and "未搞清楚（原因）" (not figured out, with reason) apart
+  - Write in Chinese; length matches the chosen depth tier
+[Required] This chapter's "未搞清楚" (unclear) list (sent to the main agent for chapter 10)
 ```
 
-**一份共用证据摘要发给所有 drafter**（省得各自重新发现项目结构）；具体源码核实各 drafter 自做——硬约束要求每个论断带 `path:line`，不准只转写摘要。
+**Send one shared evidence summary to all drafters** (so each does not rediscover the project structure); each drafter does its own source verification. The hard constraint that every claim carries `path:line` means they cannot just rewrite the summary.
 
-### 主 agent 聚合职责
+### Main agent's aggregation responsibilities
 
-沿用本文「聚合时要做的事」5 条，并额外做：
-- **跨章一致性核对**：第 2 章架构的模块名 / 职责须与第 4 章代码结构、第 8 章专项一致；第 3 章技术栈不得与第 6 章配置打架。读每章时核对，冲突自己回源码定夺，不留给读者。
-- **合并各章「未搞清楚」** → 第 10 章；**端到端流程（第 5 章）主 agent 自己追**，不外包。
+Follow the 5 points in "What to do when aggregating" above, plus:
+- **Cross-chapter consistency check**: module names / responsibilities in chapter 2 (architecture) must match chapter 4 (code structure) and chapter 8 (type analysis); chapter 3 (tech stack) must not contradict chapter 6 (configuration). Check while reading each chapter; resolve conflicts by going back to the source yourself, do not leave them to the reader.
+- **Merge each chapter's "unclear" list** → chapter 10. **The main agent traces the end-to-end flows (chapter 5) itself**; do not outsource them.
 
-### 流式节奏
+### Streaming pace
 
-沿用本文「分阶段输出节奏」：概览 + 目录地图先出 → **主动停一下**给用户调整关注点 / 排除章节 → 之后每完成一批章节同步一次 → 最后聚合完整版 → 自检 → 问输出目的地。
+Follow "Phased output pacing" above: overview + directory map first → **pause on your own initiative** so the user can adjust focus / exclude chapters → sync after each batch of chapters → aggregate the complete version last → self-check → ask for the output destination.
 
-### 退化
+### Fallback
 
-- 无子 agent 工具 / 项目偏小 → 主 agent 串行写，但仍**保留流式**（概览先出 + 边写边推），报告注明"未启用章节并行"。
-- 某章 drafter 失败或质量明显不足 → 主 agent 自己补写该章。
+- No subagent tool / project on the small side → the main agent writes serially but still **keeps streaming** (overview first + push as you write), and the report notes "未启用章节并行" (chapter parallelism not enabled).
+- A chapter's drafter fails or the quality is clearly insufficient → the main agent writes that chapter itself.
 
 ---
 
-## 反例（不要这样做）
+## Anti-patterns (do not do this)
 
-- 把项目 `src/` 平均切成 5 份派给 5 个 agent —— 切到了高耦合点。
-- 派完所有子 agent 后立刻动手写报告 —— 没等子 agent 返回就自己脑补。
-- 把端到端流程切给两个 agent，一个追前半段一个追后半段 —— 接缝处必丢信息。
-- 子 agent 返回的简报直接复制粘贴到报告里 —— 风格不一、术语不统一、有冲突。
-- 一次性派 20 个 agent 调研 20 个模块 —— 上下文管理失控，建议一批不超过 5~6 个，分批派。
+- Splitting the project's `src/` evenly into 5 parts for 5 agents: the cuts land on high-coupling points.
+- Starting to write the report right after dispatching all subagents: filling in from imagination without waiting for them to return.
+- Splitting an end-to-end flow between two agents, one tracing the first half and one the second: information is lost at the seam.
+- Copying subagents' briefs straight into the report: inconsistent style, inconsistent terms, conflicts.
+- Dispatching 20 agents at once for 20 modules: context management gets out of control. Keep batches to no more than 5-6, dispatched in turns.

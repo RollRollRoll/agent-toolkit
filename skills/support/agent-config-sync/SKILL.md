@@ -1,85 +1,85 @@
 ---
 name: agent-config-sync
-description: 将现有配置提取为统一声明，并据此安全同步 Codex 和 Claude Code 的用户级配置。
+description: Extract existing configuration into a single declaration, then use it to safely sync user-level Codex and Claude Code configuration.
 ---
 
-# Agent Config Sync — 双平台配置同步
+# Agent Config Sync: two-platform config sync
 
-以 `agent-config.yaml` 作为唯一事实来源。使用 skill 附带的确定性 CLI 生成配置，不直接拼接 TOML 或 JSON 覆盖用户文件。
+Treat `agent-config.yaml` as the single source of truth. Generate configuration with the deterministic CLI that ships with this skill. Do not hand-assemble TOML or JSON to overwrite user files.
 
-## 定位 CLI
+## Locate the CLI
 
-优先运行已安装的 `aiconfig`。若命令不可用，运行当前 skill 目录中的：
+Prefer the installed `aiconfig`. If the command is not available, run this from the current skill directory:
 
 ```bash
 python3 scripts/aiconfig.py
 ```
 
-所有命令默认从当前目录向上查找 `agent-config.yaml`，也可传 `--config <path>`。
+Every command searches upward from the current directory for `agent-config.yaml` by default. You can also pass `--config <path>`.
 
-## 标准工作流
+## Standard workflow
 
-从已有配置抽取事实时：
+When extracting facts from existing configuration:
 
-1. 用户未明确交互偏好时，先询问是否启动本地前端页面，并等待用户选择；用户已明确要求使用或不使用前端时不要重复询问。
-2. 对用户明确提供的每个文件运行 `aiconfig import inspect --source <target>=<path>`，同一目标可重复传入。
-3. 读取生成的 `.agent-config/import-plan.yaml`，说明自动去重项、冲突、敏感字段和越界字段。
-4. 用户选择前端时运行 `aiconfig ui`，把页面作为主要审阅与决策入口；提供带会话令牌的本地地址，只有用户明确要求自动打开浏览器时才使用 `--open`。页面可用时不要同时通过对话逐项提问。
-5. 用户拒绝前端，或 UI 启动失败、页面不可访问、当前环境无法操作页面时，说明降级原因并改用问答：逐项展示冲突候选，让用户明确选择 `take`、`union`、
-   `set` 或 `exclude`。不要自行选择来源或合并不同数组。
-6. 将页面或问答中的决定写入计划后运行 `aiconfig import generate`，或由本地界面生成。未解决冲突时停止。
-7. 运行 `aiconfig validate` 和 `aiconfig plan`，确认生成声明的效果。
+1. If the user has not stated an interaction preference, first ask whether to start the local web UI and wait for their choice. If the user has already said to use or not use the UI, do not ask again.
+2. For each file the user explicitly provides, run `aiconfig import inspect --source <target>=<path>`. The same target can be passed more than once.
+3. Read the generated `.agent-config/import-plan.yaml` and explain the auto-deduplicated items, conflicts, sensitive fields, and out-of-scope fields.
+4. If the user chose the UI, run `aiconfig ui` and use the page as the main place for review and decisions. Give the local address with its session token. Use `--open` only when the user explicitly asks to open the browser automatically. While the page is available, do not also ask item-by-item questions in the conversation.
+5. If the user declines the UI, or the UI fails to start, the page is unreachable, or the current environment cannot operate the page, explain why you are falling back and switch to Q&A: show each conflict's candidates one at a time and have the user explicitly choose `take`, `union`,
+   `set`, or `exclude`. Do not pick a source yourself or merge different arrays.
+6. Write the decisions from the page or the Q&A into the plan, then run `aiconfig import generate`, or let the local UI generate it. Stop if any conflict is unresolved.
+7. Run `aiconfig validate` and `aiconfig plan` to confirm the effect of the generated declaration.
 
-`import inspect` 只归并同一目标的多份配置，不推导多机器 overlay。Codex 与 Claude Code 配置始终分别处理。
-详细计划格式和决策规则见 [导入现有配置](references/importing.md)。
+`import inspect` only merges multiple configs for the same target. It does not infer multi-machine overlays. Always handle Codex and Claude Code configuration separately.
+For the full plan format and decision rules, see [Importing existing configuration](references/importing.md).
 
-只读分析时：
+For read-only analysis:
 
-1. 运行 `aiconfig detect`。
-2. 运行 `aiconfig validate`，失败即停止。
-3. 运行 `aiconfig plan`。
-4. 说明命中的 overlay、应用顺序、目标路径、差异和警告。
+1. Run `aiconfig detect`.
+2. Run `aiconfig validate`. Stop if it fails.
+3. Run `aiconfig plan`.
+4. Explain the matched overlays, application order, target paths, diffs, and warnings.
 
-用户明确要求应用、更新或写入时：
+When the user explicitly asks to apply, update, or write:
 
-1. 依次运行 `detect`、`validate`、`plan`。
-2. 校验失败时停止，给出错误码和修复建议。
-3. 运行 `aiconfig apply [codex|claude]`。
-4. 运行 `aiconfig status [codex|claude]`。
-5. 报告变更文件和备份路径。
+1. Run `detect`, `validate`, and `plan` in that order.
+2. If validation fails, stop and give the error code and a suggested fix.
+3. Run `aiconfig apply [codex|claude]`.
+4. Run `aiconfig status [codex|claude]`.
+5. Report the changed files and backup paths.
 
-不要仅因用户要求"检查、比较、分析"而执行 `apply`。目标文件有上次应用后的本地修改时，不要自行增加 `--force`；解释冲突并等待用户明确授权。
+Do not run `apply` just because the user asked to "check, compare, or analyze". If a target file has local changes since the last apply, do not add `--force` on your own; explain the conflict and wait for the user's explicit authorization.
 
-## 常用任务
+## Common tasks
 
-- 初始化声明：`aiconfig init`
-- 归并现有配置：`aiconfig import inspect --source codex=<path> --source claude=<path>`
-- 根据确认计划生成声明：`aiconfig import generate`
-- 可视化审阅导入计划：`aiconfig ui [--open]`
-- 查看环境：`aiconfig detect` 或 `aiconfig detect --json`
-- 校验全部 / 单个目标：`aiconfig validate [codex|claude]`
-- 渲染到 `.agent-config/generated/`：`aiconfig render [codex|claude]`
-- 预览匹配和差异：`aiconfig plan [codex|claude]`
-- 应用全部 / 单个目标：`aiconfig apply [codex|claude]`
-- 检查同步状态：`aiconfig status [codex|claude]`
+- Initialize a declaration: `aiconfig init`
+- Merge existing configuration: `aiconfig import inspect --source codex=<path> --source claude=<path>`
+- Generate the declaration from a confirmed plan: `aiconfig import generate`
+- Review the import plan visually: `aiconfig ui [--open]`
+- Inspect the environment: `aiconfig detect` or `aiconfig detect --json`
+- Validate all targets or one target: `aiconfig validate [codex|claude]`
+- Render to `.agent-config/generated/`: `aiconfig render [codex|claude]`
+- Preview matches and diffs: `aiconfig plan [codex|claude]`
+- Apply all targets or one target: `aiconfig apply [codex|claude]`
+- Check sync status: `aiconfig status [codex|claude]`
 
-## 配置边界
+## Configuration boundaries
 
-- 分别保留 `targets.codex` 与 `targets.claude` 的原生语义，不发明跨工具权限映射。
-- 只管理 `~/.codex/config.toml` 与 `~/.claude/settings.json`。
-- 不读取、复制或写入 Token、OAuth 状态、凭据、会话、缓存、日志或 `~/.claude.json`。
-- 不修改项目级 `.codex/config.toml`、`.claude/settings.json`。
-- 不在校验失败后继续应用。
-- 不绕过备份、原子写入或本地修改检测。
-- 不静默覆盖导入计划或已有 `agent-config.yaml`。
-- 不把不同数组自动合并；只在用户明确选择 `union` 后执行稳定并集。
-- UI 只监听回环地址，不上传配置；联网说明只读取公开 Schema，不发送配置路径或值。
+- Keep the native semantics of `targets.codex` and `targets.claude` separate. Do not invent cross-tool permission mappings.
+- Manage only `~/.codex/config.toml` and `~/.claude/settings.json`.
+- Do not read, copy, or write tokens, OAuth state, credentials, sessions, caches, logs, or `~/.claude.json`.
+- Do not modify project-level `.codex/config.toml` or `.claude/settings.json`.
+- Do not continue to apply after validation fails.
+- Do not bypass backups, atomic writes, or local-change detection.
+- Do not silently overwrite the import plan or an existing `agent-config.yaml`.
+- Do not merge different arrays automatically; compute a stable union only after the user explicitly chooses `union`.
+- The UI listens only on the loopback address and does not upload configuration. Online field descriptions only read public schemas and never send configuration paths or values.
 
-## 按需读取参考
+## Read references as needed
 
-- 编写或解释声明时读取 [声明格式](references/declaration-format.md)。
-- 从现有文件抽取、去重、解决冲突或剔除字段时读取 [导入现有配置](references/importing.md)。
-- 启动可视化审阅或解释联网说明来源时读取 [本地审阅界面](references/ui.md)。
-- 处理覆盖、数组操作或删除时读取 [合并规则](references/merge-rules.md)。
-- 解释目标边界时读取 [Codex 配置](references/codex-config.md) 或 [Claude 设置](references/claude-settings.md)。
-- 遇到稳定错误码时读取 [故障排查](references/troubleshooting.md)。
+- When writing or explaining a declaration, read [Declaration format](references/declaration-format.md).
+- When extracting from existing files, deduplicating, resolving conflicts, or excluding fields, read [Importing existing configuration](references/importing.md).
+- When starting the visual review or explaining where online descriptions come from, read [Local review UI](references/ui.md).
+- When handling overrides, array operations, or deletions, read [Merge rules](references/merge-rules.md).
+- When explaining target boundaries, read [Codex configuration](references/codex-config.md) or [Claude settings](references/claude-settings.md).
+- When you hit a stable error code, read [Troubleshooting](references/troubleshooting.md).
