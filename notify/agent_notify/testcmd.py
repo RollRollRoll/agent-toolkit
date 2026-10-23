@@ -9,14 +9,19 @@ from .hook import Notification, render
 from .log import redact
 
 
+def make_test_notification():
+    """测试命令与配置向导共用的测试通知。"""
+    return Notification("test", "测试通知", "[agent-notify] 测试通知",
+                        summary="如果你看到这条消息，说明配置正确。")
+
+
 def main(env, out=sys.stdout):
     config = load_config(env)
     channels = build_channels(config, render)
     if not channels:
         print("❌ 没有可用渠道，请检查配置中的 channels", file=out)
         return 1
-    notification = Notification("test", "测试通知", "[agent-notify] 测试通知",
-                                summary="如果你看到这条消息，说明配置正确。")
+    notification = make_test_notification()
     failed = False
     for channel in channels:
         try:

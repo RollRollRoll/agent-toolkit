@@ -1,0 +1,3 @@
+interface:
+  display_name: "Notify Setup"
+  short_description: "Configure the agent-notify Telegram bot with an interactive wizard"

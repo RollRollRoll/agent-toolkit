@@ -14,6 +14,35 @@ class ChannelError(Exception):
     pass
 
 
+class TelegramAPIError(ChannelError):
+    """Bot API 返回 HTTP 错误；保留状态码与响应体供重试判断。"""
+
+    def __init__(self, code, description, body):
+        super().__init__(f"Telegram HTTP {code}: {description}")
+        self.code = code
+        self.body = body
+
+
+def telegram_call(token, method, params=None, opener=urllib.request.urlopen, timeout=TOTAL_TIMEOUT):
+    """单次调用 Bot API，返回 result 字段；HTTP 错误抛 TelegramAPIError，网络错误抛 ChannelError。"""
+    request = urllib.request.Request(
+        f"https://api.telegram.org/bot{token}/{method}",
+        data=json.dumps(params or {}).encode(),
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with opener(request, timeout=timeout) as resp:
+            data = json.loads(resp.read().decode("utf-8", "replace") or "{}")
+    except urllib.error.HTTPError as exc:
+        body = _payload(exc)
+        raise TelegramAPIError(exc.code, body.get("description", exc.reason), body) from None
+    except (urllib.error.URLError, OSError) as exc:
+        raise ChannelError(f"网络错误: {getattr(exc, 'reason', exc)}") from None
+    except ValueError:
+        raise ChannelError("Telegram 返回了无法解析的响应") from None
+    return data.get("result")
+
+
 class TelegramChannel:
     name = "telegram"
 
@@ -26,28 +55,21 @@ class TelegramChannel:
     def send(self, notification):
         if not self.token or not self.chat_id:
             raise ChannelError("缺少 Telegram token 或 chat_id")
-        url = f"https://api.telegram.org/bot{self.token}/sendMessage"
         # 纯文本发送，不设 parse_mode，避免特殊字符导致解析失败
-        body = json.dumps({"chat_id": self.chat_id, "text": self.render(notification)}).encode()
+        params = {"chat_id": self.chat_id, "text": self.render(notification)}
         deadline = time.monotonic() + TOTAL_TIMEOUT
         last_error = None
         for _ in range(MAX_RETRIES + 1):
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 break
-            request = urllib.request.Request(
-                url, data=body, headers={"Content-Type": "application/json"}
-            )
             try:
-                with self.opener(request, timeout=remaining) as resp:
-                    resp.read()
+                telegram_call(self.token, "sendMessage", params, self.opener, remaining)
                 return
-            except urllib.error.HTTPError as exc:
-                body_json = _payload(exc)
-                description = body_json.get("description", exc.reason)
-                last_error = ChannelError(f"Telegram HTTP {exc.code}: {description}")
+            except TelegramAPIError as exc:
+                last_error = exc
                 if exc.code == 429:
-                    wait = _retry_after(body_json)
+                    wait = _retry_after(exc.body)
                     if wait >= deadline - time.monotonic():
                         break
                     time.sleep(wait)
@@ -55,8 +77,8 @@ class TelegramChannel:
                 if exc.code < 500:
                     # 4xx（token 或 chat_id 错误）重试无意义
                     break
-            except (urllib.error.URLError, OSError) as exc:
-                last_error = ChannelError(f"网络错误: {getattr(exc, 'reason', exc)}")
+            except ChannelError as exc:
+                last_error = exc
         raise last_error or ChannelError("发送超时")
 
 

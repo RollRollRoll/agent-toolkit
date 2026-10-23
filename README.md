@@ -69,6 +69,7 @@ Skill 文件（`SKILL.md`、`references/`、`agents/openai.yaml`）统一用英�
 | `grilling` | 模型可触发 | 一个计划、决策或想法要被压力测试 | 持续深入地追问，把含糊处逼出来 |
 | `grill-me` | **仅人类** | 你想让人拷问自己手上的方案 | `grilling` 的手动入口，多传一个「不剪枝」（技术分支也照问） |
 | `create-questionnaire` | **仅人类** | 有些事你自己答不出来，得问知情人 | 把这些问题做成一份交给对方填的 Markdown 问卷 |
+| `notify-setup` | 人类 / agent | 第一次配置或更换 Telegram Bot | 给出配置向导命令，在你的终端里校验 token、获取 chat_id 并写入配置 |
 | `notify-test` | 人类 / agent | 想确认 Telegram 通知配置是否正确 | 发送一条测试通知，报告成功或失败原因 |
 | `re-explain` | **仅人类** | 上一段解释没看懂 | 补充上下文，用更简单、明确的中文重新解释一遍 |
 | `teach` | **仅人类** | 想学一项新技能或新概念 | 把当前目录当有状态的教学工作区，跨会话产出自包含 HTML 课与参照文档 |
@@ -155,7 +156,7 @@ codex plugin add agent-toolkit@agent-toolkit
 | 需要授权 | ✅ | ✅ |
 | 异常 | ✅ | 不支持 |
 
-配置（环境变量优先于配置文件）：
+配置：推荐在你自己的终端运行向导 `python3 <插件目录>/notify/bin/notify-setup.py`（或用 `notify-setup` skill 获取命令）。它会校验 token、自动获取 chat_id、以 600 权限写入配置文件并发送测试通知。也可以手动配置（环境变量优先于配置文件）：
 
 - `AGENT_NOTIFY_TELEGRAM_TOKEN`、`AGENT_NOTIFY_TELEGRAM_CHAT_ID`、`AGENT_NOTIFY_PRIVACY=1`（只发标题与事件类型）
 - 或 `~/.config/agent-notify/config.json`（建议 `chmod 600`）：

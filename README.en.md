@@ -73,6 +73,7 @@ their `description`, and other skills may also call them as capability units.
 | `grilling` | model-invocable | A plan, decision, or idea needs to be stress-tested | Asks persistent, in-depth questions until the vague parts surface |
 | `grill-me` | **human only** | You want your own plan to be grilled | Manual entry point for `grilling`, with one extra setting: "no pruning" (technical branches get questioned too) |
 | `create-questionnaire` | **human only** | There are questions you cannot answer yourself and need to ask someone who knows | Turns those questions into a Markdown questionnaire for that person to fill in |
+| `notify-setup` | human / agent | First-time setup or switching Telegram bots | Gives you the wizard command; in your terminal it validates the token, detects the chat_id, and writes the config |
 | `notify-test` | human / agent | You want to check the Telegram notification setup | Sends a test notification and reports success or the failure reason |
 | `re-explain` | **human only** | You did not understand the previous explanation | Adds context and explains it again in simpler, clearer Chinese |
 | `teach` | **human only** | You want to learn a new skill or concept | Treats the current directory as a stateful teaching workspace and produces self-contained HTML lessons and reference docs across sessions |
@@ -165,7 +166,7 @@ With the plugin installed, Claude Code and Codex CLI send a Telegram message tit
 | Permission needed | ✅ | ✅ |
 | Error | ✅ | not supported |
 
-Configuration (environment variables override the file):
+Configuration: run the wizard in your own terminal with `python3 <plugin dir>/notify/bin/notify-setup.py` (or ask the `notify-setup` skill for the command). It validates the token, detects the chat_id, writes the config file with permission 600, and sends a test message. You can also configure it by hand (environment variables override the file):
 
 - `AGENT_NOTIFY_TELEGRAM_TOKEN`, `AGENT_NOTIFY_TELEGRAM_CHAT_ID`, `AGENT_NOTIFY_PRIVACY=1` (title and event type only)
 - or `~/.config/agent-notify/config.json` (`chmod 600` recommended):
