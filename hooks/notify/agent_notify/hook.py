@@ -75,7 +75,11 @@ def deliver(notification, config, channels):
     """逐个渠道发送，单个渠道失败只记日志，互不影响。"""
     for channel in channels:
         try:
-            channel.send(notification)
+            # 渠道以返回值 "fallback" 表示经纯文本回退送达（REQ-006），只记字段，不记正文
+            if channel.send(notification) == "fallback":
+                write_log(config, f"已送达 channel={getattr(channel, 'name', '?')} "
+                                  f"agent={notification.agent} session={notification.session_id} "
+                                  f"event={notification.event_type} result=fallback")
         except Exception as exc:  # noqa: BLE001 - 任何失败都不能影响 Agent
             write_log(config, f"发送失败 channel={getattr(channel, 'name', '?')} "
                               f"agent={notification.agent} session={notification.session_id} "

@@ -12,6 +12,7 @@ from .config import (AGENT_LABELS, ERROR, PERMISSION, TEST_NOTIFICATION, TURN_CO
 
 TOTAL_TIMEOUT = 10.0
 MAX_RETRIES = 2
+FALLBACK = "fallback"  # send() 的返回值：以纯文本回退送达
 
 
 class ChannelError(Exception):
@@ -63,35 +64,51 @@ class TelegramChannel:
         self.opener = opener
 
     def send(self, notification):
+        """发送一条通知；以纯文本回退送达时返回 FALLBACK，否则返回 None。"""
         if not self.token or not self.chat_id:
             raise ChannelError("缺少 Telegram token 或 chat_id")
         params = {"chat_id": self.chat_id, "text": render_html(notification), "parse_mode": "HTML"}
+        # 富文本请求、重试与纯文本回退共用同一个总时限（REQ-011）
         deadline = time.monotonic() + TOTAL_TIMEOUT
+        result = None
         last_error = None
-        for _ in range(MAX_RETRIES + 1):
+        attempts = 0
+        while attempts <= MAX_RETRIES:
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 break
             try:
                 telegram_call(self.token, "sendMessage", params, self.opener, remaining)
-                return
+                return result
             except TelegramResponseError:
                 # HTTP 200 已送达，不重试，避免重复发送
-                return
+                return result
             except TelegramAPIError as exc:
                 last_error = exc
+                if result is None and _is_parse_error(exc):
+                    # REQ-006：HTML 被拒，用同一组字段排版成纯文本补发一次；补发不计入重试次数
+                    params = {"chat_id": self.chat_id, "text": render_plain(notification)}
+                    result = FALLBACK
+                    continue
                 if exc.code == 429:
                     wait = _retry_after(exc.body)
                     if wait >= deadline - time.monotonic():
                         break
                     time.sleep(wait)
+                    attempts += 1
                     continue
                 if exc.code < 500:
-                    # 4xx（token 或 chat_id 错误）重试无意义
+                    # 4xx（token 或 chat_id 错误、补发仍被拒）重试无意义
                     break
             except ChannelError as exc:
                 last_error = exc
+            attempts += 1
         raise last_error or ChannelError("发送超时")
+
+
+def _is_parse_error(exc):
+    """Telegram 拒绝解析 HTML：400 且描述包含 can't parse entities。"""
+    return exc.code == 400 and "can't parse entities" in str(exc.body.get("description", ""))
 
 
 def _payload(exc):
