@@ -86,6 +86,11 @@ def telegram_section(data):
     return data.get("telegram") if isinstance(data.get("telegram"), dict) else {}
 
 
+def host_label_of(data):
+    """配置字典中的主机标签，去掉首尾空白；空白视为未配置。"""
+    return str(data.get("host_label") or "").strip()
+
+
 def load_config(env):
     data, _ = read_config_file(config_path(env))
     telegram = telegram_section(data)
@@ -114,7 +119,7 @@ def load_config(env):
         include_summary=not privacy and data.get("include_summary") is not False,
         include_tool_detail=not privacy and data.get("include_tool_detail") is not False,
         summary_max_chars=_summary_max_chars(data.get("summary_max_chars")),
-        host_label=str(data.get("host_label") or "").strip(),
+        host_label=host_label_of(data),
         disabled_events=disabled,
         channels=[str(c) for c in channels],
         log_path=Path(env.get("AGENT_NOTIFY_LOG") or default_log_path(env)),

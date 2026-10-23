@@ -10,6 +10,9 @@ from conftest import TOKEN
 from agent_notify import setup
 
 
+HOST_PROMPT = "主机标签"
+
+
 class FakeTelegram:
     """假 Bot API：按方法名依次返回预设结果（最后一个重复使用），并记录调用。"""
 
@@ -33,13 +36,16 @@ class FakeTelegram:
 class ScriptedTerminal:
     """按脚本回答提示，记录全部输出。"""
 
-    def __init__(self, answers=(), secrets=()):
+    def __init__(self, answers=(), secrets=(), host=""):
         self.answers = list(answers)
         self.secrets = list(secrets)
+        self.host = host  # 主机标签提示的回答，默认直接回车
         self.transcript = ""
 
     def ask(self, prompt):
         self.transcript += prompt + "\n"
+        if HOST_PROMPT in prompt:
+            return self.host
         return self.answers.pop(0)
 
     def ask_secret(self, prompt):
@@ -238,3 +244,89 @@ def test_main_refuses_without_interactive_terminal(tmp_path, monkeypatch):
     out = io.StringIO()
     assert setup.main(_env(tmp_path), out=out) == 2
     assert "终端" in out.getvalue()
+
+
+# ---- 主机标签（REQ-012） ----
+
+
+def _box(monkeypatch):
+    monkeypatch.setattr("socket.gethostname", lambda: "box.local")
+
+
+def _host_prompt(term):
+    lines = [line for line in term.transcript.splitlines() if HOST_PROMPT in line]
+    assert len(lines) == 1, term.transcript
+    return lines[0]
+
+
+def test_enter_at_host_prompt_adds_no_host_label(tmp_path, monkeypatch):
+    # SCN-012-A：回车跳过，不新增 host_label，其他设置保留，权限 600
+    _box(monkeypatch)
+    cfg = _existing(tmp_path, {"telegram": {"token": "old", "chat_id": "1"}, "privacy": True})
+    term = ScriptedTerminal(answers=["y", ""], secrets=[TOKEN], host="")
+    assert setup.run_setup(_env(tmp_path), term, opener=_ok_api()) == 0
+    assert "box" in _host_prompt(term)
+    data = json.loads(cfg.read_text())
+    assert "host_label" not in data
+    assert data["privacy"] is True and data["telegram"] == {"token": TOKEN, "chat_id": "42"}
+    assert stat.S_IMODE(cfg.stat().st_mode) == 0o600
+
+
+def test_typed_host_label_is_written(tmp_path, monkeypatch):
+    _box(monkeypatch)
+    term = ScriptedTerminal(answers=[""], secrets=[TOKEN], host=" mbp ")
+    assert setup.run_setup(_env(tmp_path), term, opener=_ok_api()) == 0
+    cfg = tmp_path / "agent-notify" / "config.json"
+    assert json.loads(cfg.read_text())["host_label"] == "mbp"
+    assert stat.S_IMODE(cfg.stat().st_mode) == 0o600
+
+
+def test_existing_host_label_is_default_and_kept_on_enter(tmp_path, monkeypatch):
+    _box(monkeypatch)
+    cfg = _existing(tmp_path, {"telegram": {"token": "old", "chat_id": "1"}, "host_label": "office"})
+    term = ScriptedTerminal(answers=["y", ""], secrets=[TOKEN], host="")
+    assert setup.run_setup(_env(tmp_path), term, opener=_ok_api()) == 0
+    prompt = _host_prompt(term)
+    assert "office" in prompt and "box" not in prompt
+    assert json.loads(cfg.read_text())["host_label"] == "office"
+
+
+def test_ctrl_c_or_eof_at_host_prompt_cancels_without_writing(tmp_path):
+    for exc in (KeyboardInterrupt(), EOFError()):
+        term = HostInterruptingTerminal(exc, answers=[""], secrets=[TOKEN])
+        assert setup.run_setup(_env(tmp_path), term, opener=_ok_api()) == 130
+        assert "已取消" in term.transcript
+        assert not (tmp_path / "agent-notify" / "config.json").exists()
+
+
+class HostInterruptingTerminal(ScriptedTerminal):
+    def __init__(self, exc, **kwargs):
+        super().__init__(**kwargs)
+        self.exc = exc
+
+    def ask(self, prompt):
+        if HOST_PROMPT in prompt:
+            raise self.exc
+        return super().ask(prompt)
+
+
+def _sent_text(api):
+    from conftest import visible
+    return [visible(body["text"]) for method, body in api.calls if method == "sendMessage"]
+
+
+def test_test_notification_shows_effective_host(tmp_path, monkeypatch):
+    # 测试通知第二行显示最终生效的主机：新输入的标签
+    _box(monkeypatch)
+    api = _ok_api()
+    term = ScriptedTerminal(answers=[""], secrets=[TOKEN], host="mbp")
+    assert setup.run_setup(_env(tmp_path), term, opener=api) == 0
+    assert _sent_text(api)[0].splitlines()[1] == "mbp"
+
+
+def test_test_notification_falls_back_to_machine_name(tmp_path, monkeypatch):
+    _box(monkeypatch)
+    api = _ok_api()
+    term = ScriptedTerminal(answers=[""], secrets=[TOKEN], host="")
+    assert setup.run_setup(_env(tmp_path), term, opener=api) == 0
+    assert _sent_text(api)[0].splitlines()[1] == "box"
