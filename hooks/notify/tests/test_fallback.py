@@ -15,6 +15,11 @@ from agent_notify.hook import Notification
 PARSE_ERROR = "Bad Request: can't parse entities: Unsupported start tag \"x\" at byte offset 3"
 
 
+@pytest.fixture(autouse=True)
+def hostname(monkeypatch):
+    monkeypatch.setattr("socket.gethostname", lambda: "box.local")
+
+
 def _http(code, description):
     body = {"ok": False, "error_code": code, "description": description}
     return urllib.error.HTTPError("u", code, "err", {}, io.BytesIO(json.dumps(body).encode()))
@@ -75,6 +80,44 @@ def test_normal_delivery_writes_no_fallback_log(env, tmp_path):
     process("claude", payload, env, channels=[telegram_channel()])
     log = tmp_path / "notify.log"
     assert not log.exists() or "result=fallback" not in log.read_text()
+
+
+def _utf16(text):
+    return len(text.encode("utf-16-le")) // 2
+
+
+def _long_payload(tmp_path, env):
+    """SCN-007-A：summary_max_chars 3500，正文全是 & 和 emoji，长项目名和会话标题。"""
+    cfg = tmp_path / "config.json"
+    cfg.write_text(json.dumps({"summary_max_chars": 3500}))
+    env["AGENT_NOTIFY_CONFIG"] = str(cfg)
+    project = tmp_path / ("项目&<" * 40)
+    project.mkdir()
+    return {"hook_event_name": "Stop", "session_id": "abcdef1234567890", "cwd": str(project),
+            "session_title": "标题&😀" * 60, "last_assistant_message": "&😀" * 1750}
+
+
+def test_long_html_message_fits_4096_and_keeps_first_two_lines(env, tmp_path):
+    ch = telegram_channel()
+    process("claude", _long_payload(tmp_path, env), env, channels=[ch])
+    [text] = ch.opener.texts()
+    assert _utf16(text) <= 4096
+    lines = visible(text).splitlines()
+    assert lines[0].startswith("✅ 回合完成 · 项目&<项目&<")
+    assert lines[1] == "Claude · box · abcdef12"
+    assert lines[-1].endswith("…")
+    assert set(lines[-1][:-1]) <= {"&", "😀"}
+
+
+def test_plain_fallback_request_also_fits_4096(env, tmp_path):
+    ch = telegram_channel(outcomes=[_http(400, PARSE_ERROR)])
+    process("claude", _long_payload(tmp_path, env), env, channels=[ch])
+    html_text, plain_text = ch.opener.texts()
+    assert "parse_mode" not in ch.opener.requests[1].body
+    assert _utf16(plain_text) <= 4096
+    lines = plain_text.splitlines()
+    assert lines[1] == "Claude · box · abcdef12"
+    assert lines[-1].endswith("…")
 
 
 def test_other_400_does_not_fall_back():
