@@ -7,7 +7,7 @@ import urllib.error
 
 import pytest
 
-from conftest import TOKEN, process, telegram_channel, visible
+from conftest import TOKEN, RecordingOpener, process, telegram_channel, visible
 
 from agent_notify.channels import ChannelError
 from agent_notify.hook import Notification
@@ -44,8 +44,29 @@ def test_fallback_is_logged_without_body_or_token(env, tmp_path):
     process("claude", payload, env, channels=[ch])
     assert len(ch.opener.requests) == 2
     log = (tmp_path / "notify.log").read_text()
-    assert "result=fallback" in log and "channel=telegram" in log and "abcdef12" in log
+    [line] = log.splitlines()
+    fields = dict(p.split("=", 1) for p in line.split()[1:])
+    assert fields["level"] == "info" and fields["result"] == "fallback"
+    assert fields["channel"] == "telegram" and fields["session"] == "abcdef12"
     assert "SECRET-BODY-TEXT" not in log and TOKEN not in log
+
+
+def test_fallback_shares_request_timeout_with_first_attempt(env, tmp_path, monkeypatch):
+    # REQ-011：回退请求只拿总时限的剩余时间，不重新计时
+    clock = {"now": 100.0}
+    monkeypatch.setattr("agent_notify.channels.time.monotonic", lambda: clock["now"])
+
+    class SlowOpener(RecordingOpener):
+        def __call__(self, request, timeout):
+            clock["now"] += 2.0  # 每次请求耗时 2 秒
+            return super().__call__(request, timeout)
+
+    cfg = tmp_path / "config.json"
+    cfg.write_text(json.dumps({"request_timeout": 3}))
+    env["AGENT_NOTIFY_CONFIG"] = str(cfg)
+    ch = telegram_channel(env=env, opener=SlowOpener([_http(400, PARSE_ERROR)]))
+    assert ch.send(_n()) == "fallback"
+    assert [r.timeout for r in ch.opener.requests] == [3.0, 1.0]
 
 
 def test_normal_delivery_writes_no_fallback_log(env, tmp_path):

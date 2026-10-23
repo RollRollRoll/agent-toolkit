@@ -41,6 +41,8 @@ class Config:
     disabled_events: set = field(default_factory=set)
     channels: list = field(default_factory=lambda: ["telegram"])
     log_path: Path = Path()
+    log_level: str = "info"
+    request_timeout: float = 10.0  # 每条通知在每个渠道上的总时限（秒），含重试与回退
 
     def event_enabled(self, event_type):
         return event_type not in self.disabled_events
@@ -118,4 +120,19 @@ def load_config(env):
         disabled_events=disabled,
         channels=[str(c) for c in channels],
         log_path=Path(env.get("AGENT_NOTIFY_LOG") or default_log_path(env)),
+        log_level=_log_level(data.get("log_level")),
+        request_timeout=_request_timeout(data.get("request_timeout")),
     )
+
+
+def _request_timeout(value):
+    """请求总时限归一化：非数字按 10 秒，小于 1 按 1，大于 60 按 60。"""
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value != value:
+        return 10.0
+    return float(min(max(value, 1), 60))
+
+
+def _log_level(value):
+    """日志级别归一化：只接受 error / info / debug，其余按 info 处理。"""
+    level = str(value).strip().lower() if isinstance(value, str) else ""
+    return level if level in ("error", "info", "debug") else "info"

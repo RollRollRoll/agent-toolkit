@@ -16,14 +16,18 @@ FALLBACK = "fallback"  # send() 的返回值：以纯文本回退送达
 
 
 class ChannelError(Exception):
-    pass
+    """渠道失败；kind 是写入日志 error= 的错误类型。"""
+
+    def __init__(self, message, kind="channel"):
+        super().__init__(message)
+        self.kind = kind
 
 
 class TelegramAPIError(ChannelError):
     """Bot API 返回 HTTP 错误；保留状态码与响应体供重试判断。"""
 
     def __init__(self, code, description, body):
-        super().__init__(f"Telegram HTTP {code}: {description}")
+        super().__init__(f"Telegram HTTP {code}: {description}", kind="api")
         self.code = code
         self.body = body
 
@@ -46,7 +50,7 @@ def telegram_call(token, method, params=None, opener=urllib.request.urlopen, tim
         body = _payload(exc)
         raise TelegramAPIError(exc.code, body.get("description", exc.reason), body) from None
     except (urllib.error.URLError, OSError) as exc:
-        raise ChannelError(f"网络错误: {getattr(exc, 'reason', exc)}") from None
+        raise ChannelError(f"网络错误: {getattr(exc, 'reason', exc)}", kind="network") from None
     # 解析放在网络调用之外：200 已代表请求被接收，解析失败不能被当成网络失败重试
     try:
         data = json.loads(raw.decode("utf-8", "replace") or "{}")
@@ -58,18 +62,19 @@ def telegram_call(token, method, params=None, opener=urllib.request.urlopen, tim
 class TelegramChannel:
     name = "telegram"
 
-    def __init__(self, token, chat_id, opener=urllib.request.urlopen):
+    def __init__(self, token, chat_id, opener=urllib.request.urlopen, timeout=TOTAL_TIMEOUT):
         self.token = token
         self.chat_id = chat_id
         self.opener = opener
+        self.timeout = timeout
 
     def send(self, notification):
         """发送一条通知；以纯文本回退送达时返回 FALLBACK，否则返回 None。"""
         if not self.token or not self.chat_id:
-            raise ChannelError("缺少 Telegram token 或 chat_id")
+            raise ChannelError("缺少 Telegram token 或 chat_id", kind="config")
         params = {"chat_id": self.chat_id, "text": render_html(notification), "parse_mode": "HTML"}
-        # 富文本请求、重试与纯文本回退共用同一个总时限（REQ-011）
-        deadline = time.monotonic() + TOTAL_TIMEOUT
+        # 富文本请求、重试与纯文本回退共用同一个 request_timeout 总时限（REQ-011）：每次请求只拿剩余时间
+        deadline = time.monotonic() + self.timeout
         result = None
         last_error = None
         attempts = 0
@@ -103,7 +108,7 @@ class TelegramChannel:
             except ChannelError as exc:
                 last_error = exc
             attempts += 1
-        raise last_error or ChannelError("发送超时")
+        raise last_error or ChannelError("发送超时", kind="timeout")
 
 
 def _is_parse_error(exc):
@@ -170,9 +175,10 @@ def render_plain(notification):
     return _layout(notification, same, same, same, same)
 
 
-def build_channels(config):
+def build_channels(config, opener=urllib.request.urlopen):
     channels = []
     for name in config.channels:
         if name == "telegram":
-            channels.append(TelegramChannel(config.telegram_token, config.telegram_chat_id))
+            channels.append(TelegramChannel(config.telegram_token, config.telegram_chat_id,
+                                            opener=opener, timeout=config.request_timeout))
     return channels
