@@ -10,6 +10,7 @@ from pathlib import Path
 from .config import (AGENT_LABELS, ERROR, PERMISSION, TURN_COMPLETE, TURN_END_WAITING,
                      WAITING_INPUT, load_config)
 from .log import write_log
+from .redaction import redact
 
 # Claude Code Notification 事件的 notification_type → 通知事件类型
 # elicitation_* 是 MCP 服务器在回合中途向用户请求输入；未列出的类型一律不通知
@@ -49,9 +50,10 @@ def build(agent, payload, config):
     notification = Notification(
         agent, event_type, project=project, branch=branch,
         session_id=(payload.get("session_id") or "")[:8],
-        session_title=str(payload.get("session_title") or ""),
+        session_title=redact(str(payload.get("session_title") or ""), config.telegram_token),
         error_kind=str(payload.get("error") or "") if event_type == ERROR else "",
-        body=_truncate(_summary(event_type, payload)),
+        # 顺序固定：选取原文 → 遮蔽 → 开关 → 截断（DEC-001），遮蔽必须在截断之前
+        body=_truncate(redact(_summary(event_type, payload), config.telegram_token)),
     )
     if config.privacy:
         # 暂时保持 1.4.3 的隐私效果：只留标题与事件类型，分支和错误类别也不发送
