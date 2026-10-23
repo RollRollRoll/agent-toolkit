@@ -4,12 +4,13 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
 from .config import (AGENT_LABELS, ERROR, PERMISSION, TURN_COMPLETE, TURN_END_WAITING,
                      WAITING_INPUT, load_config)
-from .log import write_log
+from .log import log_event
 
 # Claude Code Notification 事件的 notification_type → 通知事件类型
 # elicitation_* 是 MCP 服务器在回合中途向用户请求输入；未列出的类型一律不通知
@@ -43,12 +44,18 @@ def build(agent, payload, config):
         return None
     event_type = _event_type(agent, payload)
     if event_type is None or not config.event_enabled(event_type):
+        # debug 级别记录跳过原因；只记事件元数据，不记正文
+        reason = ("subagent" if payload.get("agent_id") else "unsupported") \
+            if event_type is None else "event_disabled"
+        log_event(config, "debug", agent=agent, session=_short_session(payload),
+                  hook=payload.get("hook_event_name"), event=event_type,
+                  result="skip", reason=reason)
         return None
     cwd = payload.get("cwd") or os.getcwd()
     project, branch = _project_and_branch(cwd)
     notification = Notification(
         agent, event_type, project=project, branch=branch,
-        session_id=(payload.get("session_id") or "")[:8],
+        session_id=_short_session(payload),
         session_title=str(payload.get("session_title") or ""),
         error_kind=str(payload.get("error") or "") if event_type == ERROR else "",
         body=_truncate(_summary(event_type, payload)),
@@ -60,15 +67,29 @@ def build(agent, payload, config):
     return notification
 
 
+def _short_session(payload):
+    return str(payload.get("session_id") or "")[:8]
+
+
 def deliver(notification, config, channels):
-    """逐个渠道发送，单个渠道失败只记日志，互不影响。"""
+    """逐个渠道发送并计时，按级别记录结果；单个渠道失败只记日志，互不影响。"""
     for channel in channels:
+        fields = {"agent": notification.agent, "session": notification.session_id,
+                  "event": notification.event_type, "channel": getattr(channel, "name", "?")}
+        start = time.monotonic()
         try:
             channel.send(notification)
         except Exception as exc:  # noqa: BLE001 - 任何失败都不能影响 Agent
-            write_log(config, f"发送失败 channel={getattr(channel, 'name', '?')} "
-                              f"agent={notification.agent} session={notification.session_id} "
-                              f"event={notification.event_type} error={exc}")
+            # 失败行固定带 result=fail 与 error=<类型>，供诊断命令查找最近一次失败
+            log_event(config, "error", **fields, result="fail", duration_ms=_elapsed_ms(start),
+                      error=getattr(exc, "kind", "internal"), status=getattr(exc, "code", None),
+                      detail=str(exc))
+            continue
+        log_event(config, "info", **fields, result="ok", duration_ms=_elapsed_ms(start))
+
+
+def _elapsed_ms(start):
+    return int((time.monotonic() - start) * 1000)
 
 
 
@@ -141,14 +162,15 @@ def run(agent, raw, env, spawn=True):
         try:
             payload = json.loads(raw or "{}")
         except ValueError:
-            write_log(config, f"payload 不是合法 JSON agent={agent}")
+            log_event(config, "error", agent=agent, result="fail", error="invalid_payload")
             return 0
         notification = build(agent, payload, config)
         if notification is None:
             return 0
         if "telegram" in config.channels and not (config.telegram_token and config.telegram_chat_id):
-            write_log(config, f"缺少 Telegram token 或 chat_id，跳过 agent={agent} "
-                              f"session={notification.session_id} event={notification.event_type}")
+            log_event(config, "debug", agent=agent, session=notification.session_id,
+                      event=notification.event_type, channel="telegram",
+                      result="skip", reason="missing_credentials")
             return 0
         if spawn:
             _spawn_sender(notification, env)
@@ -157,7 +179,8 @@ def run(agent, raw, env, spawn=True):
             deliver(notification, config, build_channels(config))
     except Exception as exc:  # noqa: BLE001
         try:
-            write_log(load_config(env), f"内部错误 agent={agent} error={exc!r}")
+            log_event(load_config(env), "error", agent=agent, result="fail",
+                      error="internal", detail=repr(exc))
         except Exception:  # noqa: BLE001
             pass
     return 0

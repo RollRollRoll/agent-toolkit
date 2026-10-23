@@ -13,14 +13,18 @@ MAX_RETRIES = 2
 
 
 class ChannelError(Exception):
-    pass
+    """渠道失败；kind 是写入日志 error= 的错误类型。"""
+
+    def __init__(self, message, kind="channel"):
+        super().__init__(message)
+        self.kind = kind
 
 
 class TelegramAPIError(ChannelError):
     """Bot API 返回 HTTP 错误；保留状态码与响应体供重试判断。"""
 
     def __init__(self, code, description, body):
-        super().__init__(f"Telegram HTTP {code}: {description}")
+        super().__init__(f"Telegram HTTP {code}: {description}", kind="api")
         self.code = code
         self.body = body
 
@@ -43,7 +47,7 @@ def telegram_call(token, method, params=None, opener=urllib.request.urlopen, tim
         body = _payload(exc)
         raise TelegramAPIError(exc.code, body.get("description", exc.reason), body) from None
     except (urllib.error.URLError, OSError) as exc:
-        raise ChannelError(f"网络错误: {getattr(exc, 'reason', exc)}") from None
+        raise ChannelError(f"网络错误: {getattr(exc, 'reason', exc)}", kind="network") from None
     # 解析放在网络调用之外：200 已代表请求被接收，解析失败不能被当成网络失败重试
     try:
         data = json.loads(raw.decode("utf-8", "replace") or "{}")
@@ -55,17 +59,19 @@ def telegram_call(token, method, params=None, opener=urllib.request.urlopen, tim
 class TelegramChannel:
     name = "telegram"
 
-    def __init__(self, token, chat_id, opener=urllib.request.urlopen):
+    def __init__(self, token, chat_id, opener=urllib.request.urlopen, timeout=TOTAL_TIMEOUT):
         self.token = token
         self.chat_id = chat_id
         self.opener = opener
+        self.timeout = timeout
 
     def send(self, notification):
         if not self.token or not self.chat_id:
-            raise ChannelError("缺少 Telegram token 或 chat_id")
+            raise ChannelError("缺少 Telegram token 或 chat_id", kind="config")
         # 纯文本发送，不设 parse_mode，避免特殊字符导致解析失败
         params = {"chat_id": self.chat_id, "text": render_plain(notification)}
-        deadline = time.monotonic() + TOTAL_TIMEOUT
+        # 重试共用同一个总时限：每次请求只拿剩余时间
+        deadline = time.monotonic() + self.timeout
         last_error = None
         for _ in range(MAX_RETRIES + 1):
             remaining = deadline - time.monotonic()
@@ -90,7 +96,7 @@ class TelegramChannel:
                     break
             except ChannelError as exc:
                 last_error = exc
-        raise last_error or ChannelError("发送超时")
+        raise last_error or ChannelError("发送超时", kind="timeout")
 
 
 def _payload(exc):
@@ -127,9 +133,10 @@ def render_plain(notification):
     return "\n".join(lines)
 
 
-def build_channels(config):
+def build_channels(config, opener=urllib.request.urlopen):
     channels = []
     for name in config.channels:
         if name == "telegram":
-            channels.append(TelegramChannel(config.telegram_token, config.telegram_chat_id))
+            channels.append(TelegramChannel(config.telegram_token, config.telegram_chat_id,
+                                            opener=opener, timeout=config.request_timeout))
     return channels

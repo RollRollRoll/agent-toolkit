@@ -189,8 +189,9 @@ def test_missing_credentials_logs_and_sends_nothing(tmp_path):
     from agent_notify.hook import run
     env = {"AGENT_NOTIFY_CONFIG": str(tmp_path / "none.json"),
            "AGENT_NOTIFY_LOG": str(tmp_path / "n.log"), "HOME": str(tmp_path)}
-    run("claude", '{"hook_event_name": "Stop", "session_id": "q"}', env, spawn=False)
-    assert "缺少" in (tmp_path / "n.log").read_text()
+    assert run("claude", '{"hook_event_name": "Stop", "session_id": "q"}', env, spawn=False) == 0
+    # 缺少凭据属于跳过原因，只在 debug 级别记录（REQ-010）；debug 情况见 test_logging.py
+    assert not (tmp_path / "n.log").exists()
 
 
 def test_invalid_payload_never_raises(env):
@@ -233,9 +234,9 @@ def test_hook_script_exits_zero_fast_without_stdout(env, tmp_path):
     # 等后台发送子进程失败并写完日志（NEG-002）
     log = state_dir / "notify.log"
     deadline = time.monotonic() + 15
-    while time.monotonic() < deadline and "发送失败" not in (log.read_text() if log.exists() else ""):
+    while time.monotonic() < deadline and "result=fail" not in (log.read_text() if log.exists() else ""):
         time.sleep(0.05)
-    assert "发送失败" in log.read_text()
+    assert "result=fail" in log.read_text()
     assert sorted(p.name for p in config_dir.rglob("*")) == ["config.json"]
     assert sorted(p.name for p in state_dir.rglob("*")) == ["notify.log"]
 
