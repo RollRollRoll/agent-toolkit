@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import socket
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -11,6 +12,10 @@ WAITING_INPUT = "等待输入"
 PERMISSION = "需要授权"
 ERROR = "异常"
 TURN_END_WAITING = "回合结束，等待输入"  # Codex 合并事件
+TEST_NOTIFICATION = "测试通知"  # 测试命令与配置向导发送的通知
+
+# 支持的 Agent 及其显示名
+AGENT_LABELS = {"claude": "Claude", "codex": "Codex"}
 
 # 配置文件里事件开关使用的英文键
 EVENT_KEYS = {
@@ -20,15 +25,36 @@ EVENT_KEYS = {
     "error": (ERROR,),
 }
 
+# 摘要与命令预览的长度上限（REQ-003）
+DEFAULT_SUMMARY_MAX_CHARS = 1000
+SUMMARY_MAX_CHARS_CAP = 3500
+
+DEFAULT_REQUEST_TIMEOUT = 10.0  # 请求总时限默认值（秒，REQ-011）
+LOG_LEVELS = ("error", "info", "debug")  # 日志级别从低到高（REQ-010）
+HOST_LIMIT = 32  # 主机显示长度上限（REQ-002）
+ELLIPSIS = "…"
+
+
+def truncate(text, limit):
+    """超过 limit 个字符时截断并以 … 结尾；Python 字符串按码点截断，不会切坏多字节字符。"""
+    return text if len(text) <= limit else text[:limit] + ELLIPSIS
+
 
 @dataclass
 class Config:
     telegram_token: str = ""
     telegram_chat_id: str = ""
-    privacy: bool = False
+    privacy: bool = False  # 生效的隐私模式，已折算进下面两个开关，只供展示
+    include_summary: bool = True
+    include_tool_detail: bool = True
+    summary_max_chars: int = DEFAULT_SUMMARY_MAX_CHARS
+    host_label: str = ""  # 用户设定的主机标签，已去掉首尾空白
     disabled_events: set = field(default_factory=set)
     channels: list = field(default_factory=lambda: ["telegram"])
     log_path: Path = Path()
+    log_level: str = "info"
+    request_timeout: float = DEFAULT_REQUEST_TIMEOUT  # 每条通知在每个渠道上的总时限（秒），含重试与回退
+    normalized_keys: list = field(default_factory=list)  # 被归一化的配置键（只记键名，不记原值）
 
     def event_enabled(self, event_type):
         return event_type not in self.disabled_events
@@ -44,8 +70,24 @@ def default_log_path(env):
     return Path(base) / "agent-notify" / "notify.log"
 
 
-def _truthy(value):
-    return str(value).strip().lower() in ("1", "true", "yes", "on")
+_FALSE_STRINGS = ("false", "0", "no", "off", "")
+
+
+def _truthy(value, default=False):
+    """布尔开关统一解析：None 取默认值；布尔照原样；字符串只有 false/0/no/off/空串为假；
+    其他类型按 Python 真值。环境变量与配置文件共用。"""
+    if value is None:
+        return default
+    if isinstance(value, str):
+        return value.strip().lower() not in _FALSE_STRINGS
+    return bool(value)
+
+
+def _summary_max_chars(value):
+    """非正整数或非数字按默认值处理，超过上限按上限处理。"""
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        return DEFAULT_SUMMARY_MAX_CHARS
+    return min(value, SUMMARY_MAX_CHARS_CAP)
 
 
 def config_path(env):
@@ -67,6 +109,11 @@ def telegram_section(data):
     return data.get("telegram") if isinstance(data.get("telegram"), dict) else {}
 
 
+def host_label_of(data):
+    """配置字典中的主机标签，去掉首尾空白；空白视为未配置。"""
+    return str(data.get("host_label") or "").strip()
+
+
 def load_config(env):
     data, _ = read_config_file(config_path(env))
     telegram = telegram_section(data)
@@ -85,12 +132,62 @@ def load_config(env):
     if not isinstance(channels, list) or not channels:
         channels = ["telegram"]
 
-    privacy = env.get("AGENT_NOTIFY_PRIVACY")
+    # 环境变量（含假值）覆盖配置文件；隐私模式开启时两个开关都视为关闭（REQ-004）
+    privacy_env = env.get("AGENT_NOTIFY_PRIVACY")
+    privacy = _truthy(privacy_env if privacy_env is not None else data.get("privacy"))
+    # 数值与枚举配置归一化；记下配置了但被改值的键，供 hook 在 debug 级别记录（spec #2 §3.6）
+    normalized = {}
+    normalized_keys = []
+    for key, normalize in (("summary_max_chars", _summary_max_chars),
+                           ("request_timeout", _request_timeout),
+                           ("log_level", _log_level)):
+        raw = data.get(key)
+        normalized[key] = normalize(raw)
+        # 日志级别只是大小写或空白不同不算非法值
+        comparable = raw.strip().lower() if key == "log_level" and isinstance(raw, str) else raw
+        if raw is not None and (isinstance(raw, bool) or comparable != normalized[key]):
+            normalized_keys.append(key)
     return Config(
         telegram_token=env.get("AGENT_NOTIFY_TELEGRAM_TOKEN") or str(telegram.get("token") or ""),
         telegram_chat_id=env.get("AGENT_NOTIFY_TELEGRAM_CHAT_ID") or str(telegram.get("chat_id") or ""),
-        privacy=_truthy(privacy) if privacy is not None else bool(data.get("privacy", False)),
+        privacy=privacy,
+        include_summary=not privacy and _truthy(data.get("include_summary"), default=True),
+        include_tool_detail=not privacy and _truthy(data.get("include_tool_detail"), default=True),
+        summary_max_chars=normalized["summary_max_chars"],
+        host_label=host_label_of(data),
         disabled_events=disabled,
         channels=[str(c) for c in channels],
         log_path=Path(env.get("AGENT_NOTIFY_LOG") or default_log_path(env)),
+        log_level=normalized["log_level"],
+        request_timeout=normalized["request_timeout"],
+        normalized_keys=normalized_keys,
     )
+
+
+def _request_timeout(value):
+    """请求总时限归一化：非数字按 10 秒，小于 1 按 1，大于 60 按 60。"""
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value != value:
+        return DEFAULT_REQUEST_TIMEOUT
+    return float(min(max(value, 1), 60))
+
+
+def _log_level(value):
+    """日志级别归一化：只接受 error / info / debug，其余按 info 处理。"""
+    level = str(value).strip().lower() if isinstance(value, str) else ""
+    return level if level in LOG_LEVELS else "info"
+
+
+def resolve_host_label(host_label):
+    """主机：给定的标签优先，否则取机器名第一个 . 之前的部分；超长截断（REQ-002）。"""
+    host = host_label.strip()
+    if not host:
+        try:
+            host = socket.gethostname().split(".", 1)[0].strip()
+        except OSError:
+            host = ""
+    return truncate(host, HOST_LIMIT)
+
+
+def resolve_host(config):
+    """按配置解析通知里显示的主机。"""
+    return resolve_host_label(config.host_label)

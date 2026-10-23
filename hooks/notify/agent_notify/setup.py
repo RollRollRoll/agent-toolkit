@@ -8,8 +8,8 @@ import sys
 import urllib.request
 
 from .channels import ChannelError, TelegramAPIError, TelegramChannel, telegram_call
-from .config import config_path, read_config_file, telegram_section
-from .hook import render
+from .config import (config_path, host_label_of, read_config_file, resolve_host_label,
+                     telegram_section)
 from .testcmd import make_test_notification
 
 MAX_TOKEN_ATTEMPTS = 3
@@ -69,6 +69,10 @@ def _run(env, term, opener):
     if chat_id is None:
         term.say("已退出，配置未改动。")
         return 1
+    # 凭据确定后、写文件前询问，这样在这一步取消时配置同样不改动
+    label = _ask_host_label(term, host_label_of(existing))
+    if label:
+        existing = {**existing, "host_label": label}
     if corrupt:
         backup = path.with_name(path.name + ".bak")
         path.replace(backup)
@@ -77,7 +81,9 @@ def _run(env, term, opener):
     _write_config(path, existing, token, chat_id)
     term.say(f"✅ 已写入 {path}（权限 600），chat_id={chat_id}")
     _warn_env_override(term, env)
-    return _send_test(term, token, chat_id, opener)
+    # 测试通知显示最终生效的主机：与 hook 使用同一套取值规则
+    host = resolve_host_label(host_label_of(existing))
+    return _send_test(term, token, chat_id, host, opener)
 
 
 def _warn_env_override(term, env):
@@ -85,6 +91,12 @@ def _warn_env_override(term, env):
     names = [n for n in ("AGENT_NOTIFY_TELEGRAM_TOKEN", "AGENT_NOTIFY_TELEGRAM_CHAT_ID") if env.get(n)]
     if names:
         term.say(f"⚠️ 当前环境设置了 {'、'.join(names)}，hook 会优先使用环境变量而不是刚写入的配置。")
+
+
+def _ask_host_label(term, current):
+    """询问可选的主机标签（REQ-012）：返回输入的新标签；直接回车返回空串，表示保持现状。"""
+    default = resolve_host_label(current)
+    return term.ask(f"主机标签（可选，直接回车使用 {default}）：").strip()
 
 
 def _ask_token(term, opener):
@@ -177,9 +189,9 @@ def _write_config(path, data, token, chat_id):
     os.replace(tmp, path)
 
 
-def _send_test(term, token, chat_id, opener):
+def _send_test(term, token, chat_id, host, opener):
     try:
-        TelegramChannel(token, chat_id, render, opener=opener).send(make_test_notification())
+        TelegramChannel(token, chat_id, opener=opener).send(make_test_notification(host))
     except ChannelError as exc:
         term.say(f"❌ 测试通知发送失败：{exc}。配置已保存，可稍后运行 notify-test 重试。")
         return 1

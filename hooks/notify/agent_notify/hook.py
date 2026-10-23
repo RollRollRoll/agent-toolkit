@@ -4,64 +4,120 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
-from .config import ERROR, PERMISSION, TURN_COMPLETE, TURN_END_WAITING, WAITING_INPUT, load_config
-from .log import write_log
-
-AGENT_LABELS = {"claude": "Claude", "codex": "Codex"}
+from .config import (AGENT_LABELS, ERROR, PERMISSION, TURN_COMPLETE, TURN_END_WAITING,
+                     WAITING_INPUT, load_config, resolve_host, truncate)
+from .log import log_event
+from .redaction import redact_checked
 
 # Claude Code Notification 事件的 notification_type → 通知事件类型
-CLAUDE_NOTIFICATION_TYPES = {"idle_prompt": WAITING_INPUT, "permission_prompt": PERMISSION}
+# elicitation_* 是 MCP 服务器在回合中途向用户请求输入；未列出的类型一律不通知
+CLAUDE_NOTIFICATION_TYPES = {
+    "idle_prompt": WAITING_INPUT,
+    "elicitation_dialog": WAITING_INPUT,
+    "elicitation_url_dialog": WAITING_INPUT,
+    "permission_prompt": PERMISSION,
+}
 
-SUMMARY_LIMIT = 300
+FIELD_MAX_CHARS = 64  # 项目、分支、会话标题的长度上限（REQ-003）
 
 
 @dataclass
 class Notification:
+    """结构化通知对象：只承载已处理的字段，排版由各渠道负责（DEC-001）。"""
+
     agent: str
     event_type: str
-    title: str
-    summary: str = ""
+    host: str = ""
+    project: str = ""
     branch: str = ""
-    session_title: str = ""
-    privacy: bool = False
     session_id: str = ""
+    session_title: str = ""
     error_kind: str = ""
+    body: str = ""  # 摘要或命令预览
 
 
 def build(agent, payload, config):
     """把原始 payload 转成通知；不需要通知时返回 None。"""
     if agent not in AGENT_LABELS or not isinstance(payload, dict):
         return None
+    # spec #2 §3.6：被归一化的配置键在 debug 级别逐个记录；原值可能是敏感信息，不写入
+    for key in config.normalized_keys:
+        log_event(config, "debug", agent=agent, session=_short_session(payload),
+                  result="normalized", key=key)
     event_type = _event_type(agent, payload)
     if event_type is None or not config.event_enabled(event_type):
+        # debug 级别记录跳过原因；只记事件元数据，不记正文
+        reason = ("subagent" if payload.get("agent_id") else "unsupported") \
+            if event_type is None else "event_disabled"
+        log_event(config, "debug", agent=agent, host=resolve_host(config),
+                  session=_short_session(payload),
+                  hook=payload.get("hook_event_name"), event=event_type,
+                  result="skip", reason=reason)
         return None
     cwd = payload.get("cwd") or os.getcwd()
     project, branch = _project_and_branch(cwd)
-    short_id = (payload.get("session_id") or "")[:8]
-    title = f"[{AGENT_LABELS[agent]}] {project} · {short_id}"
-    notification = Notification(
-        agent, event_type, title, _truncate(_summary(event_type, payload)),
-        branch=branch, session_title=str(payload.get("session_title") or ""),
-        privacy=config.privacy, session_id=short_id,
+    # 内容准备顺序（DEC-001）：选取原文 → 遮蔽 → 开关 → 截断
+    body = _summary(event_type, payload)
+    session_title = str(payload.get("session_title") or "")
+    # 遮蔽（REQ-005）：必须在截断之前，避免凭据被截成规则匹配不到的半截
+    body = _redact_field(body, config, agent, event_type, payload)
+    session_title = _redact_field(session_title, config, agent, event_type, payload)
+    # 开关（REQ-004）：授权的正文是命令预览，其余事件的正文和会话标题属于摘要
+    if not (config.include_tool_detail if event_type == PERMISSION else config.include_summary):
+        body = ""
+    if not config.include_summary:
+        session_title = ""
+    return Notification(
+        agent, event_type, host=resolve_host(config), project=truncate(project, FIELD_MAX_CHARS),
+        branch=truncate(branch, FIELD_MAX_CHARS),
+        session_id=_short_session(payload),
+        session_title=truncate(session_title, FIELD_MAX_CHARS),
         error_kind=str(payload.get("error") or "") if event_type == ERROR else "",
+        body=truncate(body, config.summary_max_chars),
     )
-    return notification
+
+
+def _redact_field(text, config, agent, event_type, payload):
+    """遮蔽单个字段；遮蔽出错时字段已整段替换为 ***，这里补记一行错误（spec #2 §3.6）。"""
+    text, failed = redact_checked(text, config.telegram_token)
+    if failed:
+        log_event(config, "error", agent=agent, session=_short_session(payload),
+                  event=event_type, result="fail", error="redaction")
+    return text
+
+
+def _short_session(payload):
+    return str(payload.get("session_id") or "")[:8]
 
 
 def deliver(notification, config, channels):
-    """逐个渠道发送，单个渠道失败只记日志，互不影响。"""
+    """逐个渠道发送并计时，按级别记录结果；单个渠道失败只记日志，互不影响。"""
+    # 渠道模块在投递时才导入（与 run 一致），hook 入口不加载网络相关模块
+    from .channels import FALLBACK
     for channel in channels:
+        fields = {"agent": notification.agent, "host": notification.host,
+                  "session": notification.session_id,
+                  "event": notification.event_type, "channel": getattr(channel, "name", "?")}
+        start = time.monotonic()
         try:
-            channel.send(notification)
+            result = channel.send(notification)
         except Exception as exc:  # noqa: BLE001 - 任何失败都不能影响 Agent
-            write_log(config, f"发送失败 channel={getattr(channel, 'name', '?')} "
-                              f"agent={notification.agent} session={notification.session_id} "
-                              f"event={notification.event_type} error={exc}")
+            # 失败行固定带 result=fail 与 error=<类型>，供诊断命令查找最近一次失败
+            log_event(config, "error", **fields, result="fail", duration_ms=_elapsed_ms(start),
+                      error=getattr(exc, "kind", "internal"), status=getattr(exc, "code", None),
+                      detail=str(exc))
+            continue
+        # 渠道以返回值 FALLBACK 表示经纯文本回退送达（REQ-006），否则为正常送达
+        log_event(config, "info", **fields, result=FALLBACK if result == FALLBACK else "ok",
+                  duration_ms=_elapsed_ms(start))
 
 
+def _elapsed_ms(start):
+    return int((time.monotonic() - start) * 1000)
 
 
 def _event_type(agent, payload):
@@ -120,27 +176,6 @@ def _project_and_branch(cwd):
     return Path(root).name, branch
 
 
-def _truncate(text):
-    # Python 字符串按码点截断，不会切坏多字节字符
-    return text if len(text) <= SUMMARY_LIMIT else text[:SUMMARY_LIMIT] + "…"
-
-
-def render(notification):
-    """渲染为纯文本消息；隐私模式只保留标题与事件类型。"""
-    lines = [notification.title, f"事件：{notification.event_type}"]
-    if notification.privacy:
-        return "\n".join(lines)
-    if notification.error_kind:
-        lines.append(f"错误类别：{notification.error_kind}")
-    if notification.branch:
-        lines.append(f"分支：{notification.branch}")
-    if notification.session_title:
-        lines.append(f"会话：{notification.session_title}")
-    if notification.summary:
-        lines.extend(["", notification.summary])
-    return "\n".join(lines)
-
-
 def run(agent, raw, env, spawn=True):
     """hook 入口：任何情况都返回 0，不向 stdout 输出决策。"""
     try:
@@ -148,23 +183,27 @@ def run(agent, raw, env, spawn=True):
         try:
             payload = json.loads(raw or "{}")
         except ValueError:
-            write_log(config, f"payload 不是合法 JSON agent={agent}")
+            log_event(config, "error", agent=agent, result="fail", error="invalid_payload")
             return 0
         notification = build(agent, payload, config)
         if notification is None:
             return 0
         if "telegram" in config.channels and not (config.telegram_token and config.telegram_chat_id):
-            write_log(config, f"缺少 Telegram token 或 chat_id，跳过 agent={agent} "
-                              f"session={notification.session_id} event={notification.event_type}")
+            # 缺少凭据是配置错误：所有级别都写失败行，notify-doctor 才能识别（Q1）
+            log_event(config, "error", agent=agent, host=notification.host,
+                      session=notification.session_id,
+                      event=notification.event_type, channel="telegram",
+                      result="fail", error="config", reason="missing_credentials")
             return 0
         if spawn:
             _spawn_sender(notification, env)
         else:
             from .channels import build_channels
-            deliver(notification, config, build_channels(config, render))
+            deliver(notification, config, build_channels(config))
     except Exception as exc:  # noqa: BLE001
         try:
-            write_log(load_config(env), f"内部错误 agent={agent} error={exc!r}")
+            log_event(load_config(env), "error", agent=agent, result="fail",
+                      error="internal", detail=repr(exc))
         except Exception:  # noqa: BLE001
             pass
     return 0

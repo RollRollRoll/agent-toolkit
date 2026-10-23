@@ -1,15 +1,13 @@
 from __future__ import annotations
 
-from agent_notify.config import load_config
-from agent_notify.hook import build, deliver
+from conftest import process
+
+from agent_notify.channels import render_plain
 
 
-def process(agent, payload, env, channels):
-    """测试 seam：hook 入口的归一化与投递，渠道换成假实现。"""
-    config = load_config(env)
-    notification = build(agent, payload, config)
-    if notification is not None:
-        deliver(notification, config, channels)
+def _title(notification):
+    """消息前两行：标题行与 Agent · 主机 · 分支 · 会话短 ID 行。"""
+    return render_plain(notification).splitlines()[:2]
 
 
 def test_claude_stop_sends_turn_complete(env, fake, tmp_path):
@@ -19,7 +17,7 @@ def test_claude_stop_sends_turn_complete(env, fake, tmp_path):
     assert len(fake.sent) == 1
     n = fake.sent[0]
     assert n.event_type == "回合完成"
-    assert n.title == "[Claude] proj · abcdef12"
+    assert _title(n) == ["✅ 回合完成 · proj", f"Claude · {n.host} · abcdef12"]
 
 
 def test_codex_stop_sends_single_turn_end_waiting(env, fake, tmp_path):
@@ -28,7 +26,8 @@ def test_codex_stop_sends_single_turn_end_waiting(env, fake, tmp_path):
                "turn_id": "t1"}
     process("codex", payload, env, channels=[fake])
     assert [n.event_type for n in fake.sent] == ["回合结束，等待输入"]
-    assert fake.sent[0].title == "[Codex] svc · c0dex999"
+    assert _title(fake.sent[0])[0] == "✅ 回合结束 · svc"
+    assert fake.sent[0].session_id == "c0dex999"
 
 
 def test_claude_idle_prompt_sends_waiting_input(env, fake, tmp_path):
@@ -37,6 +36,27 @@ def test_claude_idle_prompt_sends_waiting_input(env, fake, tmp_path):
                "message": "Claude is waiting for your input"}
     process("claude", payload, env, channels=[fake])
     assert [n.event_type for n in fake.sent] == ["等待输入"]
+
+
+def test_claude_mcp_elicitation_sends_waiting_input(env, fake, tmp_path):
+    # SCN-008-A：MCP 服务器回合中途请求输入，两种对话框各发一条「等待输入」，摘要为提示文字
+    for kind, message in [("elicitation_dialog", "请选择要部署的环境"),
+                          ("elicitation_url_dialog", "请在浏览器中完成登录")]:
+        payload = {"hook_event_name": "Notification", "notification_type": kind,
+                   "session_id": "m1234567xx", "cwd": str(tmp_path / "p"), "message": message}
+        process("claude", payload, env, channels=[fake])
+    assert [n.event_type for n in fake.sent] == ["等待输入", "等待输入"]
+    assert [n.body for n in fake.sent] == ["请选择要部署的环境", "请在浏览器中完成登录"]
+
+
+def test_claude_unrelated_notification_types_are_ignored(env, fake, tmp_path):
+    # SCN-008-B：与等待用户无关的 Notification 类型不发通知
+    base = {"hook_event_name": "Notification", "session_id": "n1234567xx",
+            "cwd": str(tmp_path / "p"), "message": "x"}
+    for kind in ["auth_success", "elicitation_complete", "elicitation_response",
+                 "agent_needs_input", "agent_completed", "quota_warning", "plugin_notification"]:
+        process("claude", {**base, "notification_type": kind}, env, channels=[fake])
+    assert fake.sent == []
 
 
 def test_permission_requests_from_both_agents(env, fake, tmp_path):
@@ -49,8 +69,8 @@ def test_permission_requests_from_both_agents(env, fake, tmp_path):
     process("claude", claude, env, channels=[fake])
     process("codex", codex, env, channels=[fake])
     assert [n.event_type for n in fake.sent] == ["需要授权", "需要授权"]
-    assert "Bash" in fake.sent[0].summary
-    assert "rm -rf build" in fake.sent[1].summary
+    assert "Bash" in fake.sent[0].body
+    assert "rm -rf build" in fake.sent[1].body
 
 
 def test_claude_stop_failure_sends_error_with_kind(env, fake, tmp_path):
@@ -59,7 +79,7 @@ def test_claude_stop_failure_sends_error_with_kind(env, fake, tmp_path):
     process("claude", payload, env, channels=[fake])
     assert [n.event_type for n in fake.sent] == ["异常"]
     assert fake.sent[0].error_kind == "rate_limit"
-    assert "429" in fake.sent[0].summary
+    assert "429" in fake.sent[0].body
 
 
 def test_unsupported_and_subagent_events_are_ignored(env, fake, tmp_path):
@@ -88,7 +108,7 @@ def test_project_is_git_root_and_branch_shown(env, fake, tmp_path):
                "cwd": str(sub), "session_title": "重构登录"}
     process("claude", payload, env, channels=[fake])
     n = fake.sent[0]
-    assert n.title == "[Claude] myrepo · 12345678"
+    assert (n.project, n.session_id) == ("myrepo", "12345678")
     assert n.branch == "feat/x"
     assert n.session_title == "重构登录"
 
@@ -98,7 +118,7 @@ def test_non_git_dir_uses_cwd_name_without_branch(env, fake, tmp_path):
     d.mkdir()
     process("codex", {"hook_event_name": "Stop", "session_id": "s" * 9, "cwd": str(d)},
             env, channels=[fake])
-    assert fake.sent[0].title.startswith("[Codex] plain · ")
+    assert fake.sent[0].project == "plain"
     assert fake.sent[0].branch == ""
 
 
@@ -107,32 +127,31 @@ def _stop(tmp_path, msg):
             "cwd": str(tmp_path), "last_assistant_message": msg}
 
 
-def test_summary_truncated_to_300_chars_without_breaking_multibyte(env, fake, tmp_path):
-    process("claude", _stop(tmp_path, "汉" * 1000), env, channels=[fake])
-    assert fake.sent[0].summary == "汉" * 300 + "…"
+def test_summary_truncated_to_1000_chars_without_breaking_multibyte(env, fake, tmp_path):
+    process("claude", _stop(tmp_path, "汉" * 1500), env, channels=[fake])
+    assert fake.sent[0].body == "汉" * 1000 + "…"
 
 
 def test_short_and_missing_summary(env, fake, tmp_path):
     process("claude", _stop(tmp_path, "ok <b>*_`"), env, channels=[fake])
     process("claude", _stop(tmp_path, None), env, channels=[fake])
-    assert fake.sent[0].summary == "ok <b>*_`"
-    assert fake.sent[1].summary == ""
+    assert fake.sent[0].body == "ok <b>*_`"
+    assert fake.sent[1].body == ""
 
 
 def test_render_text_contains_all_parts(env, fake, tmp_path):
-    from agent_notify.hook import render
     process("claude", _stop(tmp_path, "已完成重构"), env, channels=[fake])
-    text = render(fake.sent[0])
-    assert text.splitlines()[0] == ("[Claude] " + tmp_path.name + " · abcdefgh")
+    text = render_plain(fake.sent[0])
+    assert text.splitlines()[0] == "✅ 回合完成 · " + tmp_path.name
+    assert text.splitlines()[1].endswith(" · abcdefgh")
     assert "回合完成" in text
     assert "已完成重构" in text
 
 
 def test_privacy_mode_sends_only_title_and_event(env, fake, tmp_path):
-    from agent_notify.hook import render
     env["AGENT_NOTIFY_PRIVACY"] = "1"
     process("claude", _stop(tmp_path, "secret stuff"), env, channels=[fake])
-    text = render(fake.sent[0])
+    text = render_plain(fake.sent[0])
     assert "secret" not in text
     assert "回合完成" in text
 
@@ -172,8 +191,11 @@ def test_missing_credentials_logs_and_sends_nothing(tmp_path):
     from agent_notify.hook import run
     env = {"AGENT_NOTIFY_CONFIG": str(tmp_path / "none.json"),
            "AGENT_NOTIFY_LOG": str(tmp_path / "n.log"), "HOME": str(tmp_path)}
-    run("claude", '{"hook_event_name": "Stop", "session_id": "q"}', env, spawn=False)
-    assert "缺少" in (tmp_path / "n.log").read_text()
+    assert run("claude", '{"hook_event_name": "Stop", "session_id": "q"}', env, spawn=False) == 0
+    # 缺少凭据是配置错误：默认级别下也写一行失败，供 notify-doctor 识别（Q1）
+    [line] = (tmp_path / "n.log").read_text(encoding="utf-8").splitlines()
+    assert " level=error " in line and " result=fail error=config " in line
+    assert line.endswith(" reason=missing_credentials")
 
 
 def test_invalid_payload_never_raises(env):
@@ -195,15 +217,32 @@ def test_hook_script_exits_zero_fast_without_stdout(env, tmp_path):
     import subprocess, sys, time, json
     from pathlib import Path
     script = Path(__file__).resolve().parents[1] / "bin" / "hook.py"
-    payload = json.dumps(_stop(tmp_path, "x"))
-    # 指向不可达地址，确保子进程不会真的发出消息
-    env = {**env, "HOME": str(tmp_path), "AGENT_NOTIFY_TELEGRAM_TOKEN": "x",
+    home = tmp_path / "home"
+    config_dir = home / ".config" / "agent-notify"
+    state_dir = home / ".local" / "state" / "agent-notify"
+    config_dir.mkdir(parents=True)
+    (config_dir / "config.json").write_text(json.dumps({"telegram": {"token": "x", "chat_id": "42"}}))
+    workdir = tmp_path / "proj"
+    workdir.mkdir()
+    payload = json.dumps(_stop(workdir, "x"))
+    # 使用默认配置和日志路径；指向不可达地址，确保子进程不会真的发出消息
+    env = {k: v for k, v in env.items() if k not in ("AGENT_NOTIFY_CONFIG", "AGENT_NOTIFY_LOG")}
+    env = {**env, "HOME": str(home), "AGENT_NOTIFY_TELEGRAM_TOKEN": "x",
            "https_proxy": "http://127.0.0.1:9", "HTTPS_PROXY": "http://127.0.0.1:9"}
     start = time.monotonic()
     r = subprocess.run([sys.executable, str(script), "claude"], input=payload,
                        capture_output=True, text=True, env=env, timeout=10)
     assert r.returncode == 0 and r.stdout == ""
     assert time.monotonic() - start < 2
+
+    # 等后台发送子进程失败并写完日志（NEG-002）
+    log = state_dir / "notify.log"
+    deadline = time.monotonic() + 15
+    while time.monotonic() < deadline and "result=fail" not in (log.read_text() if log.exists() else ""):
+        time.sleep(0.05)
+    assert "result=fail" in log.read_text()
+    assert sorted(p.name for p in config_dir.rglob("*")) == ["config.json"]
+    assert sorted(p.name for p in state_dir.rglob("*")) == ["notify.log"]
 
 
 def test_codex_merged_event_off_only_when_both_toggles_off(env, fake, tmp_path):

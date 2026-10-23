@@ -42,6 +42,7 @@
     "./skills/support/grill-me",
     "./skills/support/grilling",
     "./skills/support/handoff",
+    "./skills/support/notify-doctor",
     "./skills/support/notify-setup",
     "./skills/support/notify-test",
     "./skills/support/re-explain",
