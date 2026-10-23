@@ -1,0 +1,3 @@
+interface:
+  display_name: "Notify Doctor"
+  short_description: "Diagnose agent-notify config, credentials, and Bot reachability"

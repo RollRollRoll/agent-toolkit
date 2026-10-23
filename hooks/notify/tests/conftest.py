@@ -65,7 +65,7 @@ class TelegramRequest:
 
 
 class RecordingOpener:
-    """假 urlopen：按顺序返回预设结果（异常则抛出，耗尽后视为成功），记录每次请求。"""
+    """假 urlopen：按顺序返回预设结果（异常则抛出，bytes 作为响应体，耗尽后视为成功），记录每次请求。"""
 
     def __init__(self, outcomes=()):
         self.outcomes = list(outcomes)
@@ -77,7 +77,8 @@ class RecordingOpener:
         outcome = self.outcomes.pop(0) if self.outcomes else None
         if isinstance(outcome, Exception):
             raise outcome
-        return io.BytesIO(b'{"ok":true}')
+        # bytes 结果作为响应体原样返回（如 getMe 的 Bot 信息）
+        return io.BytesIO(outcome if isinstance(outcome, bytes) else b'{"ok":true}')
 
     def texts(self):
         """每次 sendMessage 请求体中的 text。"""
