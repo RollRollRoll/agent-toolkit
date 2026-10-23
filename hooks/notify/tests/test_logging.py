@@ -26,9 +26,10 @@ def _log_lines(tmp_path):
 
 
 def test_default_level_logs_success_with_integer_duration(env, tmp_path):
+    env = _with_config(env, tmp_path, host_label="devbox")
     process("claude", _stop(tmp_path), env, channels=[telegram_channel()])
     [line] = _log_lines(tmp_path)
-    assert re.match(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d level=info agent=claude "
+    assert re.match(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d level=info agent=claude host=devbox "
                     r"session=abcdefgh event=回合完成 channel=telegram result=ok "
                     r"duration_ms=\d+$", line)
 
@@ -41,10 +42,11 @@ def _http(code, description):
 
 
 def test_rejected_request_logs_fail_line_with_api_error_type(env, tmp_path):
+    env = _with_config(env, tmp_path, host_label="devbox")
     channel = telegram_channel([_http(401, "Unauthorized")])
     process("claude", _stop(tmp_path), env, channels=[channel])
     [line] = _log_lines(tmp_path)
-    assert re.search(r" level=error agent=claude session=abcdefgh event=回合完成 "
+    assert re.search(r" level=error agent=claude host=devbox session=abcdefgh event=回合完成 "
                      r"channel=telegram result=fail duration_ms=\d+ error=api status=401 "
                      r'detail="Telegram HTTP 401: Unauthorized"$', line)
 
@@ -76,23 +78,26 @@ def test_invalid_level_is_treated_as_info(env, tmp_path):
 
 
 def test_debug_logs_skip_reason_when_turn_complete_disabled(env, tmp_path):
-    env = _with_config(env, tmp_path, log_level="debug", events={"turn_complete": False})
+    env = _with_config(env, tmp_path, log_level="debug", events={"turn_complete": False},
+                       host_label="devbox")
     fake = FakeChannel()
     process("claude", _stop(tmp_path), env, channels=[fake])
     assert fake.sent == []
     [line] = _log_lines(tmp_path)
-    assert re.search(r" level=debug agent=claude session=abcdefgh hook=Stop event=回合完成 "
+    assert re.search(r" level=debug agent=claude host=devbox session=abcdefgh hook=Stop "
+                     r"event=回合完成 "
                      r"result=skip reason=event_disabled$", line)
 
 
 def test_debug_logs_subagent_and_unsupported_skips(env, tmp_path):
-    env = _with_config(env, tmp_path, log_level="debug")
+    env = _with_config(env, tmp_path, log_level="debug", host_label="devbox")
     process("claude", {**_stop(tmp_path), "agent_id": "sub1"}, env, channels=[FakeChannel()])
     process("codex", {"hook_event_name": "SessionStart", "session_id": "zz"}, env,
             channels=[FakeChannel()])
     first, second = _log_lines(tmp_path)
     assert " hook=Stop result=skip reason=subagent" in first
-    assert " agent=codex session=zz hook=SessionStart result=skip reason=unsupported" in second
+    assert (" agent=codex host=devbox session=zz hook=SessionStart result=skip "
+            "reason=unsupported") in second
 
 
 def test_skips_are_not_logged_at_info(env, tmp_path):
@@ -161,10 +166,10 @@ def test_invalid_payload_logs_key_value_fail_line(env, tmp_path):
 def test_debug_logs_missing_credentials_skip(tmp_path):
     from agent_notify.hook import run
     cfg = tmp_path / "cfg.json"
-    cfg.write_text(json.dumps({"log_level": "debug"}))
+    cfg.write_text(json.dumps({"log_level": "debug", "host_label": "devbox"}))
     env = {"AGENT_NOTIFY_CONFIG": str(cfg), "AGENT_NOTIFY_LOG": str(tmp_path / "notify.log"),
            "HOME": str(tmp_path)}
     run("claude", json.dumps(_stop(tmp_path)), env, spawn=False)
     [line] = _log_lines(tmp_path)
-    assert re.search(r" level=debug agent=claude session=abcdefgh event=回合完成 "
+    assert re.search(r" level=debug agent=claude host=devbox session=abcdefgh event=回合完成 "
                      r"channel=telegram result=skip reason=missing_credentials$", line)

@@ -50,7 +50,8 @@ def build(agent, payload, config):
         # debug 级别记录跳过原因；只记事件元数据，不记正文
         reason = ("subagent" if payload.get("agent_id") else "unsupported") \
             if event_type is None else "event_disabled"
-        log_event(config, "debug", agent=agent, session=_short_session(payload),
+        log_event(config, "debug", agent=agent, host=resolve_host(config),
+                  session=_short_session(payload),
                   hook=payload.get("hook_event_name"), event=event_type,
                   result="skip", reason=reason)
         return None
@@ -81,7 +82,8 @@ def _short_session(payload):
 def deliver(notification, config, channels):
     """逐个渠道发送并计时，按级别记录结果；单个渠道失败只记日志，互不影响。"""
     for channel in channels:
-        fields = {"agent": notification.agent, "session": notification.session_id,
+        fields = {"agent": notification.agent, "host": notification.host,
+                  "session": notification.session_id,
                   "event": notification.event_type, "channel": getattr(channel, "name", "?")}
         start = time.monotonic()
         try:
@@ -186,7 +188,8 @@ def run(agent, raw, env, spawn=True):
         if notification is None:
             return 0
         if "telegram" in config.channels and not (config.telegram_token and config.telegram_chat_id):
-            log_event(config, "debug", agent=agent, session=notification.session_id,
+            log_event(config, "debug", agent=agent, host=notification.host,
+                      session=notification.session_id,
                       event=notification.event_type, channel="telegram",
                       result="skip", reason="missing_credentials")
             return 0
