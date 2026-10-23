@@ -9,7 +9,6 @@ import urllib.request
 
 from .channels import ChannelError, TelegramAPIError, TelegramChannel, telegram_call
 from .config import config_path, read_config_file, telegram_section
-from .hook import render
 from .testcmd import make_test_notification
 
 MAX_TOKEN_ATTEMPTS = 3
@@ -179,7 +178,7 @@ def _write_config(path, data, token, chat_id):
 
 def _send_test(term, token, chat_id, opener):
     try:
-        TelegramChannel(token, chat_id, render, opener=opener).send(make_test_notification())
+        TelegramChannel(token, chat_id, opener=opener).send(make_test_notification())
     except ChannelError as exc:
         term.say(f"❌ 测试通知发送失败：{exc}。配置已保存，可稍后运行 notify-test 重试。")
         return 1

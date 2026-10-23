@@ -11,6 +11,10 @@ WAITING_INPUT = "等待输入"
 PERMISSION = "需要授权"
 ERROR = "异常"
 TURN_END_WAITING = "回合结束，等待输入"  # Codex 合并事件
+TEST_NOTIFICATION = "测试通知"  # 测试命令与配置向导发送的通知
+
+# 支持的 Agent 及其显示名
+AGENT_LABELS = {"claude": "Claude", "codex": "Codex"}
 
 # 配置文件里事件开关使用的英文键
 EVENT_KEYS = {

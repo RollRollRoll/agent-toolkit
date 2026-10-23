@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import io
+import json
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -26,6 +29,16 @@ class FakeChannel:
         self.sent.append(notification)
 
 
+def process(agent, payload, env, channels):
+    """主测试 seam：从原始 payload 经 hook 归一化到渠道投递；渠道可用 FakeChannel 或 telegram_channel()。"""
+    from agent_notify.config import load_config
+    from agent_notify.hook import build, deliver
+    config = load_config(env)
+    notification = build(agent, payload, config)
+    if notification is not None:
+        deliver(notification, config, channels)
+
+
 @pytest.fixture
 def env(tmp_path):
     return {
@@ -39,3 +52,43 @@ def env(tmp_path):
 @pytest.fixture
 def fake():
     return FakeChannel()
+
+
+@dataclass
+class TelegramRequest:
+    """假 opener 记录的一次 Bot API 请求。"""
+
+    method: str
+    body: dict
+    timeout: float
+
+
+class RecordingOpener:
+    """假 urlopen：按顺序返回预设结果（异常则抛出，耗尽后视为成功），记录每次请求。"""
+
+    def __init__(self, outcomes=()):
+        self.outcomes = list(outcomes)
+        self.requests = []
+
+    def __call__(self, request, timeout):
+        method = request.full_url.rsplit("/", 1)[1]
+        self.requests.append(TelegramRequest(method, json.loads(request.data or b"{}"), timeout))
+        outcome = self.outcomes.pop(0) if self.outcomes else None
+        if isinstance(outcome, Exception):
+            raise outcome
+        return io.BytesIO(b'{"ok":true}')
+
+    def texts(self):
+        """每次 sendMessage 请求体中的 text。"""
+        return [r.body["text"] for r in self.requests if r.method == "sendMessage"]
+
+
+def telegram_channel(outcomes=(), token=TOKEN, chat_id="42"):
+    """真实 TelegramChannel，网络换成 RecordingOpener；用 channel.opener 取请求记录。"""
+    from agent_notify.channels import TelegramChannel
+    return TelegramChannel(token, chat_id, opener=RecordingOpener(outcomes))
+
+
+@pytest.fixture
+def telegram():
+    return telegram_channel()

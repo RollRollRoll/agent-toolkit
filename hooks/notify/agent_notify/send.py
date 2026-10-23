@@ -6,14 +6,14 @@ import os
 
 from .channels import build_channels
 from .config import load_config
-from .hook import Notification, deliver, render
+from .hook import Notification, deliver
 
 
 def main():
     env = dict(os.environ)
     config = load_config(env)
     notification = Notification(**json.loads(env.pop("AGENT_NOTIFY_PAYLOAD")))
-    deliver(notification, config, build_channels(config, render))
+    deliver(notification, config, build_channels(config))
 
 
 if __name__ == "__main__":

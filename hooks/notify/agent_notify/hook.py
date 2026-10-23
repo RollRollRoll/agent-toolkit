@@ -7,10 +7,9 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from .config import ERROR, PERMISSION, TURN_COMPLETE, TURN_END_WAITING, WAITING_INPUT, load_config
+from .config import (AGENT_LABELS, ERROR, PERMISSION, TURN_COMPLETE, TURN_END_WAITING,
+                     WAITING_INPUT, load_config)
 from .log import write_log
-
-AGENT_LABELS = {"claude": "Claude", "codex": "Codex"}
 
 # Claude Code Notification 事件的 notification_type → 通知事件类型
 CLAUDE_NOTIFICATION_TYPES = {"idle_prompt": WAITING_INPUT, "permission_prompt": PERMISSION}
@@ -20,15 +19,16 @@ SUMMARY_LIMIT = 300
 
 @dataclass
 class Notification:
+    """结构化通知对象：只承载已处理的字段，排版由各渠道负责（DEC-001）。"""
+
     agent: str
     event_type: str
-    title: str
-    summary: str = ""
+    project: str = ""
     branch: str = ""
-    session_title: str = ""
-    privacy: bool = False
     session_id: str = ""
+    session_title: str = ""
     error_kind: str = ""
+    body: str = ""  # 摘要或命令预览
 
 
 def build(agent, payload, config):
@@ -40,14 +40,17 @@ def build(agent, payload, config):
         return None
     cwd = payload.get("cwd") or os.getcwd()
     project, branch = _project_and_branch(cwd)
-    short_id = (payload.get("session_id") or "")[:8]
-    title = f"[{AGENT_LABELS[agent]}] {project} · {short_id}"
     notification = Notification(
-        agent, event_type, title, _truncate(_summary(event_type, payload)),
-        branch=branch, session_title=str(payload.get("session_title") or ""),
-        privacy=config.privacy, session_id=short_id,
+        agent, event_type, project=project, branch=branch,
+        session_id=(payload.get("session_id") or "")[:8],
+        session_title=str(payload.get("session_title") or ""),
         error_kind=str(payload.get("error") or "") if event_type == ERROR else "",
+        body=_truncate(_summary(event_type, payload)),
     )
+    if config.privacy:
+        # 暂时保持 1.4.3 的隐私效果：只留标题与事件类型，分支和错误类别也不发送
+        notification.branch = notification.session_title = ""
+        notification.error_kind = notification.body = ""
     return notification
 
 
@@ -125,22 +128,6 @@ def _truncate(text):
     return text if len(text) <= SUMMARY_LIMIT else text[:SUMMARY_LIMIT] + "…"
 
 
-def render(notification):
-    """渲染为纯文本消息；隐私模式只保留标题与事件类型。"""
-    lines = [notification.title, f"事件：{notification.event_type}"]
-    if notification.privacy:
-        return "\n".join(lines)
-    if notification.error_kind:
-        lines.append(f"错误类别：{notification.error_kind}")
-    if notification.branch:
-        lines.append(f"分支：{notification.branch}")
-    if notification.session_title:
-        lines.append(f"会话：{notification.session_title}")
-    if notification.summary:
-        lines.extend(["", notification.summary])
-    return "\n".join(lines)
-
-
 def run(agent, raw, env, spawn=True):
     """hook 入口：任何情况都返回 0，不向 stdout 输出决策。"""
     try:
@@ -161,7 +148,7 @@ def run(agent, raw, env, spawn=True):
             _spawn_sender(notification, env)
         else:
             from .channels import build_channels
-            deliver(notification, config, build_channels(config, render))
+            deliver(notification, config, build_channels(config))
     except Exception as exc:  # noqa: BLE001
         try:
             write_log(load_config(env), f"内部错误 agent={agent} error={exc!r}")

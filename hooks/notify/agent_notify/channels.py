@@ -6,6 +6,8 @@ import time
 import urllib.error
 import urllib.request
 
+from .config import AGENT_LABELS, TEST_NOTIFICATION
+
 TOTAL_TIMEOUT = 10.0
 MAX_RETRIES = 2
 
@@ -53,17 +55,16 @@ def telegram_call(token, method, params=None, opener=urllib.request.urlopen, tim
 class TelegramChannel:
     name = "telegram"
 
-    def __init__(self, token, chat_id, render, opener=urllib.request.urlopen):
+    def __init__(self, token, chat_id, opener=urllib.request.urlopen):
         self.token = token
         self.chat_id = chat_id
-        self.render = render
         self.opener = opener
 
     def send(self, notification):
         if not self.token or not self.chat_id:
             raise ChannelError("缺少 Telegram token 或 chat_id")
         # 纯文本发送，不设 parse_mode，避免特殊字符导致解析失败
-        params = {"chat_id": self.chat_id, "text": self.render(notification)}
+        params = {"chat_id": self.chat_id, "text": render_plain(notification)}
         deadline = time.monotonic() + TOTAL_TIMEOUT
         last_error = None
         for _ in range(MAX_RETRIES + 1):
@@ -107,9 +108,28 @@ def _retry_after(body_json):
         return 1.0
 
 
-def build_channels(config, render):
+def render_plain(notification):
+    """把结构化通知排版为 Telegram 纯文本消息；空字段整行省略。"""
+    if notification.event_type == TEST_NOTIFICATION:
+        title = f"[{notification.project}] {notification.event_type}"
+    else:
+        label = AGENT_LABELS.get(notification.agent, notification.agent)
+        title = f"[{label}] {notification.project} · {notification.session_id}"
+    lines = [title, f"事件：{notification.event_type}"]
+    if notification.error_kind:
+        lines.append(f"错误类别：{notification.error_kind}")
+    if notification.branch:
+        lines.append(f"分支：{notification.branch}")
+    if notification.session_title:
+        lines.append(f"会话：{notification.session_title}")
+    if notification.body:
+        lines.extend(["", notification.body])
+    return "\n".join(lines)
+
+
+def build_channels(config):
     channels = []
     for name in config.channels:
         if name == "telegram":
-            channels.append(TelegramChannel(config.telegram_token, config.telegram_chat_id, render))
+            channels.append(TelegramChannel(config.telegram_token, config.telegram_chat_id))
     return channels
