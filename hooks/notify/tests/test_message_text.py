@@ -1,6 +1,6 @@
 """锁定 Telegram 实际收到的请求体 text：经 process 走完整链路，渠道用真实 TelegramChannel。
 
-期望值是 1.4.3 发出的原文，手写字面量，重构不得改变。
+期望值是 1.4.3 发出的原文，手写字面量，重构不得改变；截断长度与隐私模式按 #6（REQ-003、REQ-004）更新。
 """
 from __future__ import annotations
 
@@ -72,17 +72,20 @@ def test_error_text(env, tmp_path):
 
 def test_missing_session_id_and_long_summary_text(env, tmp_path):
     payload = {"hook_event_name": "Stop", "cwd": str(tmp_path / "p"),
-               "last_assistant_message": "汉" * 1000}
-    assert _texts("claude", payload, env) == ["[Claude] p · \n事件：回合完成\n\n" + "汉" * 300 + "…"]
+               "last_assistant_message": "汉" * 1500}
+    assert _texts("claude", payload, env) == ["[Claude] p · \n事件：回合完成\n\n" + "汉" * 1000 + "…"]
 
 
 def test_privacy_mode_texts(env, tmp_path):
     env["AGENT_NOTIFY_PRIVACY"] = "1"
     repo = _repo(tmp_path)
     cwd = str(tmp_path / "p")
-    assert _texts("claude", _claude_stop(repo), env) == ["[Claude] myrepo · 12345678\n事件：回合完成"]
+    # 隐私模式只关正文和会话标题，分支和错误类别照常发送（REQ-004）
+    assert _texts("claude", _claude_stop(repo), env) == [
+        "[Claude] myrepo · 12345678\n事件：回合完成\n分支：feat/x"]
     assert _texts("codex", {**CODEX_PERMISSION, "cwd": cwd}, env) == ["[Codex] p · bbbbbbbb\n事件：需要授权"]
-    assert _texts("claude", {**CLAUDE_ERROR, "cwd": cwd}, env) == ["[Claude] p · eeeeeeee\n事件：异常"]
+    assert _texts("claude", {**CLAUDE_ERROR, "cwd": cwd}, env) == [
+        "[Claude] p · eeeeeeee\n事件：异常\n错误类别：rate_limit"]
 
 
 def test_test_notification_text():

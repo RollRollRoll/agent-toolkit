@@ -126,9 +126,9 @@ def _stop(tmp_path, msg):
             "cwd": str(tmp_path), "last_assistant_message": msg}
 
 
-def test_summary_truncated_to_300_chars_without_breaking_multibyte(env, fake, tmp_path):
-    process("claude", _stop(tmp_path, "汉" * 1000), env, channels=[fake])
-    assert fake.sent[0].body == "汉" * 300 + "…"
+def test_summary_truncated_to_1000_chars_without_breaking_multibyte(env, fake, tmp_path):
+    process("claude", _stop(tmp_path, "汉" * 1500), env, channels=[fake])
+    assert fake.sent[0].body == "汉" * 1000 + "…"
 
 
 def test_short_and_missing_summary(env, fake, tmp_path):

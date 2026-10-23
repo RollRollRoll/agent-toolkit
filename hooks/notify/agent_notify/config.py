@@ -24,12 +24,19 @@ EVENT_KEYS = {
     "error": (ERROR,),
 }
 
+# 摘要与命令预览的长度上限（REQ-003）
+DEFAULT_SUMMARY_MAX_CHARS = 1000
+SUMMARY_MAX_CHARS_CAP = 3500
+
 
 @dataclass
 class Config:
     telegram_token: str = ""
     telegram_chat_id: str = ""
-    privacy: bool = False
+    privacy: bool = False  # 生效的隐私模式，已折算进下面两个开关，只供展示
+    include_summary: bool = True
+    include_tool_detail: bool = True
+    summary_max_chars: int = DEFAULT_SUMMARY_MAX_CHARS
     disabled_events: set = field(default_factory=set)
     channels: list = field(default_factory=lambda: ["telegram"])
     log_path: Path = Path()
@@ -50,6 +57,13 @@ def default_log_path(env):
 
 def _truthy(value):
     return str(value).strip().lower() in ("1", "true", "yes", "on")
+
+
+def _summary_max_chars(value):
+    """非正整数或非数字按默认值处理，超过上限按上限处理。"""
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        return DEFAULT_SUMMARY_MAX_CHARS
+    return min(value, SUMMARY_MAX_CHARS_CAP)
 
 
 def config_path(env):
@@ -89,11 +103,16 @@ def load_config(env):
     if not isinstance(channels, list) or not channels:
         channels = ["telegram"]
 
-    privacy = env.get("AGENT_NOTIFY_PRIVACY")
+    # 环境变量（含假值）覆盖配置文件；隐私模式开启时两个开关都视为关闭（REQ-004）
+    privacy_env = env.get("AGENT_NOTIFY_PRIVACY")
+    privacy = _truthy(privacy_env) if privacy_env is not None else bool(data.get("privacy", False))
     return Config(
         telegram_token=env.get("AGENT_NOTIFY_TELEGRAM_TOKEN") or str(telegram.get("token") or ""),
         telegram_chat_id=env.get("AGENT_NOTIFY_TELEGRAM_CHAT_ID") or str(telegram.get("chat_id") or ""),
-        privacy=_truthy(privacy) if privacy is not None else bool(data.get("privacy", False)),
+        privacy=privacy,
+        include_summary=not privacy and data.get("include_summary") is not False,
+        include_tool_detail=not privacy and data.get("include_tool_detail") is not False,
+        summary_max_chars=_summary_max_chars(data.get("summary_max_chars")),
         disabled_events=disabled,
         channels=[str(c) for c in channels],
         log_path=Path(env.get("AGENT_NOTIFY_LOG") or default_log_path(env)),
