@@ -1,7 +1,7 @@
 """锁定 Telegram 实际收到的请求体 text：经 process 走完整链路，渠道用真实 TelegramChannel。
 
-期望值是 spec #2 REQ-001 新布局的手写字面量（取代 1.4.3 原文）。多数测试比较 HTML
-解析后的可见文本；完整 HTML 只在少数测试里锁定。
+期望值是 spec #2 REQ-001 新布局的手写字面量（取代 1.4.3 原文）；截断长度与隐私模式按 #6
+（REQ-003、REQ-004）更新。多数测试比较 HTML 解析后的可见文本；完整 HTML 只在少数测试里锁定。
 """
 from __future__ import annotations
 
@@ -86,18 +86,20 @@ def test_error_text(env, tmp_path):
 
 def test_missing_session_id_and_long_summary_text(env, tmp_path):
     payload = {"hook_event_name": "Stop", "cwd": str(tmp_path / "p"),
-               "last_assistant_message": "汉" * 1000}
-    assert _texts("claude", payload, env) == ["✅ 回合完成 · p\nClaude · box\n" + "汉" * 300 + "…"]
+               "last_assistant_message": "汉" * 1500}
+    assert _texts("claude", payload, env) == ["✅ 回合完成 · p\nClaude · box\n" + "汉" * 1000 + "…"]
 
 
 def test_privacy_mode_texts(env, tmp_path):
-    # 隐私模式暂时仍清空分支与错误类别（REQ-004 的改正由 #6 完成）
     env["AGENT_NOTIFY_PRIVACY"] = "1"
     repo = _repo(tmp_path)
     cwd = str(tmp_path / "p")
-    assert _texts("claude", _claude_stop(repo), env) == ["✅ 回合完成 · myrepo\nClaude · box · 12345678"]
+    # 隐私模式只关正文和会话标题，分支和错误类别照常发送（REQ-004）
+    assert _texts("claude", _claude_stop(repo), env) == [
+        "✅ 回合完成 · myrepo\nClaude · box · feat/x · 12345678"]
     assert _texts("codex", {**CODEX_PERMISSION, "cwd": cwd}, env) == ["🔐 需要授权 · p\nCodex · box · bbbbbbbb"]
-    assert _texts("claude", {**CLAUDE_ERROR, "cwd": cwd}, env) == ["❌ 异常 · p\nClaude · box · eeeeeeee"]
+    assert _texts("claude", {**CLAUDE_ERROR, "cwd": cwd}, env) == [
+        "❌ 异常 · p\nClaude · box · eeeeeeee\n错误类别：rate_limit"]
 
 
 def test_test_notification_text():
