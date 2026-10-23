@@ -91,14 +91,16 @@ def deliver(notification, config, channels):
                   "event": notification.event_type, "channel": getattr(channel, "name", "?")}
         start = time.monotonic()
         try:
-            channel.send(notification)
+            result = channel.send(notification)
         except Exception as exc:  # noqa: BLE001 - 任何失败都不能影响 Agent
             # 失败行固定带 result=fail 与 error=<类型>，供诊断命令查找最近一次失败
             log_event(config, "error", **fields, result="fail", duration_ms=_elapsed_ms(start),
                       error=getattr(exc, "kind", "internal"), status=getattr(exc, "code", None),
                       detail=str(exc))
             continue
-        log_event(config, "info", **fields, result="ok", duration_ms=_elapsed_ms(start))
+        # 渠道以返回值 "fallback" 表示经纯文本回退送达（REQ-006），否则为正常送达
+        log_event(config, "info", **fields, result="fallback" if result == "fallback" else "ok",
+                  duration_ms=_elapsed_ms(start))
 
 
 def _elapsed_ms(start):
