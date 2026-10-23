@@ -97,6 +97,15 @@ def test_three_invalid_tokens_abort_without_writing(tmp_path):
     assert "Unauthorized" in term.transcript
 
 
+def test_rejected_token_is_never_echoed(tmp_path):
+    # 错误信息里带出 token（例如代理把 URL 写进报错）也必须脱敏
+    leaky = urllib.error.URLError(f"cannot reach https://api.telegram.org/bot{TOKEN}/getMe")
+    api = FakeTelegram(getMe=[leaky])
+    term = ScriptedTerminal(secrets=[TOKEN, TOKEN, TOKEN])
+    assert setup.run_setup(_env(tmp_path), term, opener=api) == 1
+    assert TOKEN not in term.transcript
+
+
 def test_empty_token_is_reasked_without_calling_api(tmp_path):
     api = FakeTelegram(getMe=[{"username": "my_bot"}], getUpdates=[[_private(7)]],
                        sendMessage=[{"message_id": 1}])
@@ -194,7 +203,9 @@ def test_corrupt_config_is_backed_up_before_rewrite(tmp_path):
     term = ScriptedTerminal(answers=["y", ""], secrets=[TOKEN])
     assert setup.run_setup(_env(tmp_path), term, opener=_ok_api()) == 0
     assert json.loads(cfg.read_text())["telegram"]["chat_id"] == "42"
-    assert (cfg.parent / "config.json.bak").read_text() == "{not json"
+    backup = cfg.parent / "config.json.bak"
+    assert backup.read_text() == "{not json"
+    assert stat.S_IMODE(backup.stat().st_mode) == 0o600
 
 
 def test_warns_when_env_vars_would_override_file(tmp_path):
@@ -223,8 +234,7 @@ def test_ctrl_c_or_eof_cancels_without_writing(tmp_path):
 
 
 def test_main_refuses_without_interactive_terminal(tmp_path, monkeypatch):
-    import io as _io
-    monkeypatch.setattr("sys.stdin", _io.StringIO(""))
-    out = _io.StringIO()
+    monkeypatch.setattr("sys.stdin", io.StringIO(""))
+    out = io.StringIO()
     assert setup.main(_env(tmp_path), out=out) == 2
     assert "终端" in out.getvalue()

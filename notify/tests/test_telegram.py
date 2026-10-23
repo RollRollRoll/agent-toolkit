@@ -58,3 +58,14 @@ def test_429_waits_retry_after_then_succeeds(monkeypatch):
                                  "parameters": {"retry_after": 1}}), None])
     TelegramChannel("T", "42", str, opener=opener).send(_n())
     assert len(opener.requests) == 2
+
+
+def test_http_200_with_unparseable_body_counts_as_delivered():
+    class Garbled(Opener):
+        def __call__(self, request, timeout):
+            self.requests.append(request)
+            return io.BytesIO(b"<html>proxy page</html>")
+
+    opener = Garbled([])
+    TelegramChannel("T", "42", str, opener=opener).send(_n())
+    assert len(opener.requests) == 1

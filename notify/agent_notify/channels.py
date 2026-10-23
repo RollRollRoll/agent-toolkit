@@ -23,6 +23,10 @@ class TelegramAPIError(ChannelError):
         self.body = body
 
 
+class TelegramResponseError(ChannelError):
+    """HTTP 200 但响应体无法解析：请求已被 Telegram 接收。"""
+
+
 def telegram_call(token, method, params=None, opener=urllib.request.urlopen, timeout=TOTAL_TIMEOUT):
     """单次调用 Bot API，返回 result 字段；HTTP 错误抛 TelegramAPIError，网络错误抛 ChannelError。"""
     request = urllib.request.Request(
@@ -32,15 +36,18 @@ def telegram_call(token, method, params=None, opener=urllib.request.urlopen, tim
     )
     try:
         with opener(request, timeout=timeout) as resp:
-            data = json.loads(resp.read().decode("utf-8", "replace") or "{}")
+            raw = resp.read()
     except urllib.error.HTTPError as exc:
         body = _payload(exc)
         raise TelegramAPIError(exc.code, body.get("description", exc.reason), body) from None
     except (urllib.error.URLError, OSError) as exc:
         raise ChannelError(f"网络错误: {getattr(exc, 'reason', exc)}") from None
+    # 解析放在网络调用之外：200 已代表请求被接收，解析失败不能被当成网络失败重试
+    try:
+        data = json.loads(raw.decode("utf-8", "replace") or "{}")
     except ValueError:
-        raise ChannelError("Telegram 返回了无法解析的响应") from None
-    return data.get("result")
+        raise TelegramResponseError("Telegram 返回了无法解析的响应") from None
+    return data.get("result") if isinstance(data, dict) else None
 
 
 class TelegramChannel:
@@ -65,6 +72,9 @@ class TelegramChannel:
                 break
             try:
                 telegram_call(self.token, "sendMessage", params, self.opener, remaining)
+                return
+            except TelegramResponseError:
+                # HTTP 200 已送达，不重试，避免重复发送
                 return
             except TelegramAPIError as exc:
                 last_error = exc

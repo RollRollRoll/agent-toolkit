@@ -48,16 +48,28 @@ def _truthy(value):
     return str(value).strip().lower() in ("1", "true", "yes", "on")
 
 
-def load_config(env):
-    path = Path(env.get("AGENT_NOTIFY_CONFIG") or default_config_path(env))
-    data = {}
+def config_path(env):
+    return Path(env.get("AGENT_NOTIFY_CONFIG") or default_config_path(env))
+
+
+def read_config_file(path):
+    """读取配置文件：返回 (配置字典, 是否损坏)；文件不存在视为空配置。"""
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return {}, False
     except (OSError, ValueError):
-        data = {}
-    if not isinstance(data, dict):
-        data = {}
-    telegram = data.get("telegram") if isinstance(data.get("telegram"), dict) else {}
+        return {}, True
+    return (data, False) if isinstance(data, dict) else ({}, True)
+
+
+def telegram_section(data):
+    return data.get("telegram") if isinstance(data.get("telegram"), dict) else {}
+
+
+def load_config(env):
+    data, _ = read_config_file(config_path(env))
+    telegram = telegram_section(data)
 
     # Codex 合并事件同时属于两类：只在 turn_complete 和 waiting_input 都关闭时才关闭
     events = data.get("events") if isinstance(data.get("events"), dict) else {}

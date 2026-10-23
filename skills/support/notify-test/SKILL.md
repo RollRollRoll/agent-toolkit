@@ -11,7 +11,7 @@ Run the bundled test command and relay its output to the user:
 python3 "<plugin root>/notify/bin/notify-test.py"
 ```
 
-`<plugin root>` is the directory two levels above this skill (`skills/support/notify-test` → plugin root).
+`<plugin root>` is the directory three levels above this skill (`skills/support/notify-test` → plugin root).
 
 - Exit 0 with `✅`: the notification was delivered.
-- Exit 1 with `❌`: show the reason. Credentials come from `AGENT_NOTIFY_TELEGRAM_TOKEN` / `AGENT_NOTIFY_TELEGRAM_CHAT_ID`, or `~/.config/agent-notify/config.json`. Never print the token.
+- Exit 1 with `❌`: show the reason. If credentials are missing or wrong, suggest `notify-setup`. Never print the token.

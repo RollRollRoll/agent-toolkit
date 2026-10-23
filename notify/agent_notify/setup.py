@@ -6,10 +6,9 @@ import json
 import os
 import sys
 import urllib.request
-from pathlib import Path
 
 from .channels import ChannelError, TelegramAPIError, TelegramChannel, telegram_call
-from .config import default_config_path
+from .config import config_path, read_config_file, telegram_section
 from .hook import render
 from .testcmd import make_test_notification
 
@@ -47,11 +46,11 @@ def run_setup(env, term, opener=urllib.request.urlopen):
 
 
 def _run(env, term, opener):
-    path = Path(env.get("AGENT_NOTIFY_CONFIG") or default_config_path(env))
+    path = config_path(env)
     term.say("🔧 agent-notify 配置向导")
     term.say(f"配置文件：{path}")
 
-    existing, corrupt = _read_existing(path)
+    existing, corrupt = read_config_file(path)
     if path.exists():
         if corrupt:
             term.say("⚠️ 现有配置文件不是合法 JSON，继续后会备份为 config.json.bak。")
@@ -71,22 +70,14 @@ def _run(env, term, opener):
         term.say("已退出，配置未改动。")
         return 1
     if corrupt:
-        path.replace(path.with_name(path.name + ".bak"))
+        backup = path.with_name(path.name + ".bak")
+        path.replace(backup)
+        # 损坏的旧文件可能含 token，备份同样收紧到 600
+        os.chmod(backup, 0o600)
     _write_config(path, existing, token, chat_id)
     term.say(f"✅ 已写入 {path}（权限 600），chat_id={chat_id}")
     _warn_env_override(term, env)
     return _send_test(term, token, chat_id, opener)
-
-
-def _read_existing(path):
-    """读取现有配置：返回 (配置字典, 是否损坏)；文件不存在视为空配置。"""
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except FileNotFoundError:
-        return {}, False
-    except (OSError, ValueError):
-        return {}, True
-    return (data, False) if isinstance(data, dict) else ({}, True)
 
 
 def _warn_env_override(term, env):
@@ -128,14 +119,11 @@ def _find_chat_id(term, token, username, opener):
             continue
         try:
             chats = _recent_chats(telegram_call(token, "getUpdates", opener=opener) or [])
-        except TelegramAPIError as exc:
-            if exc.code == 409:
+        except ChannelError as exc:
+            if isinstance(exc, TelegramAPIError) and exc.code == 409:
                 term.say("这个 Bot 设置了 webhook，无法自动获取 chat_id，请直接输入。")
             else:
                 term.say(f"❌ 获取消息失败：{_redact(exc, token)}")
-            continue
-        except ChannelError as exc:
-            term.say(f"❌ 获取消息失败：{_redact(exc, token)}")
             continue
         if not chats:
             term.say("还没收到消息。确认已给 Bot 发过消息后再按回车。")
@@ -177,7 +165,7 @@ def _looks_like_chat_id(text):
 
 def _write_config(path, data, token, chat_id):
     """合并写入 telegram 段，保留其他配置；先写临时文件再替换，权限始终为 600。"""
-    telegram = data.get("telegram") if isinstance(data.get("telegram"), dict) else {}
+    telegram = telegram_section(data)
     data = {**data, "telegram": {**telegram, "token": token, "chat_id": chat_id}}
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     tmp = path.with_name(path.name + ".tmp")
