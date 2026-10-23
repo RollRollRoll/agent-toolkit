@@ -73,6 +73,7 @@ their `description`, and other skills may also call them as capability units.
 | `grilling` | model-invocable | A plan, decision, or idea needs to be stress-tested | Asks persistent, in-depth questions until the vague parts surface |
 | `grill-me` | **human only** | You want your own plan to be grilled | Manual entry point for `grilling`, with one extra setting: "no pruning" (technical branches get questioned too) |
 | `create-questionnaire` | **human only** | There are questions you cannot answer yourself and need to ask someone who knows | Turns those questions into a Markdown questionnaire for that person to fill in |
+| `notify-test` | human / agent | You want to check the Telegram notification setup | Sends a test notification and reports success or the failure reason |
 | `re-explain` | **human only** | You did not understand the previous explanation | Adds context and explains it again in simpler, clearer Chinese |
 | `teach` | **human only** | You want to learn a new skill or concept | Treats the current directory as a stateful teaching workspace and produces self-contained HTML lessons and reference docs across sessions |
 
@@ -152,6 +153,32 @@ codex plugin add agent-toolkit@agent-toolkit
 You can also install it from the added `agent-toolkit` marketplace through `/plugins` in the Codex
 CLI or the Plugins screen in the Codex App. After installing or updating, start a new task so Codex
 reloads the skills.
+
+## Agent notifications (Telegram)
+
+With the plugin installed, Claude Code and Codex CLI send a Telegram message titled `[Agent] project · short session ID` on these events.
+
+| Event | Claude Code | Codex CLI |
+|---|---|---|
+| Turn complete | ✅ | merged into "turn ended, waiting for input" |
+| Waiting for input | ✅ | same as above |
+| Permission needed | ✅ | ✅ |
+| Error | ✅ | not supported |
+
+Configuration (environment variables override the file):
+
+- `AGENT_NOTIFY_TELEGRAM_TOKEN`, `AGENT_NOTIFY_TELEGRAM_CHAT_ID`, `AGENT_NOTIFY_PRIVACY=1` (title and event type only)
+- or `~/.config/agent-notify/config.json` (`chmod 600` recommended):
+
+```json
+{"telegram": {"token": "123:ABC", "chat_id": "42"}, "privacy": false,
+ "events": {"turn_complete": true, "waiting_input": true, "permission": true, "error": true}}
+```
+
+- Codex: trust the plugin hooks once in `/hooks`. Claude Code needs no extra step.
+- Send a test message with the `notify-test` skill (or `python3 notify/bin/notify-test.py`).
+- One-way only; it never changes agent execution or approvals. Failed sends are logged to `~/.local/state/agent-notify/notify.log` and not retried later.
+- Requires Python ≥ 3.9 on macOS or Linux.
 
 ## Directory structure
 

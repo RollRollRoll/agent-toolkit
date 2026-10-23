@@ -1,0 +1,11 @@
+{
+  "description": "agent-notify：回合结束、需要授权时发送 Telegram 通知（Codex CLI）",
+  "hooks": {
+    "Stop": [
+      {"hooks": [{"type": "command", "command": "python3 \"$PLUGIN_ROOT/notify/bin/hook.py\" codex", "async": true, "timeout": 15}]}
+    ],
+    "PermissionRequest": [
+      {"hooks": [{"type": "command", "command": "python3 \"$PLUGIN_ROOT/notify/bin/hook.py\" codex", "async": true, "timeout": 15}]}
+    ]
+  }
+}

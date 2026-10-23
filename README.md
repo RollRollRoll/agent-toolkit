@@ -69,6 +69,7 @@ Skill 文件（`SKILL.md`、`references/`、`agents/openai.yaml`）统一用英�
 | `grilling` | 模型可触发 | 一个计划、决策或想法要被压力测试 | 持续深入地追问，把含糊处逼出来 |
 | `grill-me` | **仅人类** | 你想让人拷问自己手上的方案 | `grilling` 的手动入口，多传一个「不剪枝」（技术分支也照问） |
 | `create-questionnaire` | **仅人类** | 有些事你自己答不出来，得问知情人 | 把这些问题做成一份交给对方填的 Markdown 问卷 |
+| `notify-test` | 人类 / agent | 想确认 Telegram 通知配置是否正确 | 发送一条测试通知，报告成功或失败原因 |
 | `re-explain` | **仅人类** | 上一段解释没看懂 | 补充上下文，用更简单、明确的中文重新解释一遍 |
 | `teach` | **仅人类** | 想学一项新技能或新概念 | 把当前目录当有状态的教学工作区，跨会话产出自包含 HTML 课与参照文档 |
 
@@ -142,6 +143,32 @@ codex plugin add agent-toolkit@agent-toolkit
 
 也可以在 Codex CLI 的 `/plugins` 或 Codex App 的 Plugins 界面中，从已添加的
 `agent-toolkit` marketplace 安装。安装或更新后新开任务，让 Codex 重新加载 Skill。
+
+## Agent 通知（Telegram）
+
+安装插件后，Claude Code 与 Codex CLI 在下列事件时向你的 Telegram 发送通知，标题为 `[Agent] 项目 · 会话短ID`。
+
+| 事件 | Claude Code | Codex CLI |
+|---|---|---|
+| 回合完成 | ✅ | 合并为「回合结束，等待输入」 |
+| 等待输入 | ✅ | 同上 |
+| 需要授权 | ✅ | ✅ |
+| 异常 | ✅ | 不支持 |
+
+配置（环境变量优先于配置文件）：
+
+- `AGENT_NOTIFY_TELEGRAM_TOKEN`、`AGENT_NOTIFY_TELEGRAM_CHAT_ID`、`AGENT_NOTIFY_PRIVACY=1`（只发标题与事件类型）
+- 或 `~/.config/agent-notify/config.json`（建议 `chmod 600`）：
+
+```json
+{"telegram": {"token": "123:ABC", "chat_id": "42"}, "privacy": false,
+ "events": {"turn_complete": true, "waiting_input": true, "permission": true, "error": true}}
+```
+
+- Codex 首次使用需在 `/hooks` 中信任本插件的 hooks；Claude Code 无需额外操作。
+- 用 `notify-test` skill（或 `python3 notify/bin/notify-test.py`）发送测试通知。
+- 只做单向通知，不会改变 Agent 的执行或审批；发送失败只记录到 `~/.local/state/agent-notify/notify.log`，不补发。
+- 要求 Python ≥ 3.9，支持 macOS 与 Linux。
 
 ## 目录结构
 

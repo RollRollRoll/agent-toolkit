@@ -1,0 +1,3 @@
+interface:
+  display_name: "Notify Test"
+  short_description: "Send a test Telegram notification to verify agent-notify"
