@@ -13,7 +13,13 @@ from .log import write_log
 AGENT_LABELS = {"claude": "Claude", "codex": "Codex"}
 
 # Claude Code Notification 事件的 notification_type → 通知事件类型
-CLAUDE_NOTIFICATION_TYPES = {"idle_prompt": WAITING_INPUT, "permission_prompt": PERMISSION}
+# elicitation_* 是 MCP 服务器在回合中途向用户请求输入；未列出的类型一律不通知
+CLAUDE_NOTIFICATION_TYPES = {
+    "idle_prompt": WAITING_INPUT,
+    "elicitation_dialog": WAITING_INPUT,
+    "elicitation_url_dialog": WAITING_INPUT,
+    "permission_prompt": PERMISSION,
+}
 
 SUMMARY_LIMIT = 300
 

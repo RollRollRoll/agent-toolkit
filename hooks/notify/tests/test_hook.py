@@ -39,6 +39,27 @@ def test_claude_idle_prompt_sends_waiting_input(env, fake, tmp_path):
     assert [n.event_type for n in fake.sent] == ["等待输入"]
 
 
+def test_claude_mcp_elicitation_sends_waiting_input(env, fake, tmp_path):
+    # SCN-008-A：MCP 服务器回合中途请求输入，两种对话框各发一条「等待输入」，摘要为提示文字
+    for kind, message in [("elicitation_dialog", "请选择要部署的环境"),
+                          ("elicitation_url_dialog", "请在浏览器中完成登录")]:
+        payload = {"hook_event_name": "Notification", "notification_type": kind,
+                   "session_id": "m1234567xx", "cwd": str(tmp_path / "p"), "message": message}
+        process("claude", payload, env, channels=[fake])
+    assert [n.event_type for n in fake.sent] == ["等待输入", "等待输入"]
+    assert [n.summary for n in fake.sent] == ["请选择要部署的环境", "请在浏览器中完成登录"]
+
+
+def test_claude_unrelated_notification_types_are_ignored(env, fake, tmp_path):
+    # SCN-008-B：与等待用户无关的 Notification 类型不发通知
+    base = {"hook_event_name": "Notification", "session_id": "n1234567xx",
+            "cwd": str(tmp_path / "p"), "message": "x"}
+    for kind in ["auth_success", "elicitation_complete", "elicitation_response",
+                 "agent_needs_input", "agent_completed", "quota_warning", "plugin_notification"]:
+        process("claude", {**base, "notification_type": kind}, env, channels=[fake])
+    assert fake.sent == []
+
+
 def test_permission_requests_from_both_agents(env, fake, tmp_path):
     claude = {"hook_event_name": "Notification", "notification_type": "permission_prompt",
               "session_id": "aaaaaaaa1", "cwd": str(tmp_path / "p"),
