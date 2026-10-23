@@ -45,7 +45,7 @@ def test_claude_mcp_elicitation_sends_waiting_input(env, fake, tmp_path):
                    "session_id": "m1234567xx", "cwd": str(tmp_path / "p"), "message": message}
         process("claude", payload, env, channels=[fake])
     assert [n.event_type for n in fake.sent] == ["等待输入", "等待输入"]
-    assert [n.summary for n in fake.sent] == ["请选择要部署的环境", "请在浏览器中完成登录"]
+    assert [n.body for n in fake.sent] == ["请选择要部署的环境", "请在浏览器中完成登录"]
 
 
 def test_claude_unrelated_notification_types_are_ignored(env, fake, tmp_path):
