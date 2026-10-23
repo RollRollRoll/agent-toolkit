@@ -132,3 +132,18 @@ def test_failed_fallback_is_ordinary_failure_without_second_fallback():
     with pytest.raises(ChannelError, match="can't parse entities"):
         ch.send(_n())
     assert len(ch.opener.requests) == 2
+
+
+@pytest.mark.parametrize("failure", [
+    _http(500, "Internal Server Error"),
+    _http(429, "Too Many Requests"),
+    urllib.error.URLError("down"),
+], ids=["5xx", "429", "network"])
+def test_plain_fallback_is_sent_once_without_retry(failure, monkeypatch):
+    # spec #2 §3.4：解析失败后只发「1 次纯文本」，补发失败按普通失败处理，不再重试
+    monkeypatch.setattr("agent_notify.channels.time.sleep", lambda s: None)
+    ch = telegram_channel(outcomes=[_http(400, PARSE_ERROR), failure])
+    with pytest.raises(ChannelError):
+        ch.send(_n())
+    first, second = ch.opener.requests
+    assert first.body["parse_mode"] == "HTML" and "parse_mode" not in second.body

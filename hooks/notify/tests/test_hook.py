@@ -192,8 +192,10 @@ def test_missing_credentials_logs_and_sends_nothing(tmp_path):
     env = {"AGENT_NOTIFY_CONFIG": str(tmp_path / "none.json"),
            "AGENT_NOTIFY_LOG": str(tmp_path / "n.log"), "HOME": str(tmp_path)}
     assert run("claude", '{"hook_event_name": "Stop", "session_id": "q"}', env, spawn=False) == 0
-    # 缺少凭据属于跳过原因，只在 debug 级别记录（REQ-010）；debug 情况见 test_logging.py
-    assert not (tmp_path / "n.log").exists()
+    # 缺少凭据是配置错误：默认级别下也写一行失败，供 notify-doctor 识别（Q1）
+    [line] = (tmp_path / "n.log").read_text(encoding="utf-8").splitlines()
+    assert " level=error " in line and " result=fail error=config " in line
+    assert line.endswith(" reason=missing_credentials")
 
 
 def test_invalid_payload_never_raises(env):

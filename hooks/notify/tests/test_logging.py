@@ -156,6 +156,34 @@ def test_retries_share_the_remaining_time_budget(env, tmp_path, monkeypatch):
     assert [r.timeout for r in opener.requests] == [30, 18, 6]
 
 
+def test_debug_logs_normalized_config_keys_without_raw_values(env, tmp_path):
+    # spec #2 §3.6：配置值非法时照常发送，debug 日志记录被归一化的键，不写原值
+    env = _with_config(env, tmp_path, log_level="debug", summary_max_chars="SECRET-RAW-1",
+                       request_timeout=999, host_label="devbox")
+    channel = telegram_channel()
+    process("claude", _stop(tmp_path), env, channels=[channel])
+    assert len(channel.opener.requests) == 1
+    lines = _log_lines(tmp_path)
+    normalized = [l for l in lines if " result=normalized " in l]
+    assert [l.split(" key=")[1] for l in normalized] == ["summary_max_chars", "request_timeout"]
+    assert all(" level=debug " in l for l in normalized)
+    log = "\n".join(lines)
+    assert "SECRET-RAW-1" not in log and "999" not in log
+
+
+def test_valid_config_logs_no_normalized_line(env, tmp_path):
+    env = _with_config(env, tmp_path, log_level=" DEBUG", summary_max_chars=500,
+                       request_timeout=5)
+    process("claude", _stop(tmp_path), env, channels=[telegram_channel()])
+    assert not any(" result=normalized " in l for l in _log_lines(tmp_path))
+
+
+def test_normalized_keys_not_logged_at_info(env, tmp_path):
+    env = _with_config(env, tmp_path, summary_max_chars=-1)
+    process("claude", _stop(tmp_path), env, channels=[telegram_channel()])
+    assert not any(" result=normalized " in l for l in _log_lines(tmp_path))
+
+
 def test_invalid_payload_logs_key_value_fail_line(env, tmp_path):
     from agent_notify.hook import run
     assert run("claude", "not json{", env, spawn=False) == 0
@@ -163,13 +191,22 @@ def test_invalid_payload_logs_key_value_fail_line(env, tmp_path):
     assert re.search(r" level=error agent=claude result=fail error=invalid_payload$", line)
 
 
-def test_debug_logs_missing_credentials_skip(tmp_path):
+@pytest.mark.parametrize("level", ["error", "info", "debug"])
+def test_missing_credentials_logs_config_failure_at_every_level(tmp_path, level):
+    # Q1：缺少凭据在所有级别都写 error 行，notify-doctor 能把它识别为最近一次失败
+    from agent_notify import doctor
     from agent_notify.hook import run
     cfg = tmp_path / "cfg.json"
-    cfg.write_text(json.dumps({"log_level": "debug", "host_label": "devbox"}))
+    cfg.write_text(json.dumps({"log_level": level, "host_label": "devbox"}))
     env = {"AGENT_NOTIFY_CONFIG": str(cfg), "AGENT_NOTIFY_LOG": str(tmp_path / "notify.log"),
            "HOME": str(tmp_path)}
     run("claude", json.dumps(_stop(tmp_path)), env, spawn=False)
     [line] = _log_lines(tmp_path)
-    assert re.search(r" level=debug agent=claude host=devbox session=abcdefgh event=回合完成 "
-                     r"channel=telegram result=skip reason=missing_credentials$", line)
+    assert re.search(r" level=error agent=claude host=devbox session=abcdefgh event=回合完成 "
+                     r"channel=telegram result=fail error=config reason=missing_credentials$",
+                     line)
+    import io
+    out = io.StringIO()
+    doctor.main(env, out=out, argv=["--offline"])
+    [last] = [l for l in out.getvalue().splitlines() if "最近一次发送失败" in l]
+    assert last.startswith("⚠️") and "error=config" in last

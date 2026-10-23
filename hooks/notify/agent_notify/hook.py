@@ -12,7 +12,7 @@ from pathlib import Path
 from .config import (AGENT_LABELS, ERROR, PERMISSION, TURN_COMPLETE, TURN_END_WAITING,
                      WAITING_INPUT, load_config)
 from .log import log_event
-from .redaction import redact
+from .redaction import redact_checked
 
 # Claude Code Notification 事件的 notification_type → 通知事件类型
 # elicitation_* 是 MCP 服务器在回合中途向用户请求输入；未列出的类型一律不通知
@@ -46,6 +46,10 @@ def build(agent, payload, config):
     """把原始 payload 转成通知；不需要通知时返回 None。"""
     if agent not in AGENT_LABELS or not isinstance(payload, dict):
         return None
+    # spec #2 §3.6：被归一化的配置键在 debug 级别逐个记录；原值可能是敏感信息，不写入
+    for key in config.normalized_keys:
+        log_event(config, "debug", agent=agent, session=_short_session(payload),
+                  result="normalized", key=key)
     event_type = _event_type(agent, payload)
     if event_type is None or not config.event_enabled(event_type):
         # debug 级别记录跳过原因；只记事件元数据，不记正文
@@ -62,8 +66,8 @@ def build(agent, payload, config):
     body = _summary(event_type, payload)
     session_title = str(payload.get("session_title") or "")
     # 遮蔽（REQ-005）：必须在截断之前，避免凭据被截成规则匹配不到的半截
-    body = redact(body, config.telegram_token)
-    session_title = redact(session_title, config.telegram_token)
+    body = _redact_field(body, config, agent, event_type, payload)
+    session_title = _redact_field(session_title, config, agent, event_type, payload)
     # 开关（REQ-004）：授权的正文是命令预览，其余事件的正文和会话标题属于摘要
     if not (config.include_tool_detail if event_type == PERMISSION else config.include_summary):
         body = ""
@@ -77,6 +81,15 @@ def build(agent, payload, config):
         error_kind=str(payload.get("error") or "") if event_type == ERROR else "",
         body=_truncate(body, config.summary_max_chars),
     )
+
+
+def _redact_field(text, config, agent, event_type, payload):
+    """遮蔽单个字段；遮蔽出错时字段已整段替换为 ***，这里补记一行错误（spec #2 §3.6）。"""
+    text, failed = redact_checked(text, config.telegram_token)
+    if failed:
+        log_event(config, "error", agent=agent, session=_short_session(payload),
+                  event=event_type, result="fail", error="redaction")
+    return text
 
 
 def _short_session(payload):
@@ -194,10 +207,11 @@ def run(agent, raw, env, spawn=True):
         if notification is None:
             return 0
         if "telegram" in config.channels and not (config.telegram_token and config.telegram_chat_id):
-            log_event(config, "debug", agent=agent, host=notification.host,
+            # 缺少凭据是配置错误：所有级别都写失败行，notify-doctor 才能识别（Q1）
+            log_event(config, "error", agent=agent, host=notification.host,
                       session=notification.session_id,
                       event=notification.event_type, channel="telegram",
-                      result="skip", reason="missing_credentials")
+                      result="fail", error="config", reason="missing_credentials")
             return 0
         if spawn:
             _spawn_sender(notification, env)

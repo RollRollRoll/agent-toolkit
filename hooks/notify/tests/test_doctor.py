@@ -163,16 +163,58 @@ def test_no_log_yet_shows_writable_and_no_failure(denv, tmp_path):
 def test_log_with_failures_shows_latest_failure_time_and_kind(denv, tmp_path):
     log = tmp_path / "state" / "notify.log"
     log.parent.mkdir()
+    # 成功行早于最近一次失败：未恢复，显示 ⚠️
     log.write_text(
+        "2026-10-19T08:00:00 level=info agent=claude channel=telegram result=ok duration_ms=3\n"
         "2026-10-20T09:00:00 level=error agent=claude channel=telegram result=fail "
         "duration_ms=5 error=network detail=down\n"
         "2026-10-21T10:30:00 level=error agent=codex channel=telegram result=fail "
-        'duration_ms=8 error=api status=401 detail="Telegram HTTP 401: Unauthorized"\n'
-        "2026-10-22T11:00:00 level=info agent=claude channel=telegram result=ok duration_ms=3\n")
+        'duration_ms=8 error=api status=401 detail="Telegram HTTP 401: Unauthorized"\n')
     code, text, _ = run(denv, argv=["--offline"])
     assert code == 0
     last = line(text, "最近一次发送失败")
     assert last.startswith("⚠️") and "2026-10-21T10:30:00" in last and "api" in last and "401" in last
+    hint(text, "最近一次发送失败")
+
+
+@pytest.mark.parametrize("result", ["ok", "fallback"])
+def test_failure_followed_by_success_is_shown_as_recovered(denv, tmp_path, result):
+    log = tmp_path / "state" / "notify.log"
+    log.parent.mkdir()
+    log.write_text(
+        "2026-10-21T10:30:00 level=error agent=codex channel=telegram result=fail "
+        "duration_ms=8 error=network detail=down\n"
+        f"2026-10-22T11:00:00 level=info agent=claude channel=telegram result={result} "
+        "duration_ms=3\n")
+    _, text, _ = run(denv, argv=["--offline"])
+    last = line(text, "最近一次发送失败")
+    assert last == "✅ 最近一次发送失败：2026-10-21T10:30:00 error=network（已恢复）"
+    assert "→" not in text.splitlines()[text.splitlines().index(last) + 1]
+
+
+def test_failure_without_later_success_line_is_warning(denv, tmp_path):
+    # log_level: error 时没有成功行，无法判断是否恢复，按 ⚠️ 处理
+    log = tmp_path / "state" / "notify.log"
+    log.parent.mkdir()
+    log.write_text("2026-10-21T10:30:00 level=error agent=codex channel=telegram result=fail "
+                   "duration_ms=8 error=network\n")
+    _, text, _ = run(denv, argv=["--offline"])
+    assert line(text, "最近一次发送失败").startswith("⚠️")
+    hint(text, "最近一次发送失败")
+
+
+def test_unreadable_log_is_warning_not_none(denv, tmp_path):
+    # spec #2 §3.4：日志读取失败时该项为 ⚠️
+    log = tmp_path / "state" / "notify.log"
+    log.parent.mkdir()
+    log.write_text("2026-10-21T10:30:00 level=info result=ok duration_ms=3\n")
+    os.chmod(log, 0o000)
+    try:
+        _, text, _ = run(denv, argv=["--offline"])
+    finally:
+        os.chmod(log, 0o600)
+    last = line(text, "最近一次发送失败")
+    assert last.startswith("⚠️") and not last.endswith("无")
     hint(text, "最近一次发送失败")
 
 

@@ -90,9 +90,16 @@ class TelegramChannel:
             except TelegramResponseError:
                 # HTTP 200 已送达，不重试，避免重复发送
                 return result
-            except TelegramAPIError as exc:
+            except ChannelError as exc:
+                if result == FALLBACK:
+                    # 纯文本补发只发 1 次：任何失败都按普通失败处理，不重试（spec #2 §3.4）
+                    raise
+                if not isinstance(exc, TelegramAPIError):
+                    last_error = exc
+                    attempts += 1
+                    continue
                 last_error = exc
-                if result is None and _is_parse_error(exc):
+                if _is_parse_error(exc):
                     # REQ-006：HTML 被拒，用同一组字段排版成纯文本补发一次；补发不计入重试次数
                     params = {"chat_id": self.chat_id, "text": fit_text(render_plain, notification)}
                     result = FALLBACK
@@ -105,10 +112,8 @@ class TelegramChannel:
                     attempts += 1
                     continue
                 if exc.code < 500:
-                    # 4xx（token 或 chat_id 错误、补发仍被拒）重试无意义
+                    # 4xx（token 或 chat_id 错误）重试无意义
                     break
-            except ChannelError as exc:
-                last_error = exc
             attempts += 1
         raise last_error or ChannelError("发送超时", kind="timeout")
 

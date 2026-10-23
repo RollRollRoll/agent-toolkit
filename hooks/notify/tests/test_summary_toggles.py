@@ -116,6 +116,38 @@ def test_privacy_env_overrides_config_file(env, fake, tmp_path, env_value, file_
     assert fake.sent[0].body == body
 
 
+@pytest.mark.parametrize("value, expected", [
+    ("false", False), ("0", False), ("no", False), ("OFF", False), ("", False),
+    ("true", True), ("yes", True), ("anything", True),
+    (True, True), (False, False), (0, False), (1, True),
+])
+def test_boolean_config_values_parsed_consistently(env, tmp_path, value, expected):
+    # spec #2 §3.4：privacy 与 include_* 共用同一套真假判定；字符串 "false" 不能被当成真
+    from agent_notify.config import load_config
+    _with_config(env, tmp_path, {"privacy": value})
+    assert load_config(env).privacy is expected
+    for key in ("include_summary", "include_tool_detail"):
+        _with_config(env, tmp_path, {key: value})
+        assert getattr(load_config(env), key) is expected
+
+
+def test_null_boolean_values_fall_back_to_defaults(env, tmp_path):
+    # JSON null 视同缺省：privacy 默认关，include_* 默认开
+    from agent_notify.config import load_config
+    _with_config(env, tmp_path, {"privacy": None, "include_summary": None,
+                                 "include_tool_detail": None})
+    config = load_config(env)
+    assert (config.privacy, config.include_summary, config.include_tool_detail) == \
+        (False, True, True)
+
+
+def test_include_switches_default_to_true(env, tmp_path):
+    from agent_notify.config import load_config
+    _with_config(env, tmp_path, {})
+    config = load_config(env)
+    assert config.include_summary is True and config.include_tool_detail is True
+
+
 def test_143_config_file_upgrade(tmp_path):
     # SCN-013-A：只有 telegram、privacy、events 三项，通知照常送达，开关和隐私生效
     from agent_notify.channels import build_channels

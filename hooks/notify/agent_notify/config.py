@@ -43,6 +43,7 @@ class Config:
     log_path: Path = Path()
     log_level: str = "info"
     request_timeout: float = 10.0  # 每条通知在每个渠道上的总时限（秒），含重试与回退
+    normalized_keys: list = field(default_factory=list)  # 被归一化的配置键（只记键名，不记原值）
 
     def event_enabled(self, event_type):
         return event_type not in self.disabled_events
@@ -58,8 +59,17 @@ def default_log_path(env):
     return Path(base) / "agent-notify" / "notify.log"
 
 
-def _truthy(value):
-    return str(value).strip().lower() in ("1", "true", "yes", "on")
+_FALSE_STRINGS = ("false", "0", "no", "off", "")
+
+
+def _truthy(value, default=False):
+    """布尔开关统一解析：None 取默认值；布尔照原样；字符串只有 false/0/no/off/空串为假；
+    其他类型按 Python 真值。环境变量与配置文件共用。"""
+    if value is None:
+        return default
+    if isinstance(value, str):
+        return value.strip().lower() not in _FALSE_STRINGS
+    return bool(value)
 
 
 def _summary_max_chars(value):
@@ -113,20 +123,33 @@ def load_config(env):
 
     # 环境变量（含假值）覆盖配置文件；隐私模式开启时两个开关都视为关闭（REQ-004）
     privacy_env = env.get("AGENT_NOTIFY_PRIVACY")
-    privacy = _truthy(privacy_env) if privacy_env is not None else bool(data.get("privacy", False))
+    privacy = _truthy(privacy_env if privacy_env is not None else data.get("privacy"))
+    # 数值与枚举配置归一化；记下配置了但被改值的键，供 hook 在 debug 级别记录（spec #2 §3.6）
+    normalized = {}
+    normalized_keys = []
+    for key, normalize in (("summary_max_chars", _summary_max_chars),
+                           ("request_timeout", _request_timeout),
+                           ("log_level", _log_level)):
+        raw = data.get(key)
+        normalized[key] = normalize(raw)
+        # 日志级别只是大小写或空白不同不算非法值
+        comparable = raw.strip().lower() if key == "log_level" and isinstance(raw, str) else raw
+        if raw is not None and (isinstance(raw, bool) or comparable != normalized[key]):
+            normalized_keys.append(key)
     return Config(
         telegram_token=env.get("AGENT_NOTIFY_TELEGRAM_TOKEN") or str(telegram.get("token") or ""),
         telegram_chat_id=env.get("AGENT_NOTIFY_TELEGRAM_CHAT_ID") or str(telegram.get("chat_id") or ""),
         privacy=privacy,
-        include_summary=not privacy and data.get("include_summary") is not False,
-        include_tool_detail=not privacy and data.get("include_tool_detail") is not False,
-        summary_max_chars=_summary_max_chars(data.get("summary_max_chars")),
+        include_summary=not privacy and _truthy(data.get("include_summary"), default=True),
+        include_tool_detail=not privacy and _truthy(data.get("include_tool_detail"), default=True),
+        summary_max_chars=normalized["summary_max_chars"],
         host_label=host_label_of(data),
         disabled_events=disabled,
         channels=[str(c) for c in channels],
         log_path=Path(env.get("AGENT_NOTIFY_LOG") or default_log_path(env)),
-        log_level=_log_level(data.get("log_level")),
-        request_timeout=_request_timeout(data.get("request_timeout")),
+        log_level=normalized["log_level"],
+        request_timeout=normalized["request_timeout"],
+        normalized_keys=normalized_keys,
     )
 
 

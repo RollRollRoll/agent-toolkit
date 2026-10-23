@@ -140,15 +140,27 @@ def _check_runtime(report, config):
         report.item(FAIL, f"日志路径：{path}（不可写）",
                     "检查目录权限，或用环境变量 AGENT_NOTIFY_LOG 指向可写位置")
 
-    failure = _last_failure(path)
-    if failure:
-        report.item(WARN, f"最近一次发送失败：{failure}",
-                    "运行 notify-test 复现；仍失败时按上面的 getMe / getChat 结果处理")
-    else:
-        report.item(OK, "最近一次发送失败：无")
+    _check_last_failure(report, path)
 
     print("💡 Codex 需在 /hooks 中信任本插件的 hooks，否则不会触发通知", file=report.out)
     print("💡 hook 注册状态需在 Agent 内确认（Claude Code 用 /hooks 查看）", file=report.out)
+
+
+def _check_last_failure(report, path):
+    """最近一次发送失败：之后有成功行为 ✅（已恢复），否则 ⚠️；读日志失败也是 ⚠️（spec #2 §3.4）。"""
+    try:
+        failure, recovered = _last_failure(path)
+    except OSError as exc:
+        report.item(WARN, f"最近一次发送失败：无法读取日志（{exc.strerror or exc}）",
+                    "检查日志文件权限，或用环境变量 AGENT_NOTIFY_LOG 指向可读写位置")
+        return
+    if not failure:
+        report.item(OK, "最近一次发送失败：无")
+    elif recovered:
+        report.item(OK, f"最近一次发送失败：{failure}（已恢复）")
+    else:
+        report.item(WARN, f"最近一次发送失败：{failure}",
+                    "运行 notify-test 复现；仍失败时按上面的 getMe / getChat 结果处理")
 
 
 def _writable(path):
@@ -162,22 +174,32 @@ def _writable(path):
 
 
 def _last_failure(path):
-    """从日志（及轮转文件）中找最近一条 result=fail，返回「时间 error=类型 [status=码]」。"""
+    """从新到旧扫描日志（及轮转文件），返回 (失败摘要, 是否已恢复)。
+
+    失败摘要是最近一条 result=fail 的「时间 error=类型 [status=码]」，没有失败时为空串；
+    它之后出现过 result=ok / fallback 视为已恢复。文件不存在跳过，其他读取错误抛 OSError。
+    """
+    recovered = False
     for candidate in (path, path.with_name(path.name + ".1")):
         try:
             lines = candidate.read_text(encoding="utf-8", errors="replace").splitlines()
-        except OSError:
+        except FileNotFoundError:
             continue
         for text in reversed(lines):
-            if " result=fail" not in text:
-                continue
-            # detail 是最后一个字段且可能含任意文本，先截掉，避免误取其中的 error=
+            # detail 是最后一个字段且可能含任意文本，先截掉，避免误取其中的 error= / result=
             head = text.split(" detail=", 1)[0]
-            return " ".join([head.split(" ", 1)[0]] + _FIELD.findall(head))
-    return ""
+            match = _RESULT.search(head)
+            if not match:
+                continue
+            if match.group(1) != "fail":
+                recovered = True
+                continue
+            return " ".join([head.split(" ", 1)[0]] + _FIELD.findall(head)), recovered
+    return "", recovered
 
 
-# 失败行里的错误类型与 HTTP 状态码（#8 的日志格式）
+# 日志行的结果字段与失败行里的错误类型、HTTP 状态码（#8 的日志格式）
+_RESULT = re.compile(r"(?<= )result=(ok|fallback|fail)(?= |$)")
 _FIELD = re.compile(r"(?<= )(?:error|status)=\S+")
 
 

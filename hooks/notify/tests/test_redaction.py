@@ -22,6 +22,8 @@ CASES = [
     ("auth-basic-proxy", "proxy-authorization: basic dXNlcjpwYXNz",
      "proxy-authorization: basic ***"),
     ("auth-token", "AUTHORIZATION: Token tok_99", "AUTHORIZATION: Token ***"),
+    ("auth-bearer-double-quoted", 'Authorization: Bearer "abc 123"', 'Authorization: Bearer "***"'),
+    ("auth-bearer-single-quoted", "authorization=bearer 'xyz'", "authorization=bearer '***'"),
     ("auth-miss", "Authorization required; bearer of news",
      "Authorization required; bearer of news"),
     # Telegram token 形态（数字:35 位）
@@ -61,6 +63,10 @@ CASES = [
     ("mysql-other-segment", "mysql -h db; tar -pxf a.tar", "mysql -h db; tar -pxf a.tar"),
     # URL 中的密码
     ("url-hit", "postgres://app:s3cr3t@db/x", "postgres://app:***@db/x"),
+    # 用户名含敏感键名时仍按 URL 规则处理，保留主机和路径
+    ("url-token-user", "https://x-access-token:ghs_abc@github.com/a",
+     "https://x-access-token:***@github.com/a"),
+    ("kv-max-tokens", "max_tokens=100", "max_tokens=***"),
     ("url-miss", "https://host:8080/p and redis://app@db", "https://host:8080/p and redis://app@db"),
     # 不误伤常见命令（SCN-005-C）
     ("scn-005-c", "mkdir -p build && psql -p 5432", "mkdir -p build && psql -p 5432"),
@@ -74,6 +80,29 @@ def test_redaction_rules(text, expected):
 
 def test_redaction_failure_masks_whole_field():
     assert redact(None) == "***"
+
+
+class _BrokenRule:
+    """只在遇到特定输入时出错的规则：真实的正则异常也取决于输入，日志行本身仍能正常遮蔽。"""
+
+    def sub(self, repl, text):
+        if "SECRET-XYZ" in text:
+            raise RuntimeError("regex blew up")
+        return text
+
+
+def test_redaction_error_is_logged_and_field_sent_as_mask(env, tmp_path, monkeypatch):
+    # spec #2 §3.6：遮蔽正则异常时该字段整段替换为 ***，通知照常发送，并记录错误
+    monkeypatch.setattr("agent_notify.redaction._RULES", [(_BrokenRule(), "")])
+    ch = telegram_channel()
+    process("claude", _stop(tmp_path, "原始正文 SECRET-XYZ"), env, channels=[ch])
+    [text] = ch.opener.texts()
+    assert visible(text).endswith("\n***") and "SECRET-XYZ" not in text
+    lines = (tmp_path / "notify.log").read_text(encoding="utf-8").splitlines()
+    errors = [l for l in lines if " error=redaction" in l]
+    assert len(errors) == 1
+    assert " level=error " in errors[0] and " result=fail " in errors[0]
+    assert "SECRET-XYZ" not in "\n".join(lines)
 
 
 def _permission(tmp_path, command):
