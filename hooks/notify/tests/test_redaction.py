@@ -6,7 +6,7 @@ import json
 import pytest
 
 from agent_notify.redaction import redact
-from conftest import process, telegram_channel
+from conftest import process, telegram_channel, visible
 
 CONFIGURED = "123:CONFIGURED-RAW"  # 当前配置的 bot token 原文（不是 Telegram 形态）
 TG = "1234567890:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsawZ"  # 形如 Telegram bot token（35 位）
@@ -112,7 +112,7 @@ def test_key_value_and_url_password_masked_in_summary_and_title(env, tmp_path):
 def test_common_commands_shown_verbatim(env, tmp_path):
     ch = telegram_channel()
     process("codex", _permission(tmp_path, "mkdir -p build && psql -p 5432"), env, channels=[ch])
-    assert ch.opener.texts()[0].endswith("Bash: mkdir -p build && psql -p 5432")
+    assert visible(ch.opener.texts()[0]).endswith("Bash: mkdir -p build && psql -p 5432")
 
 
 def test_credential_across_truncation_point_leaves_no_fragment(env, tmp_path):
