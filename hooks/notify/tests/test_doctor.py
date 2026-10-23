@@ -7,6 +7,7 @@ import os
 
 import pytest
 from conftest import TOKEN, RecordingOpener
+from conftest import http_error as _http
 
 from agent_notify import doctor
 
@@ -61,12 +62,6 @@ def hint(text, keyword):
     i = next(i for i, l in enumerate(lines) if keyword in l)
     assert lines[i + 1].lstrip().startswith("→"), lines[i + 1]
     return lines[i + 1]
-
-
-def _http(code, description):
-    import urllib.error
-    body = json.dumps({"ok": False, "error_code": code, "description": description}).encode()
-    return urllib.error.HTTPError("u", code, "err", {}, io.BytesIO(body))
 
 
 def test_rejected_token_fails_get_me_and_skips_get_chat(denv):

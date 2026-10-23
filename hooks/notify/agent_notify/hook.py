@@ -3,14 +3,13 @@ from __future__ import annotations
 
 import json
 import os
-import socket
 import subprocess
 import time
 from dataclasses import dataclass
 from pathlib import Path
 
 from .config import (AGENT_LABELS, ERROR, PERMISSION, TURN_COMPLETE, TURN_END_WAITING,
-                     WAITING_INPUT, load_config)
+                     WAITING_INPUT, load_config, resolve_host, truncate)
 from .log import log_event
 from .redaction import redact_checked
 
@@ -24,7 +23,6 @@ CLAUDE_NOTIFICATION_TYPES = {
 }
 
 FIELD_MAX_CHARS = 64  # 项目、分支、会话标题的长度上限（REQ-003）
-HOST_LIMIT = 32
 
 
 @dataclass
@@ -74,12 +72,12 @@ def build(agent, payload, config):
     if not config.include_summary:
         session_title = ""
     return Notification(
-        agent, event_type, host=resolve_host(config), project=_truncate(project, FIELD_MAX_CHARS),
-        branch=_truncate(branch, FIELD_MAX_CHARS),
+        agent, event_type, host=resolve_host(config), project=truncate(project, FIELD_MAX_CHARS),
+        branch=truncate(branch, FIELD_MAX_CHARS),
         session_id=_short_session(payload),
-        session_title=_truncate(session_title, FIELD_MAX_CHARS),
+        session_title=truncate(session_title, FIELD_MAX_CHARS),
         error_kind=str(payload.get("error") or "") if event_type == ERROR else "",
-        body=_truncate(body, config.summary_max_chars),
+        body=truncate(body, config.summary_max_chars),
     )
 
 
@@ -98,6 +96,8 @@ def _short_session(payload):
 
 def deliver(notification, config, channels):
     """逐个渠道发送并计时，按级别记录结果；单个渠道失败只记日志，互不影响。"""
+    # 渠道模块在投递时才导入（与 run 一致），hook 入口不加载网络相关模块
+    from .channels import FALLBACK
     for channel in channels:
         fields = {"agent": notification.agent, "host": notification.host,
                   "session": notification.session_id,
@@ -111,15 +111,13 @@ def deliver(notification, config, channels):
                       error=getattr(exc, "kind", "internal"), status=getattr(exc, "code", None),
                       detail=str(exc))
             continue
-        # 渠道以返回值 "fallback" 表示经纯文本回退送达（REQ-006），否则为正常送达
-        log_event(config, "info", **fields, result="fallback" if result == "fallback" else "ok",
+        # 渠道以返回值 FALLBACK 表示经纯文本回退送达（REQ-006），否则为正常送达
+        log_event(config, "info", **fields, result=FALLBACK if result == FALLBACK else "ok",
                   duration_ms=_elapsed_ms(start))
 
 
 def _elapsed_ms(start):
     return int((time.monotonic() - start) * 1000)
-
-
 
 
 def _event_type(agent, payload):
@@ -158,17 +156,6 @@ def _summary(event_type, payload):
     return str(payload.get("last_assistant_message") or payload.get("message") or "")
 
 
-def resolve_host(config):
-    """主机：配置的 host_label 优先，否则取机器名第一个 . 之前的部分；超长截断（REQ-002）。"""
-    host = config.host_label
-    if not host:
-        try:
-            host = socket.gethostname().split(".", 1)[0].strip()
-        except OSError:
-            host = ""
-    return host if len(host) <= HOST_LIMIT else host[:HOST_LIMIT] + "…"
-
-
 def _git(cwd, *args):
     try:
         result = subprocess.run(
@@ -187,11 +174,6 @@ def _project_and_branch(cwd):
     # symbolic-ref 在尚无提交的仓库里也能拿到分支名
     branch = _git(cwd, "symbolic-ref", "--short", "-q", "HEAD")
     return Path(root).name, branch
-
-
-def _truncate(text, limit):
-    # Python 字符串按码点截断，不会切坏多字节字符
-    return text if len(text) <= limit else text[:limit] + "…"
 
 
 def run(agent, raw, env, spawn=True):

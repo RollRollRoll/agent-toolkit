@@ -8,10 +8,10 @@ import time
 import urllib.error
 import urllib.request
 
-from .config import (AGENT_LABELS, ERROR, PERMISSION, TEST_NOTIFICATION, TURN_COMPLETE,
-                     TURN_END_WAITING, WAITING_INPUT)
+from .config import (AGENT_LABELS, DEFAULT_REQUEST_TIMEOUT, ERROR, PERMISSION, TEST_NOTIFICATION,
+                     TURN_COMPLETE, TURN_END_WAITING, WAITING_INPUT, truncate)
 
-TOTAL_TIMEOUT = 10.0
+TOTAL_TIMEOUT = DEFAULT_REQUEST_TIMEOUT
 MAX_RETRIES = 2
 MAX_TEXT_UTF16 = 4096  # Telegram 单条消息上限，按 UTF-16 码元计（REQ-007）
 FALLBACK = "fallback"  # send() 的返回值：以纯文本回退送达
@@ -185,7 +185,8 @@ def fit_text(render, notification):
     body = notification.body
 
     def attempt(keep):
-        return render(dataclasses.replace(notification, body=body[:keep] + "…"))
+        # keep 始终小于正文长度，truncate 一定会截短并补 …
+        return render(dataclasses.replace(notification, body=truncate(body, keep)))
 
     low, high = 0, len(body) - 1  # 至少截掉一个字符
     while low < high:

@@ -55,6 +55,29 @@ def fake():
     return FakeChannel()
 
 
+@pytest.fixture
+def hostname(monkeypatch):
+    """机器名固定为 box.local；测试可改 hostname["value"]。各文件用 usefixtures 默认启用。"""
+    names = {"value": "box.local"}
+    monkeypatch.setattr("socket.gethostname", lambda: names["value"])
+    return names
+
+
+def with_config(env, tmp_path, **data):
+    """把 data 写成配置文件并让 env 指向它；直接修改 env 并返回它。"""
+    cfg = tmp_path / "config.json"
+    cfg.write_text(json.dumps(data), encoding="utf-8")
+    env["AGENT_NOTIFY_CONFIG"] = str(cfg)
+    return env
+
+
+def http_error(code, description):
+    """Bot API 返回的 HTTP 错误，响应体与 Telegram 一致。"""
+    import urllib.error
+    body = {"ok": False, "error_code": code, "description": description}
+    return urllib.error.HTTPError("u", code, "err", {}, io.BytesIO(json.dumps(body).encode()))
+
+
 @dataclass
 class TelegramRequest:
     """假 opener 记录的一次 Bot API 请求。"""

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import socket
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -28,6 +29,16 @@ EVENT_KEYS = {
 DEFAULT_SUMMARY_MAX_CHARS = 1000
 SUMMARY_MAX_CHARS_CAP = 3500
 
+DEFAULT_REQUEST_TIMEOUT = 10.0  # 请求总时限默认值（秒，REQ-011）
+LOG_LEVELS = ("error", "info", "debug")  # 日志级别从低到高（REQ-010）
+HOST_LIMIT = 32  # 主机显示长度上限（REQ-002）
+ELLIPSIS = "…"
+
+
+def truncate(text, limit):
+    """超过 limit 个字符时截断并以 … 结尾；Python 字符串按码点截断，不会切坏多字节字符。"""
+    return text if len(text) <= limit else text[:limit] + ELLIPSIS
+
 
 @dataclass
 class Config:
@@ -42,7 +53,7 @@ class Config:
     channels: list = field(default_factory=lambda: ["telegram"])
     log_path: Path = Path()
     log_level: str = "info"
-    request_timeout: float = 10.0  # 每条通知在每个渠道上的总时限（秒），含重试与回退
+    request_timeout: float = DEFAULT_REQUEST_TIMEOUT  # 每条通知在每个渠道上的总时限（秒），含重试与回退
     normalized_keys: list = field(default_factory=list)  # 被归一化的配置键（只记键名，不记原值）
 
     def event_enabled(self, event_type):
@@ -156,11 +167,27 @@ def load_config(env):
 def _request_timeout(value):
     """请求总时限归一化：非数字按 10 秒，小于 1 按 1，大于 60 按 60。"""
     if isinstance(value, bool) or not isinstance(value, (int, float)) or value != value:
-        return 10.0
+        return DEFAULT_REQUEST_TIMEOUT
     return float(min(max(value, 1), 60))
 
 
 def _log_level(value):
     """日志级别归一化：只接受 error / info / debug，其余按 info 处理。"""
     level = str(value).strip().lower() if isinstance(value, str) else ""
-    return level if level in ("error", "info", "debug") else "info"
+    return level if level in LOG_LEVELS else "info"
+
+
+def resolve_host_label(host_label):
+    """主机：给定的标签优先，否则取机器名第一个 . 之前的部分；超长截断（REQ-002）。"""
+    host = host_label.strip()
+    if not host:
+        try:
+            host = socket.gethostname().split(".", 1)[0].strip()
+        except OSError:
+            host = ""
+    return truncate(host, HOST_LIMIT)
+
+
+def resolve_host(config):
+    """按配置解析通知里显示的主机。"""
+    return resolve_host_label(config.host_label)

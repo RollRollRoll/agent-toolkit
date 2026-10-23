@@ -13,9 +13,7 @@ import pytest
 from conftest import TOKEN, process, telegram_channel, visible
 
 
-@pytest.fixture(autouse=True)
-def _hostname(monkeypatch):
-    monkeypatch.setattr("socket.gethostname", lambda: "box.local")
+pytestmark = pytest.mark.usefixtures("hostname")
 
 
 def _repo(tmp_path, name="myrepo", branch="feat/x"):

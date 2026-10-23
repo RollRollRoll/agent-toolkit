@@ -4,9 +4,9 @@ from __future__ import annotations
 import sys
 
 from .channels import build_channels
-from .config import TEST_NOTIFICATION, load_config
-from .hook import Notification, resolve_host
-from .log import redact
+from .config import TEST_NOTIFICATION, load_config, resolve_host
+from .hook import Notification
+from .redaction import redact
 
 
 def make_test_notification(host=""):
@@ -29,5 +29,5 @@ def main(env, out=sys.stdout):
             print(f"✅ {channel.name}：发送成功", file=out)
         except Exception as exc:  # noqa: BLE001
             failed = True
-            print(f"❌ {channel.name}：{redact(config, str(exc))}", file=out)
+            print(f"❌ {channel.name}：{redact(str(exc), config.telegram_token)}", file=out)
     return 1 if failed else 0

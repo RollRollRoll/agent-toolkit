@@ -1,16 +1,12 @@
 """摘要长度与摘要 / 命令预览开关（spec REQ-003、REQ-004、REQ-013）。"""
 from __future__ import annotations
 
-import json
 import subprocess
 
 import pytest
-from conftest import TOKEN, process, telegram_channel, visible
+from conftest import TOKEN, process, telegram_channel, visible, with_config
 
-
-@pytest.fixture(autouse=True)
-def _hostname(monkeypatch):
-    monkeypatch.setattr("socket.gethostname", lambda: "box.local")
+pytestmark = pytest.mark.usefixtures("hostname")
 
 
 def _visible(channel):
@@ -23,13 +19,6 @@ CODEX_PERMISSION = {"hook_event_name": "PermissionRequest", "session_id": "bbbbb
 def _stop(cwd, msg, **extra):
     return {"hook_event_name": "Stop", "session_id": "abcdefgh99", "cwd": str(cwd),
             "last_assistant_message": msg, **extra}
-
-
-def _with_config(env, tmp_path, data):
-    cfg = tmp_path / "config.json"
-    cfg.write_text(json.dumps(data), encoding="utf-8")
-    env["AGENT_NOTIFY_CONFIG"] = str(cfg)
-    return env
 
 
 def test_default_summary_limit_is_1000_chars(env, fake, tmp_path):
@@ -51,7 +40,7 @@ def test_long_chinese_summary_keeps_whole_characters(env, telegram, tmp_path):
 @pytest.mark.parametrize("value, expected", [(200, 200), ("abc", 1000), (0, 1000), (9999, 3500)])
 def test_summary_max_chars_custom_and_invalid_values(env, fake, tmp_path, value, expected):
     # SCN-003-B：非法值按 1000、超过上限按 3500，通知照常发送
-    _with_config(env, tmp_path, {"summary_max_chars": value})
+    with_config(env, tmp_path, **{"summary_max_chars": value})
     process("claude", _stop(tmp_path, "x" * 5000), env, channels=[fake])
     assert fake.sent[0].body == "x" * expected + "…"
 
@@ -67,7 +56,7 @@ def test_project_branch_and_session_title_truncated_to_64_chars(env, fake, tmp_p
 
 def test_summary_off_keeps_command_preview(env, telegram, tmp_path):
     # SCN-004-A：只关摘要
-    _with_config(env, tmp_path, {"include_summary": False})
+    with_config(env, tmp_path, **{"include_summary": False})
     cwd = str(tmp_path / "p")
     process("claude", _stop(cwd, "回合摘要", session_title="标题"), env, channels=[telegram])
     process("codex", {**CODEX_PERMISSION, "cwd": cwd, "session_title": "标题"}, env, channels=[telegram])
@@ -76,7 +65,7 @@ def test_summary_off_keeps_command_preview(env, telegram, tmp_path):
 
 
 def test_summary_off_drops_waiting_prompt_and_error_details_but_keeps_error_kind(env, fake, tmp_path):
-    _with_config(env, tmp_path, {"include_summary": False})
+    with_config(env, tmp_path, **{"include_summary": False})
     process("claude", {"hook_event_name": "Notification", "notification_type": "idle_prompt",
                        "session_id": "s" * 9, "cwd": str(tmp_path), "message": "等你输入"},
             env, channels=[fake])
@@ -89,7 +78,7 @@ def test_summary_off_drops_waiting_prompt_and_error_details_but_keeps_error_kind
 
 def test_tool_detail_off_keeps_turn_summary(env, telegram, tmp_path):
     # SCN-004-A：只关命令预览
-    _with_config(env, tmp_path, {"include_tool_detail": False})
+    with_config(env, tmp_path, **{"include_tool_detail": False})
     cwd = str(tmp_path / "p")
     process("claude", _stop(cwd, "回合摘要", session_title="标题"), env, channels=[telegram])
     process("codex", {**CODEX_PERMISSION, "cwd": cwd}, env, channels=[telegram])
@@ -99,7 +88,7 @@ def test_tool_detail_off_keeps_turn_summary(env, telegram, tmp_path):
 
 def test_143_privacy_config_drops_body_and_session_title(env, telegram, tmp_path):
     # SCN-004-B：privacy 优先于两个开关本身的值
-    _with_config(env, tmp_path, {"privacy": True, "include_summary": True, "include_tool_detail": True})
+    with_config(env, tmp_path, **{"privacy": True, "include_summary": True, "include_tool_detail": True})
     cwd = str(tmp_path / "p")
     process("codex", {**CODEX_PERMISSION, "cwd": cwd, "session_title": "标题"}, env, channels=[telegram])
     process("claude", _stop(cwd, "回合摘要", session_title="标题"), env, channels=[telegram])
@@ -110,7 +99,7 @@ def test_143_privacy_config_drops_body_and_session_title(env, telegram, tmp_path
 @pytest.mark.parametrize("env_value, file_privacy, body", [
     ("1", False, ""), ("true", False, ""), ("0", True, "回合摘要"), ("false", True, "回合摘要")])
 def test_privacy_env_overrides_config_file(env, fake, tmp_path, env_value, file_privacy, body):
-    _with_config(env, tmp_path, {"privacy": file_privacy})
+    with_config(env, tmp_path, **{"privacy": file_privacy})
     env["AGENT_NOTIFY_PRIVACY"] = env_value
     process("claude", _stop(tmp_path, "回合摘要"), env, channels=[fake])
     assert fake.sent[0].body == body
@@ -124,17 +113,17 @@ def test_privacy_env_overrides_config_file(env, fake, tmp_path, env_value, file_
 def test_boolean_config_values_parsed_consistently(env, tmp_path, value, expected):
     # spec #2 §3.4：privacy 与 include_* 共用同一套真假判定；字符串 "false" 不能被当成真
     from agent_notify.config import load_config
-    _with_config(env, tmp_path, {"privacy": value})
+    with_config(env, tmp_path, **{"privacy": value})
     assert load_config(env).privacy is expected
     for key in ("include_summary", "include_tool_detail"):
-        _with_config(env, tmp_path, {key: value})
+        with_config(env, tmp_path, **{key: value})
         assert getattr(load_config(env), key) is expected
 
 
 def test_null_boolean_values_fall_back_to_defaults(env, tmp_path):
     # JSON null 视同缺省：privacy 默认关，include_* 默认开
     from agent_notify.config import load_config
-    _with_config(env, tmp_path, {"privacy": None, "include_summary": None,
+    with_config(env, tmp_path, **{"privacy": None, "include_summary": None,
                                  "include_tool_detail": None})
     config = load_config(env)
     assert (config.privacy, config.include_summary, config.include_tool_detail) == \
@@ -143,7 +132,7 @@ def test_null_boolean_values_fall_back_to_defaults(env, tmp_path):
 
 def test_include_switches_default_to_true(env, tmp_path):
     from agent_notify.config import load_config
-    _with_config(env, tmp_path, {})
+    with_config(env, tmp_path)
     config = load_config(env)
     assert config.include_summary is True and config.include_tool_detail is True
 
@@ -152,7 +141,7 @@ def test_143_config_file_upgrade(tmp_path):
     # SCN-013-A：只有 telegram、privacy、events 三项，通知照常送达，开关和隐私生效
     from agent_notify.channels import build_channels
     from agent_notify.config import load_config
-    env = _with_config({"AGENT_NOTIFY_LOG": str(tmp_path / "n.log")}, tmp_path, {
+    env = with_config({"AGENT_NOTIFY_LOG": str(tmp_path / "n.log")}, tmp_path, **{
         "telegram": {"token": TOKEN, "chat_id": "7"}, "privacy": True,
         "events": {"permission": False}})
     [built] = build_channels(load_config(env))

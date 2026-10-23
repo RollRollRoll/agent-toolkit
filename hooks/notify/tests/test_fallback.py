@@ -1,13 +1,13 @@
 """纯文本回退与 4096 兜底（spec #2 REQ-006 回退部分、REQ-007）。"""
 from __future__ import annotations
 
-import io
 import json
 import urllib.error
 
 import pytest
 
 from conftest import TOKEN, RecordingOpener, process, telegram_channel, visible
+from conftest import http_error as _http
 
 from agent_notify.channels import ChannelError
 from agent_notify.hook import Notification
@@ -15,14 +15,7 @@ from agent_notify.hook import Notification
 PARSE_ERROR = "Bad Request: can't parse entities: Unsupported start tag \"x\" at byte offset 3"
 
 
-@pytest.fixture(autouse=True)
-def hostname(monkeypatch):
-    monkeypatch.setattr("socket.gethostname", lambda: "box.local")
-
-
-def _http(code, description):
-    body = {"ok": False, "error_code": code, "description": description}
-    return urllib.error.HTTPError("u", code, "err", {}, io.BytesIO(json.dumps(body).encode()))
+pytestmark = pytest.mark.usefixtures("hostname")
 
 
 def _n(**fields):

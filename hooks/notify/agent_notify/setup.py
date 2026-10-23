@@ -8,8 +8,8 @@ import sys
 import urllib.request
 
 from .channels import ChannelError, TelegramAPIError, TelegramChannel, telegram_call
-from .config import Config, config_path, host_label_of, read_config_file, telegram_section
-from .hook import resolve_host
+from .config import (config_path, host_label_of, read_config_file, resolve_host_label,
+                     telegram_section)
 from .testcmd import make_test_notification
 
 MAX_TOKEN_ATTEMPTS = 3
@@ -82,7 +82,7 @@ def _run(env, term, opener):
     term.say(f"✅ 已写入 {path}（权限 600），chat_id={chat_id}")
     _warn_env_override(term, env)
     # 测试通知显示最终生效的主机：与 hook 使用同一套取值规则
-    host = resolve_host(Config(host_label=host_label_of(existing)))
+    host = resolve_host_label(host_label_of(existing))
     return _send_test(term, token, chat_id, host, opener)
 
 
@@ -95,7 +95,7 @@ def _warn_env_override(term, env):
 
 def _ask_host_label(term, current):
     """询问可选的主机标签（REQ-012）：返回输入的新标签；直接回车返回空串，表示保持现状。"""
-    default = resolve_host(Config(host_label=current))
+    default = resolve_host_label(current)
     return term.ask(f"主机标签（可选，直接回车使用 {default}）：").strip()
 
 

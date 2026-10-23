@@ -12,12 +12,12 @@ import time
 import urllib.request
 
 from .channels import ChannelError, telegram_call
-from .config import EVENT_KEYS, config_path, load_config, read_config_file
-from .hook import resolve_host
+from .config import EVENT_KEYS, config_path, load_config, read_config_file, resolve_host
 from .redaction import redact
 
 OK, WARN, FAIL, SKIP = "✅", "⚠️", "❌", "⏭️"
 USAGE = "用法：notify-doctor [--offline]"
+NETWORK_HINT = "无法连接 Telegram：检查网络或代理（HTTPS_PROXY）设置"
 
 
 class Report:
@@ -206,7 +206,7 @@ _FIELD = re.compile(r"(?<= )(?:error|status)=\S+")
 def _get_me_hint(exc):
     if getattr(exc, "code", None) in (401, 404):
         return "token 无效或已被撤销：运行 notify-setup 重新配置"
-    return "无法连接 Telegram：检查网络或代理（HTTPS_PROXY）设置"
+    return NETWORK_HINT
 
 
 def _source(env, key):
@@ -230,8 +230,7 @@ def _online(report, config, opener):
                       opener=opener, timeout=remaining)
     except ChannelError as exc:
         hint = ("先给 Bot 发一条消息，或检查 chat_id 填写错误：可运行 notify-setup 重新获取"
-                if getattr(exc, "code", None) is not None else
-                "无法连接 Telegram：检查网络或代理（HTTPS_PROXY）设置")
+                if getattr(exc, "code", None) is not None else NETWORK_HINT)
         report.item(FAIL, f"getChat：chat_id {config.telegram_chat_id} 不可达："
                           f"{redact(str(exc), config.telegram_token)}", hint)
         return

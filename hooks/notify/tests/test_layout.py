@@ -5,27 +5,13 @@
 """
 from __future__ import annotations
 
-import json
 import subprocess
 
 import pytest
 
-from conftest import process, telegram_channel, visible
+from conftest import process, telegram_channel, visible, with_config
 
-
-@pytest.fixture(autouse=True)
-def hostname(monkeypatch):
-    """默认机器名固定为 box.local；个别测试再改。"""
-    names = {"value": "box.local"}
-    monkeypatch.setattr("socket.gethostname", lambda: names["value"])
-    return names
-
-
-def _config(env, tmp_path, **data):
-    cfg = tmp_path / "config.json"
-    cfg.write_text(json.dumps(data))
-    env["AGENT_NOTIFY_CONFIG"] = str(cfg)
-    return env
+pytestmark = pytest.mark.usefixtures("hostname")
 
 
 def _repo(tmp_path, name, branch):
@@ -50,7 +36,7 @@ def _stop(cwd, **extra):
 
 def test_turn_complete_in_git_repo(env, tmp_path):
     # SCN-001-A
-    _config(env, tmp_path, host_label="mbp")
+    with_config(env, tmp_path, host_label="mbp")
     repo = _repo(tmp_path, "agent-toolkit", "main")
     body, lines = _send("claude", _stop(repo), env)
     assert lines == ["✅ 回合完成 · agent-toolkit", "Claude · mbp · main · 1a2b3c4d", "已完成重构"]
@@ -117,7 +103,7 @@ def test_test_notification_layout(env, tmp_path, monkeypatch):
     # 测试命令发出的测试通知同样显示主机
     import io
     from agent_notify import testcmd
-    _config(env, tmp_path, host_label="mbp")
+    with_config(env, tmp_path, host_label="mbp")
     channel = telegram_channel()
     monkeypatch.setattr(testcmd, "build_channels", lambda config: [channel])
     assert testcmd.main(env, out=io.StringIO()) == 0
@@ -135,7 +121,7 @@ def test_test_notification_without_host_skips_second_line():
 
 def test_configured_host_label(env, tmp_path):
     # SCN-002-A：配置值优先于机器名，首尾空白去掉
-    _config(env, tmp_path, host_label="  home-linux  ")
+    with_config(env, tmp_path, host_label="  home-linux  ")
     _, lines = _send("claude", _stop(tmp_path / "p"), env)
     assert lines[1] == "Claude · home-linux · 1a2b3c4d"
 
@@ -145,7 +131,7 @@ def test_blank_host_label_falls_back_to_short_hostname(env, tmp_path, hostname, 
     # SCN-002-B
     hostname["value"] = "chenjinfans-MacBook-Pro.local"
     data = {} if label is None else {"host_label": label}
-    _config(env, tmp_path, **data)
+    with_config(env, tmp_path, **data)
     _, lines = _send("claude", _stop(tmp_path / "p"), env)
     assert lines[1] == "Claude · chenjinfans-MacBook-Pro · 1a2b3c4d"
 
@@ -164,7 +150,7 @@ def test_host_omitted_when_unavailable(env, tmp_path, hostname):
 
 def test_special_characters_shown_verbatim(env, tmp_path):
     # SCN-006-A：所有字段值先转义，解析后的可见文本与原文一致
-    _config(env, tmp_path, host_label="h<1>&")
+    with_config(env, tmp_path, host_label="h<1>&")
     repo = _repo(tmp_path, "a&b", "fix/<x>")
     payload = {"hook_event_name": "PermissionRequest", "session_id": "bbbbbbbb2",
                "cwd": str(repo), "tool_name": "Bash", "tool_input": {"command": 'echo "<a>" && ls'}}
