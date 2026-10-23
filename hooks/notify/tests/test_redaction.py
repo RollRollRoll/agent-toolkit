@@ -78,6 +78,24 @@ def test_redaction_rules(text, expected):
     assert redact(text, token=CONFIGURED) == expected
 
 
+@pytest.mark.parametrize("text", [
+    "x" * 4600,                       # 一整段没有空白的单词字符（长哈希、base64、压缩输出）
+    "abc_" * 1150,
+    "中" * 4600,
+    "a.b-" * 1150,
+    "x" * 4600 + "://",               # 只有末尾像 URL
+    "token" * 920,                    # 长串里反复出现敏感键名
+    "mysql " * 770,                   # 一段命令里反复出现 mysql 但没有 -p
+], ids=["word-run", "underscore-run", "cjk-run", "dot-dash-run", "url-tail", "keyword-run", "mysql-run"])
+def test_redaction_is_fast_on_longest_input(text):
+    # QOS-001：遮蔽在 hook 主进程同步执行，且在截断之前（DEC-001），输入是未截断的原文；
+    # 取略大于摘要上限 3500 的长度，确认不会出现回溯导致的二次方耗时
+    import time
+    start = time.perf_counter()
+    redact(text, token=CONFIGURED)
+    assert time.perf_counter() - start < 0.02
+
+
 def test_redaction_failure_masks_whole_field():
     assert redact(None) == "***"
 
