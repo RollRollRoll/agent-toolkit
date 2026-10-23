@@ -21,7 +21,7 @@ CLAUDE_NOTIFICATION_TYPES = {
     "permission_prompt": PERMISSION,
 }
 
-SUMMARY_LIMIT = 300
+FIELD_MAX_CHARS = 64  # 项目、分支、会话标题的长度上限（REQ-003）
 
 
 @dataclass
@@ -47,19 +47,25 @@ def build(agent, payload, config):
         return None
     cwd = payload.get("cwd") or os.getcwd()
     project, branch = _project_and_branch(cwd)
-    notification = Notification(
-        agent, event_type, project=project, branch=branch,
+    # 内容准备顺序（DEC-001）：选取原文 → 遮蔽 → 开关 → 截断
+    body = _summary(event_type, payload)
+    session_title = str(payload.get("session_title") or "")
+    # 遮蔽（REQ-005）：必须在截断之前，避免凭据被截成规则匹配不到的半截
+    body = redact(body, config.telegram_token)
+    session_title = redact(session_title, config.telegram_token)
+    # 开关（REQ-004）：授权的正文是命令预览，其余事件的正文和会话标题属于摘要
+    if not (config.include_tool_detail if event_type == PERMISSION else config.include_summary):
+        body = ""
+    if not config.include_summary:
+        session_title = ""
+    return Notification(
+        agent, event_type, project=_truncate(project, FIELD_MAX_CHARS),
+        branch=_truncate(branch, FIELD_MAX_CHARS),
         session_id=(payload.get("session_id") or "")[:8],
-        session_title=redact(str(payload.get("session_title") or ""), config.telegram_token),
+        session_title=_truncate(session_title, FIELD_MAX_CHARS),
         error_kind=str(payload.get("error") or "") if event_type == ERROR else "",
-        # 顺序固定：选取原文 → 遮蔽 → 开关 → 截断（DEC-001），遮蔽必须在截断之前
-        body=_truncate(redact(_summary(event_type, payload), config.telegram_token)),
+        body=_truncate(body, config.summary_max_chars),
     )
-    if config.privacy:
-        # 暂时保持 1.4.3 的隐私效果：只留标题与事件类型，分支和错误类别也不发送
-        notification.branch = notification.session_title = ""
-        notification.error_kind = notification.body = ""
-    return notification
 
 
 def deliver(notification, config, channels):
@@ -131,9 +137,9 @@ def _project_and_branch(cwd):
     return Path(root).name, branch
 
 
-def _truncate(text):
+def _truncate(text, limit):
     # Python 字符串按码点截断，不会切坏多字节字符
-    return text if len(text) <= SUMMARY_LIMIT else text[:SUMMARY_LIMIT] + "…"
+    return text if len(text) <= limit else text[:limit] + "…"
 
 
 def run(agent, raw, env, spawn=True):

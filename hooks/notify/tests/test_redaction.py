@@ -116,7 +116,10 @@ def test_common_commands_shown_verbatim(env, tmp_path):
 
 
 def test_credential_across_truncation_point_leaves_no_fragment(env, tmp_path):
-    # 截断位置在 300 字：密钥从第 290 字开始，先截断会留下规则匹配不到的半截
+    # 截断位置设为 300 字：密钥从第 290 字开始，先截断会留下规则匹配不到的半截
+    cfg = tmp_path / "cfg.json"
+    cfg.write_text(json.dumps({"summary_max_chars": 300}), encoding="utf-8")
+    env["AGENT_NOTIFY_CONFIG"] = str(cfg)
     key = "sk-proj-" + "Q7w" * 10
     ch = telegram_channel()
     process("claude", _stop(tmp_path, "x" * 289 + " " + key + " 结尾"), env, channels=[ch])
