@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import socket
 import subprocess
 import time
 from dataclasses import dataclass
@@ -21,7 +22,8 @@ CLAUDE_NOTIFICATION_TYPES = {
     "permission_prompt": PERMISSION,
 }
 
-SUMMARY_LIMIT = 300
+FIELD_MAX_CHARS = 64  # 项目、分支、会话标题的长度上限（REQ-003）
+HOST_LIMIT = 32
 
 
 @dataclass
@@ -30,6 +32,7 @@ class Notification:
 
     agent: str
     event_type: str
+    host: str = ""
     project: str = ""
     branch: str = ""
     session_id: str = ""
@@ -53,18 +56,22 @@ def build(agent, payload, config):
         return None
     cwd = payload.get("cwd") or os.getcwd()
     project, branch = _project_and_branch(cwd)
-    notification = Notification(
-        agent, event_type, project=project, branch=branch,
+    # 内容准备顺序（DEC-001）：选取原文 → 遮蔽 → 开关 → 截断
+    body = _summary(event_type, payload)
+    session_title = str(payload.get("session_title") or "")
+    # 开关（REQ-004）：授权的正文是命令预览，其余事件的正文和会话标题属于摘要
+    if not (config.include_tool_detail if event_type == PERMISSION else config.include_summary):
+        body = ""
+    if not config.include_summary:
+        session_title = ""
+    return Notification(
+        agent, event_type, host=resolve_host(config), project=_truncate(project, FIELD_MAX_CHARS),
+        branch=_truncate(branch, FIELD_MAX_CHARS),
         session_id=_short_session(payload),
-        session_title=str(payload.get("session_title") or ""),
+        session_title=_truncate(session_title, FIELD_MAX_CHARS),
         error_kind=str(payload.get("error") or "") if event_type == ERROR else "",
-        body=_truncate(_summary(event_type, payload)),
+        body=_truncate(body, config.summary_max_chars),
     )
-    if config.privacy:
-        # 暂时保持 1.4.3 的隐私效果：只留标题与事件类型，分支和错误类别也不发送
-        notification.branch = notification.session_title = ""
-        notification.error_kind = notification.body = ""
-    return notification
 
 
 def _short_session(payload):
@@ -130,6 +137,17 @@ def _summary(event_type, payload):
     return str(payload.get("last_assistant_message") or payload.get("message") or "")
 
 
+def resolve_host(config):
+    """主机：配置的 host_label 优先，否则取机器名第一个 . 之前的部分；超长截断（REQ-002）。"""
+    host = config.host_label
+    if not host:
+        try:
+            host = socket.gethostname().split(".", 1)[0].strip()
+        except OSError:
+            host = ""
+    return host if len(host) <= HOST_LIMIT else host[:HOST_LIMIT] + "…"
+
+
 def _git(cwd, *args):
     try:
         result = subprocess.run(
@@ -150,9 +168,9 @@ def _project_and_branch(cwd):
     return Path(root).name, branch
 
 
-def _truncate(text):
+def _truncate(text, limit):
     # Python 字符串按码点截断，不会切坏多字节字符
-    return text if len(text) <= SUMMARY_LIMIT else text[:SUMMARY_LIMIT] + "…"
+    return text if len(text) <= limit else text[:limit] + "…"
 
 
 def run(agent, raw, env, spawn=True):
