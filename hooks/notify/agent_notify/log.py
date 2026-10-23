@@ -1,9 +1,11 @@
-"""本地日志：单文件追加，超过大小上限时轮转一份，写入前对 token 脱敏。"""
+"""本地日志：单文件追加，超过大小上限时轮转一份，写入前经过 REQ-005 遮蔽。"""
 from __future__ import annotations
 
 import json
 import re
 import time
+
+from . import redaction
 
 MAX_BYTES = 512 * 1024
 
@@ -13,8 +15,8 @@ _NEEDS_QUOTE = re.compile(r'[\s"=]')
 
 
 def redact(config, text):
-    """把消息里的 token 替换为 ***。"""
-    return text.replace(config.telegram_token, "***") if config.telegram_token else text
+    """按 REQ-005 的同一套规则遮蔽消息，并替换当前配置的 token。"""
+    return redaction.redact(text, config.telegram_token)
 
 
 def write_log(config, message):

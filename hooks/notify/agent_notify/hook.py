@@ -12,6 +12,7 @@ from pathlib import Path
 from .config import (AGENT_LABELS, ERROR, PERMISSION, TURN_COMPLETE, TURN_END_WAITING,
                      WAITING_INPUT, load_config)
 from .log import log_event
+from .redaction import redact
 
 # Claude Code Notification 事件的 notification_type → 通知事件类型
 # elicitation_* 是 MCP 服务器在回合中途向用户请求输入；未列出的类型一律不通知
@@ -60,6 +61,9 @@ def build(agent, payload, config):
     # 内容准备顺序（DEC-001）：选取原文 → 遮蔽 → 开关 → 截断
     body = _summary(event_type, payload)
     session_title = str(payload.get("session_title") or "")
+    # 遮蔽（REQ-005）：必须在截断之前，避免凭据被截成规则匹配不到的半截
+    body = redact(body, config.telegram_token)
+    session_title = redact(session_title, config.telegram_token)
     # 开关（REQ-004）：授权的正文是命令预览，其余事件的正文和会话标题属于摘要
     if not (config.include_tool_detail if event_type == PERMISSION else config.include_summary):
         body = ""
