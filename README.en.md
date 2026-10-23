@@ -73,6 +73,7 @@ their `description`, and other skills may also call them as capability units.
 | `grilling` | model-invocable | A plan, decision, or idea needs to be stress-tested | Asks persistent, in-depth questions until the vague parts surface |
 | `grill-me` | **human only** | You want your own plan to be grilled | Manual entry point for `grilling`, with one extra setting: "no pruning" (technical branches get questioned too) |
 | `create-questionnaire` | **human only** | There are questions you cannot answer yourself and need to ask someone who knows | Turns those questions into a Markdown questionnaire for that person to fill in |
+| `notify-doctor` | human / agent | Telegram notifications don't arrive, or you want to see the effective notify config | Checks config, credentials, logs, and bot reachability with a fix hint for each problem; read-only, sends no messages |
 | `notify-setup` | human / agent | First-time setup or switching Telegram bots | Gives you the wizard command; in your terminal it validates the token, detects the chat_id, and writes the config |
 | `notify-test` | human / agent | You want to check the Telegram notification setup | Sends a test notification and reports success or the failure reason |
 | `re-explain` | **human only** | You did not understand the previous explanation | Adds context and explains it again in simpler, clearer Chinese |
@@ -157,27 +158,66 @@ reloads the skills.
 
 ## Agent notifications (Telegram)
 
-With the plugin installed, Claude Code and Codex CLI send a Telegram message titled `[Agent] project · short session ID` on these events.
+With the plugin installed, Claude Code and Codex CLI send a Telegram message on the events below. A notification looks like this (the body is collapsed by default; tap to expand). Event names are shown in Chinese in the actual message:
 
-| Event | Claude Code | Codex CLI |
-|---|---|---|
-| Turn complete | ✅ | merged into "turn ended, waiting for input" |
-| Waiting for input | ✅ | same as above |
-| Permission needed | ✅ | ✅ |
-| Error | ✅ | not supported |
-
-Configuration: run the wizard in your own terminal with `python3 <plugin dir>/hooks/notify/bin/notify-setup.py` (or ask the `notify-setup` skill for the command). It validates the token, detects the chat_id, writes the config file with permission 600, and sends a test message. You can also configure it by hand (environment variables override the file):
-
-- `AGENT_NOTIFY_TELEGRAM_TOKEN`, `AGENT_NOTIFY_TELEGRAM_CHAT_ID`, `AGENT_NOTIFY_PRIVACY=1` (title and event type only)
-- or `~/.config/agent-notify/config.json` (`chmod 600` recommended):
-
-```json
-{"telegram": {"token": "123:ABC", "chat_id": "42"}, "privacy": false,
- "events": {"turn_complete": true, "waiting_input": true, "permission": true, "error": true}}
+```text
+🔐 需要授权 · agent-toolkit
+Codex · mbp · main · 1a2b3c4d
+▸ Bash: curl -H "Authorization: Bearer ***" https://x
 ```
 
-- Codex: trust the plugin hooks once in `/hooks`. Claude Code needs no extra step.
+The first line is the event and project. The second line is the agent, host, git branch, and short session ID; missing fields are left out.
+
+| Event | Icon | Claude Code | Codex CLI |
+|---|---|---|---|
+| Turn complete | ✅ | supported | merged into "turn ended", which also means waiting for input |
+| Waiting for input | 💬 | about 60 s after a turn with no reply; an MCP server asks for input mid-turn | same as above |
+| Permission needed | 🔐 | sent only if the prompt is still open after about 6 s; prompts you handle right away are not pushed | sent as soon as the request appears |
+| Error | ❌ | the turn stopped on an API or similar error | not supported |
+
+Before sending, credentials in the body and session title are replaced with `***`: the bot token, `Authorization` headers, common key prefixes, `password=`-style key-value pairs, and passwords in URLs. The rules are fixed and can't cover every format. To keep the body out of Telegram entirely, turn off `include_summary` / `include_tool_detail`, or turn on privacy mode.
+
+### Configuration
+
+Run the wizard in your own terminal with `python3 <plugin dir>/hooks/notify/bin/notify-setup.py` (or ask the `notify-setup` skill for the command). It validates the token, detects the chat_id, asks for an optional host label, writes the config file with permission 600, and sends a test message. Pressing Enter at the host label prompt keeps the existing label; to clear it, edit the config file by hand.
+
+You can also edit `~/.config/agent-notify/config.json` yourself (`chmod 600` recommended). Every key except `telegram` is optional:
+
+```json
+{"telegram": {"token": "123:ABC", "chat_id": "42"},
+ "host_label": "mbp",
+ "events": {"turn_complete": true, "waiting_input": true, "permission": true, "error": true},
+ "include_summary": true, "include_tool_detail": true, "privacy": false,
+ "summary_max_chars": 1000, "request_timeout": 10, "log_level": "info"}
+```
+
+| Key | Default | Meaning |
+|---|---|---|
+| `host_label` | machine name up to the first `.` | Host shown in the notification; tells machines apart when they share one bot |
+| `events` | all on | Turn notifications off per event type; Codex's "turn ended" is skipped only when both `turn_complete` and `waiting_input` are off |
+| `include_summary` | `true` | Send the turn summary, the waiting-for-input prompt, error details, and the session title |
+| `include_tool_detail` | `true` | Send the command preview of permission requests |
+| `privacy` | `false` | Privacy mode; on means both settings above are off |
+| `summary_max_chars` | `1000` | Maximum body length in characters, capped at 3500 |
+| `request_timeout` | `10` | Total send time limit per notification in seconds, 1–60, retries included |
+| `log_level` | `info` | `error` logs failures only; `info` also logs each notification's result and duration; `debug` also logs skipped events and why |
+
+Boolean keys written as strings treat `"false"`, `"0"`, `"no"`, and `"off"` as off. Invalid values fall back to the default or the nearest bound.
+
+Environment variables override the file: `AGENT_NOTIFY_TELEGRAM_TOKEN`, `AGENT_NOTIFY_TELEGRAM_CHAT_ID`, `AGENT_NOTIFY_PRIVACY`, plus `AGENT_NOTIFY_CONFIG` and `AGENT_NOTIFY_LOG` to point at a different config file or log path.
+
+### Testing and diagnosis
+
 - Send a test message with the `notify-test` skill (or `python3 hooks/notify/bin/notify-test.py`).
+- When notifications don't arrive, run the `notify-doctor` skill (or `python3 hooks/notify/bin/notify-doctor.py`). It checks the config file, its permissions, where the credentials come from, the effective value of each setting, the Python version, the log, and whether the bot is reachable (`getMe`, `getChat`), with a fix hint for each problem. It is read-only, sends no messages, and shows only the first and last 4 characters of the token.
+  - Symbols: ✅ fine, ⚠️ worth a look, ❌ needs fixing, ⏭️ skipped because a prerequisite failed. Lines starting with 💡 are fixed tips, not checks.
+  - Exit codes: 0 means no ❌, 1 means at least one ❌, 2 means bad arguments.
+  - `--offline` runs only the local checks, with no network access.
+  - If a successful send was logged after the most recent failure, that check shows "已恢复" (recovered).
+
+### Other notes
+
+- Codex: trust the plugin hooks once in `/hooks`. Claude Code needs no extra step.
 - One-way only; it never changes agent execution or approvals. Failed sends are logged to `~/.local/state/agent-notify/notify.log` and not retried later.
 - Requires Python ≥ 3.9 on macOS or Linux.
 

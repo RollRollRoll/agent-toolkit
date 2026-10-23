@@ -69,6 +69,7 @@ Skill 文件（`SKILL.md`、`references/`、`agents/openai.yaml`）统一用英�
 | `grilling` | 模型可触发 | 一个计划、决策或想法要被压力测试 | 持续深入地追问，把含糊处逼出来 |
 | `grill-me` | **仅人类** | 你想让人拷问自己手上的方案 | `grilling` 的手动入口，多传一个「不剪枝」（技术分支也照问） |
 | `create-questionnaire` | **仅人类** | 有些事你自己答不出来，得问知情人 | 把这些问题做成一份交给对方填的 Markdown 问卷 |
+| `notify-doctor` | 人类 / agent | Telegram 通知收不到，或想看当前生效的通知配置 | 逐项检查配置、凭据、日志和 Bot 可达性，给出修复建议；只读，不发消息 |
 | `notify-setup` | 人类 / agent | 第一次配置或更换 Telegram Bot | 给出配置向导命令，在你的终端里校验 token、获取 chat_id 并写入配置 |
 | `notify-test` | 人类 / agent | 想确认 Telegram 通知配置是否正确 | 发送一条测试通知，报告成功或失败原因 |
 | `re-explain` | **仅人类** | 上一段解释没看懂 | 补充上下文，用更简单、明确的中文重新解释一遍 |
@@ -147,27 +148,66 @@ codex plugin add agent-toolkit@agent-toolkit
 
 ## Agent 通知（Telegram）
 
-安装插件后，Claude Code 与 Codex CLI 在下列事件时向你的 Telegram 发送通知，标题为 `[Agent] 项目 · 会话短ID`。
+安装插件后，Claude Code 与 Codex CLI 在下列事件发生时向你的 Telegram 发送通知。一条通知长这样（正文默认折叠，点开展开）：
 
-| 事件 | Claude Code | Codex CLI |
-|---|---|---|
-| 回合完成 | ✅ | 合并为「回合结束，等待输入」 |
-| 等待输入 | ✅ | 同上 |
-| 需要授权 | ✅ | ✅ |
-| 异常 | ✅ | 不支持 |
-
-配置：推荐在你自己的终端运行向导 `python3 <插件目录>/hooks/notify/bin/notify-setup.py`（或用 `notify-setup` skill 获取命令）。它会校验 token、自动获取 chat_id、以 600 权限写入配置文件并发送测试通知。也可以手动配置（环境变量优先于配置文件）：
-
-- `AGENT_NOTIFY_TELEGRAM_TOKEN`、`AGENT_NOTIFY_TELEGRAM_CHAT_ID`、`AGENT_NOTIFY_PRIVACY=1`（只发标题与事件类型）
-- 或 `~/.config/agent-notify/config.json`（建议 `chmod 600`）：
-
-```json
-{"telegram": {"token": "123:ABC", "chat_id": "42"}, "privacy": false,
- "events": {"turn_complete": true, "waiting_input": true, "permission": true, "error": true}}
+```text
+🔐 需要授权 · agent-toolkit
+Codex · mbp · main · 1a2b3c4d
+▸ Bash: curl -H "Authorization: Bearer ***" https://x
 ```
 
+第一行是事件和项目，第二行依次是 Agent、主机、git 分支、会话短 ID，缺的字段直接省略。
+
+| 事件 | 图标 | Claude Code | Codex CLI |
+|---|---|---|---|
+| 回合完成 | ✅ | 支持 | 合并为「回合结束」，同时表示等待输入 |
+| 等待输入 | 💬 | 回合结束后约 60 秒无人回应；回合中途 MCP 服务器请求输入 | 同上 |
+| 需要授权 | 🔐 | 授权提示出现约 6 秒仍未处理时才发，及时处理的不推送 | 授权请求一出现就发 |
+| 异常 | ❌ | 回合因 API 等错误终止 | 不支持 |
+
+发送前会把正文和会话标题里的凭据替换成 `***`，覆盖 bot token、`Authorization` 头、常见密钥前缀、`password=` 这类键值、URL 里的密码。规则是固定的，不能保证覆盖所有格式；不想让正文经过 Telegram，就关掉 `include_summary` / `include_tool_detail`，或开启隐私模式。
+
+### 配置
+
+推荐在你自己的终端运行向导 `python3 <插件目录>/hooks/notify/bin/notify-setup.py`（或用 `notify-setup` skill 获取命令）。它会校验 token、自动获取 chat_id、询问可选的主机标签、以 600 权限写入配置文件并发送测试通知。向导里直接回车会保留已有的主机标签；要清除它，需手动编辑配置文件。
+
+也可以手动编辑 `~/.config/agent-notify/config.json`（建议 `chmod 600`）。除 `telegram` 外的配置项都可以省略：
+
+```json
+{"telegram": {"token": "123:ABC", "chat_id": "42"},
+ "host_label": "mbp",
+ "events": {"turn_complete": true, "waiting_input": true, "permission": true, "error": true},
+ "include_summary": true, "include_tool_detail": true, "privacy": false,
+ "summary_max_chars": 1000, "request_timeout": 10, "log_level": "info"}
+```
+
+| 配置项 | 默认值 | 说明 |
+|---|---|---|
+| `host_label` | 机器名第一个 `.` 之前的部分 | 通知里显示的主机名，多台电脑共用一个 Bot 时用来区分 |
+| `events` | 全部开启 | 按事件类型关闭通知；Codex 的「回合结束」要 `turn_complete` 和 `waiting_input` 都关闭才不发 |
+| `include_summary` | `true` | 是否发送回合摘要、等待输入的提示、错误详情和会话标题 |
+| `include_tool_detail` | `true` | 是否发送授权的命令预览 |
+| `privacy` | `false` | 隐私模式，开启时等于上面两项都关 |
+| `summary_max_chars` | `1000` | 正文最多多少字符，上限 3500 |
+| `request_timeout` | `10` | 每条通知的发送总时限（秒），范围 1–60，含重试 |
+| `log_level` | `info` | `error` 只记失败；`info` 另记每条通知的结果和耗时；`debug` 另记被跳过的事件及原因 |
+
+布尔项写成字符串时，`"false"`、`"0"`、`"no"`、`"off"` 视为关闭。非法值按默认值或边界值处理。
+
+环境变量优先于配置文件：`AGENT_NOTIFY_TELEGRAM_TOKEN`、`AGENT_NOTIFY_TELEGRAM_CHAT_ID`、`AGENT_NOTIFY_PRIVACY`，以及指定配置文件和日志路径的 `AGENT_NOTIFY_CONFIG`、`AGENT_NOTIFY_LOG`。
+
+### 测试与诊断
+
+- 用 `notify-test` skill（或 `python3 hooks/notify/bin/notify-test.py`）发送一条测试通知。
+- 收不到通知时，用 `notify-doctor` skill（或 `python3 hooks/notify/bin/notify-doctor.py`）诊断。它会逐项检查配置文件、权限、凭据来源、各配置项的生效值、Python 版本、日志，以及 Bot 是否可达（`getMe`、`getChat`），并给每个问题附上修复建议。它只读，不发消息，token 只显示首尾 4 位。
+  - 符号：✅ 正常、⚠️ 值得注意、❌ 需要修复、⏭️ 因前置条件不满足而跳过；💡 开头的行是固定提示，不算检查项。
+  - 退出码：0 表示没有 ❌，1 表示至少有一个 ❌，2 表示参数错误。
+  - `--offline` 只做本地检查，不联网。
+  - 日志里最近一次发送失败之后如果已有成功发送，这一项显示为「已恢复」。
+
+### 其他
+
 - Codex 首次使用需在 `/hooks` 中信任本插件的 hooks；Claude Code 无需额外操作。
-- 用 `notify-test` skill（或 `python3 hooks/notify/bin/notify-test.py`）发送测试通知。
 - 只做单向通知，不会改变 Agent 的执行或审批；发送失败只记录到 `~/.local/state/agent-notify/notify.log`，不补发。
 - 要求 Python ≥ 3.9，支持 macOS 与 Linux。
 
