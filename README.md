@@ -156,7 +156,7 @@ codex plugin add agent-toolkit@agent-toolkit
 | 需要授权 | ✅ | ✅ |
 | 异常 | ✅ | 不支持 |
 
-配置：推荐在你自己的终端运行向导 `python3 <插件目录>/notify/bin/notify-setup.py`（或用 `notify-setup` skill 获取命令）。它会校验 token、自动获取 chat_id、以 600 权限写入配置文件并发送测试通知。也可以手动配置（环境变量优先于配置文件）：
+配置：推荐在你自己的终端运行向导 `python3 <插件目录>/hooks/notify/bin/notify-setup.py`（或用 `notify-setup` skill 获取命令）。它会校验 token、自动获取 chat_id、以 600 权限写入配置文件并发送测试通知。也可以手动配置（环境变量优先于配置文件）：
 
 - `AGENT_NOTIFY_TELEGRAM_TOKEN`、`AGENT_NOTIFY_TELEGRAM_CHAT_ID`、`AGENT_NOTIFY_PRIVACY=1`（只发标题与事件类型）
 - 或 `~/.config/agent-notify/config.json`（建议 `chmod 600`）：
@@ -167,7 +167,7 @@ codex plugin add agent-toolkit@agent-toolkit
 ```
 
 - Codex 首次使用需在 `/hooks` 中信任本插件的 hooks；Claude Code 无需额外操作。
-- 用 `notify-test` skill（或 `python3 notify/bin/notify-test.py`）发送测试通知。
+- 用 `notify-test` skill（或 `python3 hooks/notify/bin/notify-test.py`）发送测试通知。
 - 只做单向通知，不会改变 Agent 的执行或审批；发送失败只记录到 `~/.local/state/agent-notify/notify.log`，不补发。
 - 要求 Python ≥ 3.9，支持 macOS 与 Linux。
 

@@ -8,7 +8,7 @@ description: Send a test Telegram notification through the agent-notify hooks an
 Run the bundled test command and relay its output to the user:
 
 ```bash
-python3 "<plugin root>/notify/bin/notify-test.py"
+python3 "<plugin root>/hooks/notify/bin/notify-test.py"
 ```
 
 `<plugin root>` is the directory three levels above this skill (`skills/support/notify-test` → plugin root).

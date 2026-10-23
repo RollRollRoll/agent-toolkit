@@ -32,7 +32,7 @@ def main(env, out=sys.stdout):
     """命令入口：只在交互终端里运行，避免 token 落进 Agent 对话或日志。"""
     if not sys.stdin.isatty():
         print("❌ 配置向导需要在交互终端里运行：请在你自己的终端执行 "
-              "python3 <插件目录>/notify/bin/notify-setup.py", file=out)
+              "python3 <插件目录>/hooks/notify/bin/notify-setup.py", file=out)
         return 2
     return run_setup(env, ConsoleTerminal())
 

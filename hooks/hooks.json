@@ -2,13 +2,13 @@
   "description": "agent-notify：回合完成、等待输入、需要授权、异常时发送 Telegram 通知（Claude Code）",
   "hooks": {
     "Stop": [
-      {"hooks": [{"type": "command", "command": "python3", "args": ["${CLAUDE_PLUGIN_ROOT}/notify/bin/hook.py", "claude"], "async": true, "timeout": 15}]}
+      {"hooks": [{"type": "command", "command": "python3", "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/notify/bin/hook.py", "claude"], "async": true, "timeout": 15}]}
     ],
     "Notification": [
-      {"matcher": "idle_prompt|permission_prompt", "hooks": [{"type": "command", "command": "python3", "args": ["${CLAUDE_PLUGIN_ROOT}/notify/bin/hook.py", "claude"], "async": true, "timeout": 15}]}
+      {"matcher": "idle_prompt|permission_prompt", "hooks": [{"type": "command", "command": "python3", "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/notify/bin/hook.py", "claude"], "async": true, "timeout": 15}]}
     ],
     "StopFailure": [
-      {"hooks": [{"type": "command", "command": "python3", "args": ["${CLAUDE_PLUGIN_ROOT}/notify/bin/hook.py", "claude"], "async": true, "timeout": 15}]}
+      {"hooks": [{"type": "command", "command": "python3", "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/notify/bin/hook.py", "claude"], "async": true, "timeout": 15}]}
     ]
   }
 }

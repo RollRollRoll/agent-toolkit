@@ -166,7 +166,7 @@ With the plugin installed, Claude Code and Codex CLI send a Telegram message tit
 | Permission needed | ✅ | ✅ |
 | Error | ✅ | not supported |
 
-Configuration: run the wizard in your own terminal with `python3 <plugin dir>/notify/bin/notify-setup.py` (or ask the `notify-setup` skill for the command). It validates the token, detects the chat_id, writes the config file with permission 600, and sends a test message. You can also configure it by hand (environment variables override the file):
+Configuration: run the wizard in your own terminal with `python3 <plugin dir>/hooks/notify/bin/notify-setup.py` (or ask the `notify-setup` skill for the command). It validates the token, detects the chat_id, writes the config file with permission 600, and sends a test message. You can also configure it by hand (environment variables override the file):
 
 - `AGENT_NOTIFY_TELEGRAM_TOKEN`, `AGENT_NOTIFY_TELEGRAM_CHAT_ID`, `AGENT_NOTIFY_PRIVACY=1` (title and event type only)
 - or `~/.config/agent-notify/config.json` (`chmod 600` recommended):
@@ -177,7 +177,7 @@ Configuration: run the wizard in your own terminal with `python3 <plugin dir>/no
 ```
 
 - Codex: trust the plugin hooks once in `/hooks`. Claude Code needs no extra step.
-- Send a test message with the `notify-test` skill (or `python3 notify/bin/notify-test.py`).
+- Send a test message with the `notify-test` skill (or `python3 hooks/notify/bin/notify-test.py`).
 - One-way only; it never changes agent execution or approvals. Failed sends are logged to `~/.local/state/agent-notify/notify.log` and not retried later.
 - Requires Python ≥ 3.9 on macOS or Linux.
 

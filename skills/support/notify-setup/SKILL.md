@@ -7,11 +7,11 @@ description: Walk the user through configuring the agent-notify Telegram bot tok
 
 The wizard reads the bot token with hidden input, so it needs a real terminal. Do not run it yourself, and never ask the user to paste the token into the conversation.
 
-1. Resolve the absolute path of `notify/bin/notify-setup.py`. The plugin root is three levels above this skill's directory (`skills/support/notify-setup` → plugin root).
+1. Resolve the absolute path of `hooks/notify/bin/notify-setup.py`. The plugin root is three levels above this skill's directory (`skills/support/notify-setup` → plugin root).
 2. Tell the user to run it in their own terminal window:
 
    ```bash
-   python3 "<absolute path>/notify/bin/notify-setup.py"
+   python3 "<absolute path>/hooks/notify/bin/notify-setup.py"
    ```
 
    The wizard explains each step itself; don't repeat its prompts here.
