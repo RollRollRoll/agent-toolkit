@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import socket
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -21,6 +22,7 @@ CLAUDE_NOTIFICATION_TYPES = {
 }
 
 SUMMARY_LIMIT = 300
+HOST_LIMIT = 32
 
 
 @dataclass
@@ -29,6 +31,7 @@ class Notification:
 
     agent: str
     event_type: str
+    host: str = ""
     project: str = ""
     branch: str = ""
     session_id: str = ""
@@ -47,7 +50,7 @@ def build(agent, payload, config):
     cwd = payload.get("cwd") or os.getcwd()
     project, branch = _project_and_branch(cwd)
     notification = Notification(
-        agent, event_type, project=project, branch=branch,
+        agent, event_type, host=resolve_host(config), project=project, branch=branch,
         session_id=(payload.get("session_id") or "")[:8],
         session_title=str(payload.get("session_title") or ""),
         error_kind=str(payload.get("error") or "") if event_type == ERROR else "",
@@ -107,6 +110,17 @@ def _summary(event_type, payload):
             return f"{payload.get('tool_name', '')}: {detail}".strip(": ")
         return str(payload.get("message") or "")
     return str(payload.get("last_assistant_message") or payload.get("message") or "")
+
+
+def resolve_host(config):
+    """主机：配置的 host_label 优先，否则取机器名第一个 . 之前的部分；超长截断（REQ-002）。"""
+    host = config.host_label
+    if not host:
+        try:
+            host = socket.gethostname().split(".", 1)[0].strip()
+        except OSError:
+            host = ""
+    return host if len(host) <= HOST_LIMIT else host[:HOST_LIMIT] + "…"
 
 
 def _git(cwd, *args):

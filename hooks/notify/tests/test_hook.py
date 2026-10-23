@@ -6,8 +6,8 @@ from agent_notify.channels import render_plain
 
 
 def _title(notification):
-    """Telegram 消息第一行（1.4.3 的标题）。"""
-    return render_plain(notification).splitlines()[0]
+    """消息前两行：标题行与 Agent · 主机 · 分支 · 会话短 ID 行。"""
+    return render_plain(notification).splitlines()[:2]
 
 
 def test_claude_stop_sends_turn_complete(env, fake, tmp_path):
@@ -17,7 +17,7 @@ def test_claude_stop_sends_turn_complete(env, fake, tmp_path):
     assert len(fake.sent) == 1
     n = fake.sent[0]
     assert n.event_type == "回合完成"
-    assert _title(n) == "[Claude] proj · abcdef12"
+    assert _title(n) == ["✅ 回合完成 · proj", f"Claude · {n.host} · abcdef12"]
 
 
 def test_codex_stop_sends_single_turn_end_waiting(env, fake, tmp_path):
@@ -26,7 +26,8 @@ def test_codex_stop_sends_single_turn_end_waiting(env, fake, tmp_path):
                "turn_id": "t1"}
     process("codex", payload, env, channels=[fake])
     assert [n.event_type for n in fake.sent] == ["回合结束，等待输入"]
-    assert _title(fake.sent[0]) == "[Codex] svc · c0dex999"
+    assert _title(fake.sent[0])[0] == "✅ 回合结束 · svc"
+    assert fake.sent[0].session_id == "c0dex999"
 
 
 def test_claude_idle_prompt_sends_waiting_input(env, fake, tmp_path):
@@ -107,7 +108,7 @@ def test_project_is_git_root_and_branch_shown(env, fake, tmp_path):
                "cwd": str(sub), "session_title": "重构登录"}
     process("claude", payload, env, channels=[fake])
     n = fake.sent[0]
-    assert _title(n) == "[Claude] myrepo · 12345678"
+    assert (n.project, n.session_id) == ("myrepo", "12345678")
     assert n.branch == "feat/x"
     assert n.session_title == "重构登录"
 
@@ -117,7 +118,7 @@ def test_non_git_dir_uses_cwd_name_without_branch(env, fake, tmp_path):
     d.mkdir()
     process("codex", {"hook_event_name": "Stop", "session_id": "s" * 9, "cwd": str(d)},
             env, channels=[fake])
-    assert _title(fake.sent[0]).startswith("[Codex] plain · ")
+    assert fake.sent[0].project == "plain"
     assert fake.sent[0].branch == ""
 
 
@@ -141,7 +142,8 @@ def test_short_and_missing_summary(env, fake, tmp_path):
 def test_render_text_contains_all_parts(env, fake, tmp_path):
     process("claude", _stop(tmp_path, "已完成重构"), env, channels=[fake])
     text = render_plain(fake.sent[0])
-    assert text.splitlines()[0] == ("[Claude] " + tmp_path.name + " · abcdefgh")
+    assert text.splitlines()[0] == "✅ 回合完成 · " + tmp_path.name
+    assert text.splitlines()[1].endswith(" · abcdefgh")
     assert "回合完成" in text
     assert "已完成重构" in text
 

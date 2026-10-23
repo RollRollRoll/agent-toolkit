@@ -1,12 +1,14 @@
 """通知渠道。每个渠道实现 send(notification)，失败时抛异常。"""
 from __future__ import annotations
 
+import html
 import json
 import time
 import urllib.error
 import urllib.request
 
-from .config import AGENT_LABELS, TEST_NOTIFICATION
+from .config import (AGENT_LABELS, ERROR, PERMISSION, TEST_NOTIFICATION, TURN_COMPLETE,
+                     TURN_END_WAITING, WAITING_INPUT)
 
 TOTAL_TIMEOUT = 10.0
 MAX_RETRIES = 2
@@ -63,8 +65,7 @@ class TelegramChannel:
     def send(self, notification):
         if not self.token or not self.chat_id:
             raise ChannelError("缺少 Telegram token 或 chat_id")
-        # 纯文本发送，不设 parse_mode，避免特殊字符导致解析失败
-        params = {"chat_id": self.chat_id, "text": render_plain(notification)}
+        params = {"chat_id": self.chat_id, "text": render_html(notification), "parse_mode": "HTML"}
         deadline = time.monotonic() + TOTAL_TIMEOUT
         last_error = None
         for _ in range(MAX_RETRIES + 1):
@@ -108,23 +109,48 @@ def _retry_after(body_json):
         return 1.0
 
 
-def render_plain(notification):
-    """把结构化通知排版为 Telegram 纯文本消息；空字段整行省略。"""
-    if notification.event_type == TEST_NOTIFICATION:
-        title = f"[{notification.project}] {notification.event_type}"
-    else:
-        label = AGENT_LABELS.get(notification.agent, notification.agent)
-        title = f"[{label}] {notification.project} · {notification.session_id}"
-    lines = [title, f"事件：{notification.event_type}"]
-    if notification.error_kind:
-        lines.append(f"错误类别：{notification.error_kind}")
-    if notification.branch:
-        lines.append(f"分支：{notification.branch}")
+# 通知事件 → (图标, 显示名)，见 spec #2 REQ-001 表格
+EVENT_DISPLAY = {
+    TURN_COMPLETE: ("✅", "回合完成"),
+    TURN_END_WAITING: ("✅", "回合结束"),
+    WAITING_INPUT: ("💬", "等待输入"),
+    PERMISSION: ("🔐", "需要授权"),
+    ERROR: ("❌", "异常"),
+    TEST_NOTIFICATION: ("🔔", "测试通知"),
+}
+
+
+def _layout(notification, esc, bold, code, quote):
+    """按 REQ-001 布局逐行拼接；缺失字段整项省略。各渠道格式由传入的函数决定。"""
+    icon, label = EVENT_DISPLAY.get(notification.event_type, ("", notification.event_type))
+    title = " · ".join(p for p in (f"{icon} {label}".strip(), notification.project) if p)
+    meta = [esc(p) for p in (AGENT_LABELS.get(notification.agent, ""),
+                             notification.host, notification.branch) if p]
+    if notification.session_id:
+        meta.append(code(esc(notification.session_id)))
+    lines = [bold(esc(title))]
+    if meta:
+        lines.append(" · ".join(meta))
     if notification.session_title:
-        lines.append(f"会话：{notification.session_title}")
+        lines.append(esc(f"会话：{notification.session_title}"))
+    if notification.error_kind:
+        lines.append(esc(f"错误类别：{notification.error_kind}"))
     if notification.body:
-        lines.extend(["", notification.body])
+        lines.append(quote(esc(notification.body)))
     return "\n".join(lines)
+
+
+def render_html(notification):
+    """Telegram HTML 排版：字段值先转义，标题加粗、会话短 ID 等宽、正文放折叠引用块。"""
+    return _layout(notification, lambda t: html.escape(t, quote=False),
+                   lambda t: f"<b>{t}</b>", lambda t: f"<code>{t}</code>",
+                   lambda t: f"<blockquote expandable>{t}</blockquote>")
+
+
+def render_plain(notification):
+    """同一布局的纯文本形式，不含标签（供纯文本发送使用）。"""
+    same = lambda t: t  # noqa: E731
+    return _layout(notification, same, same, same, same)
 
 
 def build_channels(config):

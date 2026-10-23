@@ -35,8 +35,10 @@ def test_sends_plain_text_to_chat():
     opener = Opener([None])
     TelegramChannel("T", "42", opener=opener).send(_n())
     body = json.loads(opener.requests[0].data)
-    # 纯文本：不设 parse_mode，特殊字符原样发送
-    assert body == {"chat_id": "42", "text": "[Claude] p · 12345678\n事件：回合完成\n\na<b>*"}
+    # HTML 模式：字段值转义后嵌入
+    assert body == {"chat_id": "42", "parse_mode": "HTML",
+                    "text": "<b>✅ 回合完成 · p</b>\nClaude · <code>12345678</code>\n"
+                            "<blockquote expandable>a&lt;b&gt;*</blockquote>"}
 
 
 def test_network_error_retries_twice_then_raises():

@@ -30,6 +30,7 @@ class Config:
     telegram_token: str = ""
     telegram_chat_id: str = ""
     privacy: bool = False
+    host_label: str = ""  # 用户设定的主机标签，已去掉首尾空白
     disabled_events: set = field(default_factory=set)
     channels: list = field(default_factory=lambda: ["telegram"])
     log_path: Path = Path()
@@ -94,6 +95,7 @@ def load_config(env):
         telegram_token=env.get("AGENT_NOTIFY_TELEGRAM_TOKEN") or str(telegram.get("token") or ""),
         telegram_chat_id=env.get("AGENT_NOTIFY_TELEGRAM_CHAT_ID") or str(telegram.get("chat_id") or ""),
         privacy=_truthy(privacy) if privacy is not None else bool(data.get("privacy", False)),
+        host_label=str(data.get("host_label") or "").strip(),
         disabled_events=disabled,
         channels=[str(c) for c in channels],
         log_path=Path(env.get("AGENT_NOTIFY_LOG") or default_log_path(env)),

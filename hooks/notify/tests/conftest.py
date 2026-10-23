@@ -4,6 +4,7 @@ import io
 import json
 import sys
 from dataclasses import dataclass
+from html.parser import HTMLParser
 from pathlib import Path
 
 import pytest
@@ -92,3 +93,20 @@ def telegram_channel(outcomes=(), token=TOKEN, chat_id="42"):
 @pytest.fixture
 def telegram():
     return telegram_channel()
+
+
+class _Visible(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.parts = []
+
+    def handle_data(self, data):
+        self.parts.append(data)
+
+
+def visible(html_text):
+    """Telegram HTML 解析后用户看到的文本（去掉标签、还原转义）。"""
+    parser = _Visible()
+    parser.feed(html_text)
+    parser.close()
+    return "".join(parser.parts)
