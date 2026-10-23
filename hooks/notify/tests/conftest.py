@@ -84,10 +84,18 @@ class RecordingOpener:
         return [r.body["text"] for r in self.requests if r.method == "sendMessage"]
 
 
-def telegram_channel(outcomes=(), token=TOKEN, chat_id="42"):
-    """真实 TelegramChannel，网络换成 RecordingOpener；用 channel.opener 取请求记录。"""
-    from agent_notify.channels import TelegramChannel
-    return TelegramChannel(token, chat_id, opener=RecordingOpener(outcomes))
+def telegram_channel(outcomes=(), token=TOKEN, chat_id="42", env=None, opener=None):
+    """真实 TelegramChannel，网络换成 RecordingOpener；用 channel.opener 取请求记录。
+
+    传入 env 时按该环境的配置经 build_channels 构造（可观察 request_timeout 等配置）。
+    """
+    from agent_notify.channels import TelegramChannel, build_channels
+    opener = opener or RecordingOpener(outcomes)
+    if env is not None:
+        from agent_notify.config import load_config
+        [channel] = build_channels(load_config(env), opener=opener)
+        return channel
+    return TelegramChannel(token, chat_id, opener=opener)
 
 
 @pytest.fixture
