@@ -168,7 +168,7 @@ With the plugin installed, Claude Code and Codex CLI send a Telegram message on 
 
 The first line is the event icon, project, and host, so the system pop-up shows where it came from at a glance. The second line is the event, agent, git branch, and short session ID; missing fields are left out.
 
-Markdown in the turn summary is converted to what Telegram supports: bold, inline code, links, and code blocks render as usual; headings become bold, list items become `•`, horizontal rules are dropped, and tables stay as plain text.
+Markdown in the turn summary (the agent's reply) is converted to what Telegram supports: bold, inline code, http(s) links, and code blocks render as usual; headings become bold, unordered list items become `•`, and horizontal rules are dropped. Ordered lists, quotes, italics, and tables stay as plain text. Command previews and error details are not converted and show as-is.
 
 | Event | Icon | Claude Code | Codex CLI |
 |---|---|---|---|
