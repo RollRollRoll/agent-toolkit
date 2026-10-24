@@ -31,7 +31,9 @@ def test_parse_error_resends_once_as_plain_text():
     first, second = ch.opener.requests
     assert first.body["parse_mode"] == "HTML"
     assert second.body == {"chat_id": "42",
-                           "text": "✅ p @ box\n回合完成 · Claude · 12345678\na<b>&c"}
+                           "text": "✅ 回合完成 · p @ box\n\nAgent：Claude\n会话：12345678\n\na<b>&c"}
+    # 纯文本与 HTML 的可见文本逐行一致，包括部分之间的空行
+    assert visible(first.body["text"]) == second.body["text"]
 
 
 def test_fallback_is_logged_without_body_or_token(env, tmp_path):
@@ -90,16 +92,23 @@ def _long_payload(tmp_path, env):
             "session_title": "标题&😀" * 60, "last_assistant_message": "&😀" * 1750}
 
 
-def test_long_html_message_fits_4096_and_keeps_first_two_lines(env, tmp_path):
+def test_long_html_message_fits_4096_and_keeps_header(env, tmp_path):
     ch = telegram_channel()
     process("claude", _long_payload(tmp_path, env), env, channels=[ch])
     [text] = ch.opener.texts()
     assert _utf16(text) <= 4096
     lines = visible(text).splitlines()
-    assert lines[0] == "✅ " + "项目&<" * 16 + "… @ box"
-    assert lines[1] == "回合完成 · Claude · abcdef12"
+    _assert_header_and_details(lines)
     assert lines[-1].endswith("…")
     assert set(lines[-1][:-1]) <= {"&", "😀"}
+
+
+def _assert_header_and_details(lines):
+    """超长时只截正文：第一行与第二部分完整，部分之间的空行保留。"""
+    assert lines[0] == "✅ 回合完成 · " + "项目&<" * 16 + "… @ box"
+    assert lines[1:4] == ["", "Agent：Claude", "会话：abcdef12"]
+    assert lines[4].startswith("标题：标题&😀") and lines[4].endswith("…")
+    assert lines[5] == ""
 
 
 def test_plain_fallback_request_also_fits_4096(env, tmp_path):
@@ -109,8 +118,7 @@ def test_plain_fallback_request_also_fits_4096(env, tmp_path):
     assert "parse_mode" not in ch.opener.requests[1].body
     assert _utf16(plain_text) <= 4096
     lines = plain_text.splitlines()
-    assert lines[0] == "✅ " + "项目&<" * 16 + "… @ box"
-    assert lines[1] == "回合完成 · Claude · abcdef12"
+    _assert_header_and_details(lines)
     assert lines[-1].endswith("…")
 
 

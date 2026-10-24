@@ -1,6 +1,6 @@
 """锁定 Telegram 实际收到的请求体 text：经 process 走完整链路，渠道用真实 TelegramChannel。
 
-期望值是「图标 项目 @ 主机」布局的手写字面量（取代 1.4.3 原文与 spec #2 REQ-001 原定布局）；截断长度与隐私模式按 #6
+期望值是 spec #19 三段式布局的手写字面量（取代 1.4.3 原文、spec #2 REQ-001 与 #5 的布局）；截断长度与隐私模式按 #6
 （REQ-003、REQ-004）更新。多数测试比较 HTML 解析后的可见文本；完整 HTML 只在少数测试里锁定。
 """
 from __future__ import annotations
@@ -51,14 +51,14 @@ def test_turn_complete_text(env, tmp_path):
     repo = _repo(tmp_path)
     (repo / "src").mkdir()
     assert _html("claude", _claude_stop(repo / "src"), env) == [
-        "<b>✅ myrepo @ box</b>\n回合完成 · Claude · feat/x · <code>12345678</code>\n"
-        "会话：重构登录\n<blockquote expandable>已完成重构</blockquote>"]
+        "<b>✅ 回合完成 · myrepo @ box</b>\n\nAgent：Claude\n分支：feat/x\n会话：<code>12345678</code>\n"
+        "标题：重构登录\n\n<blockquote expandable>已完成重构</blockquote>"]
 
 
 def test_codex_turn_end_text(env, tmp_path):
     payload = {"hook_event_name": "Stop", "session_id": "c0dex999zzz",
                "cwd": str(tmp_path / "svc"), "last_assistant_message": "done", "turn_id": "t1"}
-    assert _texts("codex", payload, env) == ["✅ svc @ box\n回合结束 · Codex · c0dex999\ndone"]
+    assert _texts("codex", payload, env) == ["✅ 回合结束 · svc @ box\n\nAgent：Codex\n会话：c0dex999\n\ndone"]
 
 
 def test_waiting_input_text(env, tmp_path):
@@ -66,26 +66,26 @@ def test_waiting_input_text(env, tmp_path):
                "session_id": "s1234567xx", "cwd": str(tmp_path / "p"),
                "message": "Claude is waiting for your input"}
     assert _texts("claude", payload, env) == [
-        "💬 p @ box\n等待输入 · Claude · s1234567\nClaude is waiting for your input"]
+        "💬 等待输入 · p @ box\n\nAgent：Claude\n会话：s1234567\n\nClaude is waiting for your input"]
 
 
 def test_permission_texts(env, tmp_path):
     cwd = str(tmp_path / "p")
     assert _texts("claude", {**CLAUDE_PERMISSION, "cwd": cwd}, env) == [
-        "🔐 p @ box\n需要授权 · Claude · aaaaaaaa\nClaude needs your permission to use Bash"]
+        "🔐 需要授权 · p @ box\n\nAgent：Claude\n会话：aaaaaaaa\n\nClaude needs your permission to use Bash"]
     assert _texts("codex", {**CODEX_PERMISSION, "cwd": cwd}, env) == [
-        "🔐 p @ box\n需要授权 · Codex · bbbbbbbb\nBash: rm -rf build"]
+        "🔐 需要授权 · p @ box\n\nAgent：Codex\n会话：bbbbbbbb\n\nBash: rm -rf build"]
 
 
 def test_error_text(env, tmp_path):
     assert _texts("claude", {**CLAUDE_ERROR, "cwd": str(tmp_path / "p")}, env) == [
-        "❌ p @ box\n异常 · Claude · eeeeeeee\n错误类别：rate_limit\n429 Too Many Requests"]
+        "❌ 异常 · p @ box\n\nAgent：Claude\n会话：eeeeeeee\n错误类别：rate_limit\n\n429 Too Many Requests"]
 
 
 def test_missing_session_id_and_long_summary_text(env, tmp_path):
     payload = {"hook_event_name": "Stop", "cwd": str(tmp_path / "p"),
                "last_assistant_message": "汉" * 1500}
-    assert _texts("claude", payload, env) == ["✅ p @ box\n回合完成 · Claude\n" + "汉" * 1000 + "…"]
+    assert _texts("claude", payload, env) == ["✅ 回合完成 · p @ box\n\nAgent：Claude\n\n" + "汉" * 1000 + "…"]
 
 
 def test_privacy_mode_texts(env, tmp_path):
@@ -94,10 +94,11 @@ def test_privacy_mode_texts(env, tmp_path):
     cwd = str(tmp_path / "p")
     # 隐私模式只关正文和会话标题，分支和错误类别照常发送（REQ-004）
     assert _texts("claude", _claude_stop(repo), env) == [
-        "✅ myrepo @ box\n回合完成 · Claude · feat/x · 12345678"]
-    assert _texts("codex", {**CODEX_PERMISSION, "cwd": cwd}, env) == ["🔐 p @ box\n需要授权 · Codex · bbbbbbbb"]
-    assert _texts("claude", {**CLAUDE_ERROR, "cwd": cwd}, env) == [
-        "❌ p @ box\n异常 · Claude · eeeeeeee\n错误类别：rate_limit"]
+        "✅ 回合完成 · myrepo @ box\n\nAgent：Claude\n分支：feat/x\n会话：12345678"]
+    assert _texts("codex", {**CODEX_PERMISSION, "cwd": cwd, "session_title": "重构登录"}, env) == [
+        "🔐 需要授权 · p @ box\n\nAgent：Codex\n会话：bbbbbbbb"]
+    assert _texts("claude", {**CLAUDE_ERROR, "cwd": cwd, "session_title": "重构登录"}, env) == [
+        "❌ 异常 · p @ box\n\nAgent：Claude\n会话：eeeeeeee\n错误类别：rate_limit"]
 
 
 def test_test_notification_text():
@@ -105,7 +106,7 @@ def test_test_notification_text():
     channel = telegram_channel()
     channel.send(make_test_notification("mbp"))
     assert channel.opener.texts() == [
-        "<b>🔔 agent-notify @ mbp</b>\n测试通知\n"
+        "<b>🔔 测试通知 · agent-notify @ mbp</b>\n\n"
         "<blockquote expandable>如果你看到这条消息，说明配置正确。</blockquote>"]
 
 
@@ -132,4 +133,5 @@ def test_143_config_file_still_works(tmp_path):
     cwd = str(tmp_path / "p")
     process("claude", {**CLAUDE_ERROR, "cwd": cwd}, env, channels=[channel])
     process("codex", {**CODEX_PERMISSION, "cwd": cwd}, env, channels=[channel])
-    assert [visible(t) for t in channel.opener.texts()] == ["🔐 p @ box\n需要授权 · Codex · bbbbbbbb"]
+    assert [visible(t) for t in channel.opener.texts()] == [
+        "🔐 需要授权 · p @ box\n\nAgent：Codex\n会话：bbbbbbbb"]
