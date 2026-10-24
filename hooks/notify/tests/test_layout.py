@@ -75,7 +75,16 @@ def test_session_title_and_error_kind_lines_in_order(env, tmp_path):
                "cwd": str(tmp_path / "p"), "session_title": "重构登录"}
     _, lines = _send("claude", payload, env)
     assert lines == ["❌ 异常 · p", "Claude · box · eeeeeeee", "会话：重构登录",
-                     "错误类别：rate_limit", "rate_limit · 429 Too Many Requests"]
+                     "错误类别：rate_limit", "429 Too Many Requests"]
+
+
+def test_error_without_details_has_no_body(env, tmp_path):
+    # 错误类别已单独成行，正文只放错误详情（REQ-003）；没有详情时不出现引用块
+    payload = {"hook_event_name": "StopFailure", "error": "rate_limit",
+               "session_id": "e" * 12, "cwd": str(tmp_path / "p")}
+    body, lines = _send("claude", payload, env)
+    assert lines == ["❌ 异常 · p", "Claude · box · eeeeeeee", "错误类别：rate_limit"]
+    assert "blockquote" not in body["text"]
 
 
 def test_short_id_is_monospace_and_title_bold(env, tmp_path):

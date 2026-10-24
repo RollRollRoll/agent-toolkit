@@ -144,8 +144,8 @@ def _event_type(agent, payload):
 def _summary(event_type, payload):
     """按事件类型挑选摘要原文（未截断）。"""
     if event_type == ERROR:
-        parts = [payload.get("error"), payload.get("error_details")]
-        return " · ".join(str(p) for p in parts if p)
+        # 错误类别已单独成行（error_kind），正文只放错误详情（REQ-003）
+        return str(payload.get("error_details") or "")
     if event_type == PERMISSION:
         if payload.get("tool_input") is not None:
             tool_input = payload["tool_input"]
