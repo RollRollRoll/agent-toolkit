@@ -172,7 +172,7 @@ The first line is the event and project. The second line is the agent, host, git
 |---|---|---|---|
 | Turn complete | ✅ | supported | merged with waiting for input into "turn ended, waiting for input", shown as 回合结束 in the message |
 | Waiting for input | 💬 | about 60 s after a turn with no reply; an MCP server asks for input mid-turn | same as above |
-| Permission needed | 🔐 | sent only if the prompt is still open after about 6 s; prompts you handle right away are not pushed | sent as soon as the request appears |
+| Permission needed | 🔐 | sent only if the prompt is still open after about 6 s; prompts you handle right away are not pushed. Questions asked through AskUserQuestion are notified the same way. In auto mode no prompt appears, so nothing is sent | sent as soon as the request appears |
 | Error | ❌ | the turn stopped on an API or similar error | not supported |
 
 Before sending, credentials in the body and session title are replaced with `***`: the bot token, `Authorization` headers, common key prefixes, `password=`-style key-value pairs, and passwords in URLs. The rules are fixed and can't cover every format. To keep the body out of Telegram entirely, turn off `include_summary` / `include_tool_detail`, or turn on privacy mode.
