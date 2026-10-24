@@ -170,8 +170,10 @@ def _layout(notification, esc, bold, code, quote, body=None):
         lines.append(esc(f"会话：{notification.session_title}"))
     if notification.error_kind:
         lines.append(esc(f"错误类别：{notification.error_kind}"))
-    if notification.body:
-        lines.append(quote((body or esc)(notification.body)))
+    # 正文转换后可能为空（只有分隔线），这时不发空引用块
+    text = (body or esc)(notification.body) if notification.body else ""
+    if text.strip():
+        lines.append(quote(text))
     return "\n".join(lines)
 
 
@@ -205,16 +207,21 @@ def fit_text(render, notification):
 
 
 def render_html(notification):
-    """Telegram HTML 排版：字段值先转义，标题加粗、会话短 ID 等宽、正文放折叠引用块。"""
+    """Telegram HTML 排版：字段值先转义，标题加粗、会话短 ID 等宽、正文放折叠引用块。
+
+    正文里的 Markdown 转成 Telegram 支持的格式；其余字段只做转义。
+    """
+    from .markdown import to_html
     return _layout(notification, lambda t: html.escape(t, quote=False),
                    lambda t: f"<b>{t}</b>", lambda t: f"<code>{t}</code>",
-                   lambda t: f"<blockquote expandable>{t}</blockquote>")
+                   lambda t: f"<blockquote expandable>{t}</blockquote>", body=to_html)
 
 
 def render_plain(notification):
-    """同一布局的纯文本形式，不含标签（供纯文本发送使用）。"""
+    """同一布局的纯文本形式，不含标签（供纯文本发送使用）；正文去掉 Markdown 标记。"""
+    from .markdown import to_plain
     same = lambda t: t  # noqa: E731
-    return _layout(notification, same, same, same, same)
+    return _layout(notification, same, same, same, same, body=to_plain)
 
 
 def build_channels(config, opener=urllib.request.urlopen):
