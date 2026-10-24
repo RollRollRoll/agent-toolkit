@@ -161,12 +161,14 @@ reloads the skills.
 With the plugin installed, Claude Code and Codex CLI send a Telegram message on the events below. A notification looks like this (the body is collapsed by default; tap to expand). Event names are shown in Chinese in the actual message:
 
 ```text
-🔐 需要授权 · agent-toolkit
-Codex · mbp · main · 1a2b3c4d
+🔐 agent-toolkit @ mbp
+需要授权 · Codex · main · 1a2b3c4d
 ▸ Bash: curl -H "Authorization: Bearer ***" https://x
 ```
 
-The first line is the event and project. The second line is the agent, host, git branch, and short session ID; missing fields are left out.
+The first line is the event icon, project, and host, so the system pop-up shows where it came from at a glance. The second line is the event, agent, git branch, and short session ID; missing fields are left out.
+
+Markdown in the turn summary is converted to what Telegram supports: bold, inline code, links, and code blocks render as usual; headings become bold, list items become `•`, horizontal rules are dropped, and tables stay as plain text.
 
 | Event | Icon | Claude Code | Codex CLI |
 |---|---|---|---|
