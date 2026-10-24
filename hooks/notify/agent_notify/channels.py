@@ -154,33 +154,38 @@ EVENT_DISPLAY = {
 
 
 def _layout(notification, esc, bold, code, quote, markdown):
-    """逐行拼接通知；缺失字段整项省略。各渠道格式由传入的函数决定。
+    """把通知排成三部分，部分之间空一行；缺失字段整行省略，空的部分连同空行一起省略。
 
-    第一行只放图标、项目和主机，系统弹窗里一眼看出来源（取代 spec #2 REQ-001 原定的
-    「事件 · 项目」）；第二行依次是事件名、Agent、分支、会话短 ID。
-    markdown 用来排版 Agent 回复；其余事件的正文与其他字段一样只做 esc。
+    第一部分是加粗的「图标 事件 · 项目 @ 主机」；第二部分一行一个「标签：值」，
+    依次为 Agent、分支、会话短 ID、会话标题、错误类别；第三部分是正文引用块（spec #19）。
+    各渠道格式由传入的函数决定；markdown 用来排版 Agent 回复，其余事件的正文只做 esc。
     """
     icon, label = EVENT_DISPLAY.get(notification.event_type, ("", notification.event_type))
     # 没有项目时主机前仍保留 @，不会被误认成项目名
     source = f"{notification.project or ''} @ {notification.host}".strip() if notification.host \
         else notification.project
-    title = " ".join(p for p in (icon, source or label) if p)
-    meta = [esc(p) for p in (label if source else "", AGENT_LABELS.get(notification.agent, ""),
-                             notification.branch) if p]
-    if notification.session_id:
-        meta.append(code(esc(notification.session_id)))
-    lines = [bold(esc(title))]
-    if meta:
-        lines.append(" · ".join(meta))
-    if notification.session_title:
-        lines.append(esc(f"会话：{notification.session_title}"))
-    if notification.error_kind:
-        lines.append(esc(f"错误类别：{notification.error_kind}"))
-    # 正文转换后可能为空（只有分隔线），这时不发空引用块
+    event = f"{icon} {label}".strip()
+    header = f"{event} · {source}" if source else event
+    fields = (("Agent", AGENT_LABELS.get(notification.agent, ""), esc),
+              ("分支", notification.branch, esc),
+              ("会话", notification.session_id, lambda t: code(esc(t))),
+              ("标题", notification.session_title, esc),
+              ("错误类别", notification.error_kind, esc))
+    details = [f"{name}：{fmt(value)}" for name, value, fmt in fields if value]
+    # 正文首尾的空白行会在部分之间多出空行，先去掉；转换后为空（只有分隔线）时不发空引用块
     format_body = markdown if notification.event_type in MARKDOWN_EVENTS else esc
-    text = format_body(notification.body) if notification.body else ""
-    if text.strip():
-        lines.append(quote(text))
+    text = _trim_blank_lines(format_body(notification.body)) if notification.body else ""
+    parts = [[bold(esc(header))], details, [quote(text)] if text else []]
+    return "\n\n".join("\n".join(lines) for lines in parts if lines)
+
+
+def _trim_blank_lines(text):
+    """去掉首尾只含空白的行；正文内部和首行缩进保持原样。"""
+    lines = text.split("\n")
+    while lines and not lines[0].strip():
+        lines.pop(0)
+    while lines and not lines[-1].strip():
+        lines.pop()
     return "\n".join(lines)
 
 
@@ -192,7 +197,7 @@ def fit_text(render, notification):
     """REQ-007：渲染结果超过 4096 个 UTF-16 码元时只截短正文并以 … 结尾。
 
     每次截短后都重新渲染（重新转义）再计数，二分出能放下的最长正文；
-    标题行与第二行不参与截短，始终完整。
+    标题行与来源明细不参与截短，始终完整。
     """
     text = render(notification)
     if _utf16_len(text) <= MAX_TEXT_UTF16 or not notification.body:

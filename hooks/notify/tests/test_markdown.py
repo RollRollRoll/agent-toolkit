@@ -76,7 +76,7 @@ def test_plain_fallback_strips_markers_and_keeps_urls(env, tmp_path):
     _, plain = send_once("claude", _stop(tmp_path, message), env,
                          outcomes=[http_error(400, "Bad Request: can't parse entities")])
     assert "parse_mode" not in plain
-    assert plain["text"].split("\n")[2:] == ["标题", "• 粗体 code 文档 (https://x.io/p)", "x"]
+    assert plain["text"].split("\n\n", 2)[2].split("\n") == ["标题", "• 粗体 code 文档 (https://x.io/p)", "x"]
 
 
 def test_redaction_mask_line_is_not_a_rule(env, tmp_path):
@@ -88,7 +88,8 @@ def test_body_of_only_rules_has_no_empty_quote(env, tmp_path):
     # 正文转换后为空时不发空引用块
     [body] = send_once("claude", _stop(tmp_path, "---\n\n---"), env)
     assert quote_html(body["text"]) is None
-    assert visible(body["text"]).split("\n") == ["✅ p @ box", "回合完成 · Claude · 1a2b3c4d"]
+    assert visible(body["text"]).split("\n") == [
+        "✅ 回合完成 · p @ box", "", "Agent：Claude", "会话：1a2b3c4d"]
 
 
 @pytest.mark.parametrize("command", [
@@ -134,4 +135,4 @@ def test_converted_body_still_fits_4096(env, tmp_path):
     with_config(env, tmp_path, summary_max_chars=3500)
     [body] = send_once("claude", _stop(tmp_path, "**a** `b` " * 400), env)
     assert len(body["text"].encode("utf-16-le")) // 2 <= 4096
-    assert visible(body["text"]).split("\n")[0] == "✅ p @ box"
+    assert visible(body["text"]).split("\n")[0] == "✅ 回合完成 · p @ box"
