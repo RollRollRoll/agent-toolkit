@@ -160,7 +160,7 @@ Codex · mbp · main · 1a2b3c4d
 
 | 事件 | 图标 | Claude Code | Codex CLI |
 |---|---|---|---|
-| 回合完成 | ✅ | 支持 | 合并为「回合结束」，同时表示等待输入 |
+| 回合完成 | ✅ | 支持 | 与等待输入合并为「回合结束，等待输入」，通知里显示为「回合结束」 |
 | 等待输入 | 💬 | 回合结束后约 60 秒无人回应；回合中途 MCP 服务器请求输入 | 同上 |
 | 需要授权 | 🔐 | 授权提示出现约 6 秒仍未处理时才发，及时处理的不推送 | 授权请求一出现就发 |
 | 异常 | ❌ | 回合因 API 等错误终止 | 不支持 |
@@ -184,7 +184,7 @@ Codex · mbp · main · 1a2b3c4d
 | 配置项 | 默认值 | 说明 |
 |---|---|---|
 | `host_label` | 机器名第一个 `.` 之前的部分 | 通知里显示的主机名，多台电脑共用一个 Bot 时用来区分 |
-| `events` | 全部开启 | 按事件类型关闭通知；Codex 的「回合结束」要 `turn_complete` 和 `waiting_input` 都关闭才不发 |
+| `events` | 全部开启 | 按事件类型关闭通知；Codex 的「回合结束，等待输入」要 `turn_complete` 和 `waiting_input` 都关闭才不发 |
 | `include_summary` | `true` | 是否发送回合摘要、等待输入的提示、错误详情和会话标题 |
 | `include_tool_detail` | `true` | 是否发送授权的命令预览 |
 | `privacy` | `false` | 隐私模式，开启时等于上面两项都关 |
@@ -192,7 +192,7 @@ Codex · mbp · main · 1a2b3c4d
 | `request_timeout` | `10` | 每条通知的发送总时限（秒），范围 1–60，含重试 |
 | `log_level` | `info` | `error` 只记失败；`info` 另记每条通知的结果和耗时；`debug` 另记被跳过的事件及原因 |
 
-布尔项写成字符串时，`"false"`、`"0"`、`"no"`、`"off"` 视为关闭。非法值按默认值或边界值处理。
+布尔项写成字符串时，`"false"`、`"0"`、`"no"`、`"off"` 和空串视为关闭。非法值按默认值或边界值处理。
 
 环境变量优先于配置文件：`AGENT_NOTIFY_TELEGRAM_TOKEN`、`AGENT_NOTIFY_TELEGRAM_CHAT_ID`、`AGENT_NOTIFY_PRIVACY`，以及指定配置文件和日志路径的 `AGENT_NOTIFY_CONFIG`、`AGENT_NOTIFY_LOG`。
 

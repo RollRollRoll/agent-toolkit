@@ -170,7 +170,7 @@ The first line is the event and project. The second line is the agent, host, git
 
 | Event | Icon | Claude Code | Codex CLI |
 |---|---|---|---|
-| Turn complete | ✅ | supported | merged into "turn ended", which also means waiting for input |
+| Turn complete | ✅ | supported | merged with waiting for input into "turn ended, waiting for input", shown as 回合结束 in the message |
 | Waiting for input | 💬 | about 60 s after a turn with no reply; an MCP server asks for input mid-turn | same as above |
 | Permission needed | 🔐 | sent only if the prompt is still open after about 6 s; prompts you handle right away are not pushed | sent as soon as the request appears |
 | Error | ❌ | the turn stopped on an API or similar error | not supported |
@@ -194,7 +194,7 @@ You can also edit `~/.config/agent-notify/config.json` yourself (`chmod 600` rec
 | Key | Default | Meaning |
 |---|---|---|
 | `host_label` | machine name up to the first `.` | Host shown in the notification; tells machines apart when they share one bot |
-| `events` | all on | Turn notifications off per event type; Codex's "turn ended" is skipped only when both `turn_complete` and `waiting_input` are off |
+| `events` | all on | Turn notifications off per event type; Codex's "turn ended, waiting for input" is skipped only when both `turn_complete` and `waiting_input` are off |
 | `include_summary` | `true` | Send the turn summary, the waiting-for-input prompt, error details, and the session title |
 | `include_tool_detail` | `true` | Send the command preview of permission requests |
 | `privacy` | `false` | Privacy mode; on means both settings above are off |
@@ -202,7 +202,7 @@ You can also edit `~/.config/agent-notify/config.json` yourself (`chmod 600` rec
 | `request_timeout` | `10` | Total send time limit per notification in seconds, 1–60, retries included |
 | `log_level` | `info` | `error` logs failures only; `info` also logs each notification's result and duration; `debug` also logs skipped events and why |
 
-Boolean keys written as strings treat `"false"`, `"0"`, `"no"`, and `"off"` as off. Invalid values fall back to the default or the nearest bound.
+Boolean keys written as strings treat `"false"`, `"0"`, `"no"`, `"off"`, and the empty string as off. Invalid values fall back to the default or the nearest bound.
 
 Environment variables override the file: `AGENT_NOTIFY_TELEGRAM_TOKEN`, `AGENT_NOTIFY_TELEGRAM_CHAT_ID`, `AGENT_NOTIFY_PRIVACY`, plus `AGENT_NOTIFY_CONFIG` and `AGENT_NOTIFY_LOG` to point at a different config file or log path.
 
