@@ -10,6 +10,10 @@ import urllib.request
 
 from .config import (AGENT_LABELS, DEFAULT_REQUEST_TIMEOUT, ERROR, PERMISSION, TEST_NOTIFICATION,
                      TURN_COMPLETE, TURN_END_WAITING, WAITING_INPUT, truncate)
+from .markdown import to_html, to_plain
+
+# 正文是 Agent 回复（Markdown）的通知事件；其余事件的正文（命令预览、错误详情、提示）按原文显示
+MARKDOWN_EVENTS = (TURN_COMPLETE, TURN_END_WAITING)
 
 TOTAL_TIMEOUT = DEFAULT_REQUEST_TIMEOUT
 MAX_RETRIES = 2
@@ -149,12 +153,20 @@ EVENT_DISPLAY = {
 }
 
 
-def _layout(notification, esc, bold, code, quote):
-    """按 REQ-001 布局逐行拼接；缺失字段整项省略。各渠道格式由传入的函数决定。"""
+def _layout(notification, esc, bold, code, quote, markdown):
+    """逐行拼接通知；缺失字段整项省略。各渠道格式由传入的函数决定。
+
+    第一行只放图标、项目和主机，系统弹窗里一眼看出来源（取代 spec #2 REQ-001 原定的
+    「事件 · 项目」）；第二行依次是事件名、Agent、分支、会话短 ID。
+    markdown 用来排版 Agent 回复；其余事件的正文与其他字段一样只做 esc。
+    """
     icon, label = EVENT_DISPLAY.get(notification.event_type, ("", notification.event_type))
-    title = " · ".join(p for p in (f"{icon} {label}".strip(), notification.project) if p)
-    meta = [esc(p) for p in (AGENT_LABELS.get(notification.agent, ""),
-                             notification.host, notification.branch) if p]
+    # 没有项目时主机前仍保留 @，不会被误认成项目名
+    source = f"{notification.project or ''} @ {notification.host}".strip() if notification.host \
+        else notification.project
+    title = " ".join(p for p in (icon, source or label) if p)
+    meta = [esc(p) for p in (label if source else "", AGENT_LABELS.get(notification.agent, ""),
+                             notification.branch) if p]
     if notification.session_id:
         meta.append(code(esc(notification.session_id)))
     lines = [bold(esc(title))]
@@ -164,8 +176,11 @@ def _layout(notification, esc, bold, code, quote):
         lines.append(esc(f"会话：{notification.session_title}"))
     if notification.error_kind:
         lines.append(esc(f"错误类别：{notification.error_kind}"))
-    if notification.body:
-        lines.append(quote(esc(notification.body)))
+    # 正文转换后可能为空（只有分隔线），这时不发空引用块
+    format_body = markdown if notification.event_type in MARKDOWN_EVENTS else esc
+    text = format_body(notification.body) if notification.body else ""
+    if text.strip():
+        lines.append(quote(text))
     return "\n".join(lines)
 
 
@@ -199,16 +214,19 @@ def fit_text(render, notification):
 
 
 def render_html(notification):
-    """Telegram HTML 排版：字段值先转义，标题加粗、会话短 ID 等宽、正文放折叠引用块。"""
+    """Telegram HTML 排版：字段值先转义，标题加粗、会话短 ID 等宽、正文放折叠引用块。
+
+    Agent 回复里的 Markdown 转成 Telegram 支持的格式；其余字段只做转义。
+    """
     return _layout(notification, lambda t: html.escape(t, quote=False),
                    lambda t: f"<b>{t}</b>", lambda t: f"<code>{t}</code>",
-                   lambda t: f"<blockquote expandable>{t}</blockquote>")
+                   lambda t: f"<blockquote expandable>{t}</blockquote>", markdown=to_html)
 
 
 def render_plain(notification):
-    """同一布局的纯文本形式，不含标签（供纯文本发送使用）。"""
+    """同一布局的纯文本形式，不含标签（供纯文本发送使用）；Agent 回复去掉 Markdown 标记。"""
     same = lambda t: t  # noqa: E731
-    return _layout(notification, same, same, same, same)
+    return _layout(notification, same, same, same, same, markdown=to_plain)
 
 
 def build_channels(config, opener=urllib.request.urlopen):

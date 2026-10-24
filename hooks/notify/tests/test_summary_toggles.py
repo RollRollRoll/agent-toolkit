@@ -60,8 +60,8 @@ def test_summary_off_keeps_command_preview(env, telegram, tmp_path):
     cwd = str(tmp_path / "p")
     process("claude", _stop(cwd, "回合摘要", session_title="标题"), env, channels=[telegram])
     process("codex", {**CODEX_PERMISSION, "cwd": cwd, "session_title": "标题"}, env, channels=[telegram])
-    assert _visible(telegram) == ["✅ 回合完成 · p\nClaude · box · abcdefgh",
-                                  "🔐 需要授权 · p\nCodex · box · bbbbbbbb\nBash: rm -rf build"]
+    assert _visible(telegram) == ["✅ p @ box\n回合完成 · Claude · abcdefgh",
+                                  "🔐 p @ box\n需要授权 · Codex · bbbbbbbb\nBash: rm -rf build"]
 
 
 def test_summary_off_drops_waiting_prompt_and_error_details_but_keeps_error_kind(env, fake, tmp_path):
@@ -82,8 +82,8 @@ def test_tool_detail_off_keeps_turn_summary(env, telegram, tmp_path):
     cwd = str(tmp_path / "p")
     process("claude", _stop(cwd, "回合摘要", session_title="标题"), env, channels=[telegram])
     process("codex", {**CODEX_PERMISSION, "cwd": cwd}, env, channels=[telegram])
-    assert _visible(telegram) == ["✅ 回合完成 · p\nClaude · box · abcdefgh\n会话：标题\n回合摘要",
-                                  "🔐 需要授权 · p\nCodex · box · bbbbbbbb"]
+    assert _visible(telegram) == ["✅ p @ box\n回合完成 · Claude · abcdefgh\n会话：标题\n回合摘要",
+                                  "🔐 p @ box\n需要授权 · Codex · bbbbbbbb"]
 
 
 def test_143_privacy_config_drops_body_and_session_title(env, telegram, tmp_path):
@@ -92,8 +92,8 @@ def test_143_privacy_config_drops_body_and_session_title(env, telegram, tmp_path
     cwd = str(tmp_path / "p")
     process("codex", {**CODEX_PERMISSION, "cwd": cwd, "session_title": "标题"}, env, channels=[telegram])
     process("claude", _stop(cwd, "回合摘要", session_title="标题"), env, channels=[telegram])
-    assert _visible(telegram) == ["🔐 需要授权 · p\nCodex · box · bbbbbbbb",
-                                  "✅ 回合完成 · p\nClaude · box · abcdefgh"]
+    assert _visible(telegram) == ["🔐 p @ box\n需要授权 · Codex · bbbbbbbb",
+                                  "✅ p @ box\n回合完成 · Claude · abcdefgh"]
 
 
 @pytest.mark.parametrize("env_value, file_privacy, body", [
@@ -151,4 +151,4 @@ def test_143_config_file_upgrade(tmp_path):
     process("claude", _stop(cwd, "回合摘要", session_title="标题"), env, channels=[channel])
     [request] = channel.opener.requests
     assert request.body["chat_id"] == "7"
-    assert visible(request.body["text"]) == "✅ 回合完成 · p\nClaude · box · abcdefgh"
+    assert visible(request.body["text"]) == "✅ p @ box\n回合完成 · Claude · abcdefgh"

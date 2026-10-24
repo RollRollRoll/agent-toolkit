@@ -316,12 +316,12 @@ def _sent_text(api):
 
 
 def test_test_notification_shows_effective_host(tmp_path, monkeypatch):
-    # 测试通知第二行显示最终生效的主机：新输入的标签
+    # 测试通知第一行显示最终生效的主机：新输入的标签；第二行是事件显示名
     _box(monkeypatch)
     api = _ok_api()
     term = ScriptedTerminal(answers=[""], secrets=[TOKEN], host="mbp")
     assert setup.run_setup(_env(tmp_path), term, opener=api) == 0
-    assert _sent_text(api)[0].splitlines()[1] == "mbp"
+    assert _sent_text(api)[0].splitlines()[:2] == ["🔔 agent-notify @ mbp", "测试通知"]
 
 
 def test_test_notification_falls_back_to_machine_name(tmp_path, monkeypatch):
@@ -329,4 +329,4 @@ def test_test_notification_falls_back_to_machine_name(tmp_path, monkeypatch):
     api = _ok_api()
     term = ScriptedTerminal(answers=[""], secrets=[TOKEN], host="")
     assert setup.run_setup(_env(tmp_path), term, opener=api) == 0
-    assert _sent_text(api)[0].splitlines()[1] == "box"
+    assert _sent_text(api)[0].splitlines()[:2] == ["🔔 agent-notify @ box", "测试通知"]

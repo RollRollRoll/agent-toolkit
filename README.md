@@ -151,12 +151,14 @@ codex plugin add agent-toolkit@agent-toolkit
 安装插件后，Claude Code 与 Codex CLI 在下列事件发生时向你的 Telegram 发送通知。一条通知长这样（正文默认折叠，点开展开）：
 
 ```text
-🔐 需要授权 · agent-toolkit
-Codex · mbp · main · 1a2b3c4d
+🔐 agent-toolkit @ mbp
+需要授权 · Codex · main · 1a2b3c4d
 ▸ Bash: curl -H "Authorization: Bearer ***" https://x
 ```
 
-第一行是事件和项目，第二行依次是 Agent、主机、git 分支、会话短 ID，缺的字段直接省略。
+第一行是事件图标、项目和主机，系统弹窗里一眼就能看出来源；第二行依次是事件、Agent、git 分支、会话短 ID，缺的字段直接省略。
+
+回合摘要（Agent 的回复）里的 Markdown 会转成 Telegram 支持的格式：粗体、行内代码、http(s) 链接、代码块照常显示，标题转成粗体，无序列表转成 `•`，分隔线去掉；有序列表、引用、斜体、表格保留原文。命令预览和错误详情不做转换，按原文显示。
 
 | 事件 | 图标 | Claude Code | Codex CLI |
 |---|---|---|---|
