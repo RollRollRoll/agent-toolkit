@@ -79,7 +79,7 @@ def test_permission_texts(env, tmp_path):
 
 def test_error_text(env, tmp_path):
     assert _texts("claude", {**CLAUDE_ERROR, "cwd": str(tmp_path / "p")}, env) == [
-        "❌ 异常 · p\nClaude · box · eeeeeeee\n错误类别：rate_limit\nrate_limit · 429 Too Many Requests"]
+        "❌ 异常 · p\nClaude · box · eeeeeeee\n错误类别：rate_limit\n429 Too Many Requests"]
 
 
 def test_missing_session_id_and_long_summary_text(env, tmp_path):
