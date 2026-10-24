@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import time
 
 import pytest
 
@@ -61,8 +62,15 @@ CASES = [
     ("mysql-miss", "mysql -P3306 -p db && mkdir -p build && psql -p 5432",
      "mysql -P3306 -p db && mkdir -p build && psql -p 5432"),
     ("mysql-other-segment", "mysql -h db; tar -pxf a.tar", "mysql -h db; tar -pxf a.tar"),
+    # 同一段命令里的参数含 mysql 子串时，仍要遮蔽其后的 -p
+    ("mysql-host-named-mysql", "mysql -h mysqlhost -psecret db", "mysql -h mysqlhost -p*** db"),
+    ("mysql-env-var", 'mysql -u $MYSQL_USER -p"$PW" db', "mysql -u $MYSQL_USER -p*** db"),
+    ("mysql-socket-path", "mysql --socket=/var/run/mysqld/m.sock -psecret db",
+     "mysql --socket=/var/run/mysqld/m.sock -p*** db"),
+    ("mysql-twice", "mysql -h a mysql -pS3c db", "mysql -h a mysql -p*** db"),
     # URL 中的密码
     ("url-hit", "postgres://app:s3cr3t@db/x", "postgres://app:***@db/x"),
+    ("url-after-digit", "1https://u:pw@h/x", "1https://u:***@h/x"),
     # 用户名含敏感键名时仍按 URL 规则处理，保留主机和路径
     ("url-token-user", "https://x-access-token:ghs_abc@github.com/a",
      "https://x-access-token:***@github.com/a"),
@@ -76,6 +84,24 @@ CASES = [
 @pytest.mark.parametrize("text,expected", [c[1:] for c in CASES], ids=[c[0] for c in CASES])
 def test_redaction_rules(text, expected):
     assert redact(text, token=CONFIGURED) == expected
+
+
+@pytest.mark.parametrize("text", [
+    "x" * 18000,                      # 一整段没有空白的单词字符（长哈希、base64、压缩输出）
+    "abc_" * 4500,
+    "中" * 18000,
+    "a.b-" * 4500,
+    "x" * 18000 + "://",              # 只有末尾像 URL
+    "token" * 3600,                   # 长串里反复出现敏感键名
+    "mysql " * 3000,                  # 一段命令里反复出现 mysql 但没有 -p
+], ids=["word-run", "underscore-run", "cjk-run", "dot-dash-run", "url-tail", "keyword-run", "mysql-run"])
+def test_redaction_is_fast_on_long_input(text):
+    # QOS-001：遮蔽在 hook 主进程同步执行，且在截断之前（DEC-001），输入是未截断的原文。
+    # 取约 5 倍于摘要上限 3500 的长度：线性耗时只有几毫秒，二次方回溯会到秒级，
+    # 阈值放宽到 200ms，慢机器上也不会误报
+    start = time.perf_counter()
+    redact(text, token=CONFIGURED)
+    assert time.perf_counter() - start < 0.2
 
 
 def test_redaction_failure_masks_whole_field():
