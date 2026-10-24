@@ -207,7 +207,7 @@ Codex · mbp · main · 1a2b3c4d
 
 ### 其他
 
-- Codex 首次使用需在 `/hooks` 中信任本插件的 hooks；Claude Code 无需额外操作。
+- Codex 首次使用，以及每次升级本插件后，都需要在 `/hooks` 中重新信任本插件的 hooks，否则不会触发通知；即使 hooks 配置本身没有变化也一样。Claude Code 无需额外操作。
 - 只做单向通知，不会改变 Agent 的执行或审批；发送失败只记录到 `~/.local/state/agent-notify/notify.log`，不补发。
 - 要求 Python ≥ 3.9，支持 macOS 与 Linux。
 

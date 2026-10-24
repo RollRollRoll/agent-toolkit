@@ -217,7 +217,7 @@ Environment variables override the file: `AGENT_NOTIFY_TELEGRAM_TOKEN`, `AGENT_N
 
 ### Other notes
 
-- Codex: trust the plugin hooks once in `/hooks`. Claude Code needs no extra step.
+- Codex: trust the plugin hooks in `/hooks` on first use and again after every plugin upgrade, even when the hooks config itself is unchanged; until you do, no notifications fire. Claude Code needs no extra step.
 - One-way only; it never changes agent execution or approvals. Failed sends are logged to `~/.local/state/agent-notify/notify.log` and not retried later.
 - Requires Python ≥ 3.9 on macOS or Linux.
 
