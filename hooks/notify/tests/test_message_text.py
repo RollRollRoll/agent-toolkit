@@ -1,6 +1,6 @@
 """锁定 Telegram 实际收到的请求体 text：经 process 走完整链路，渠道用真实 TelegramChannel。
 
-期望值是 spec #2 REQ-001 新布局的手写字面量（取代 1.4.3 原文）；截断长度与隐私模式按 #6
+期望值是「图标 项目 @ 主机」布局的手写字面量（取代 1.4.3 原文与 spec #2 REQ-001 原定布局）；截断长度与隐私模式按 #6
 （REQ-003、REQ-004）更新。多数测试比较 HTML 解析后的可见文本；完整 HTML 只在少数测试里锁定。
 """
 from __future__ import annotations

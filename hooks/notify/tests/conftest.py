@@ -127,6 +127,22 @@ def telegram():
     return telegram_channel()
 
 
+def send_once(agent, payload, env, outcomes=()):
+    """经 process 发送一条通知，返回 Telegram 收到的全部请求体（列表）。"""
+    channel = telegram_channel(outcomes)
+    process(agent, payload, env, channels=[channel])
+    return [r.body for r in channel.opener.requests]
+
+
+def quote_html(text):
+    """取请求 text 中折叠引用块内的 HTML；没有引用块时返回 None。"""
+    start = text.find("<blockquote expandable>")
+    if start < 0:
+        return None
+    start += len("<blockquote expandable>")
+    return text[start:text.rindex("</blockquote>")]
+
+
 class _Visible(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)

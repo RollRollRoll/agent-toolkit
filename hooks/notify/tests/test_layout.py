@@ -1,5 +1,7 @@
-"""新消息布局、主机与 HTML 发送（spec #2 REQ-001、REQ-002、REQ-006 转义部分）。
+"""消息布局、主机与 HTML 发送（spec #2 REQ-002、REQ-006 转义部分）。
 
+第一行是「图标 项目 @ 主机」，第二行是「事件 · Agent · 分支 · 会话短 ID」；这个布局
+取代了 spec #2 REQ-001 原定的「事件 · 项目」开头。
 经 process 走完整链路，渠道用真实 TelegramChannel；先把请求体的 HTML 解析成
 用户可见文本再比较布局，标签与转义只在少数测试里单独检查。
 """
@@ -9,7 +11,7 @@ import subprocess
 
 import pytest
 
-from conftest import process, telegram_channel, visible, with_config
+from conftest import send_once, telegram_channel, visible, with_config
 
 pytestmark = pytest.mark.usefixtures("hostname")
 
@@ -23,10 +25,8 @@ def _repo(tmp_path, name, branch):
 
 def _send(agent, payload, env):
     """返回 (请求体, 可见文本的各行)。"""
-    channel = telegram_channel()
-    process(agent, payload, env, channels=[channel])
-    [request] = channel.opener.requests
-    return request.body, visible(request.body["text"]).split("\n")
+    [body] = send_once(agent, payload, env)
+    return body, visible(body["text"]).split("\n")
 
 
 def _stop(cwd, **extra):
@@ -154,6 +154,12 @@ def test_long_host_truncated_to_32_chars(env, tmp_path, hostname):
     hostname["value"] = "a" * 40 + ".example.com"
     _, lines = _send("claude", _stop(tmp_path / "p"), env)
     assert lines[0] == "✅ p @ " + "a" * 32 + "…"
+
+
+def test_host_without_project_keeps_at_sign(env, tmp_path):
+    # cwd 为根目录时没有项目名；主机前保留 @，不会被误认成项目
+    _, lines = _send("claude", _stop("/"), env)
+    assert lines[:2] == ["✅ @ box", "回合完成 · Claude · 1a2b3c4d"]
 
 
 def test_host_omitted_when_unavailable(env, tmp_path, hostname):
