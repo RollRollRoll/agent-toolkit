@@ -149,12 +149,18 @@ EVENT_DISPLAY = {
 }
 
 
-def _layout(notification, esc, bold, code, quote):
-    """按 REQ-001 布局逐行拼接；缺失字段整项省略。各渠道格式由传入的函数决定。"""
+def _layout(notification, esc, bold, code, quote, body=None):
+    """按 REQ-001 布局逐行拼接；缺失字段整项省略。各渠道格式由传入的函数决定。
+
+    第一行只放图标、项目和主机，系统弹窗里一眼看出来源；
+    第二行依次是事件名、Agent、分支、会话短 ID。
+    body 用来排版正文，默认与其他字段一样只做转义。
+    """
     icon, label = EVENT_DISPLAY.get(notification.event_type, ("", notification.event_type))
-    title = " · ".join(p for p in (f"{icon} {label}".strip(), notification.project) if p)
-    meta = [esc(p) for p in (AGENT_LABELS.get(notification.agent, ""),
-                             notification.host, notification.branch) if p]
+    source = " @ ".join(p for p in (notification.project, notification.host) if p)
+    title = " ".join(p for p in (icon, source or label) if p)
+    meta = [esc(p) for p in (label if source else "", AGENT_LABELS.get(notification.agent, ""),
+                             notification.branch) if p]
     if notification.session_id:
         meta.append(code(esc(notification.session_id)))
     lines = [bold(esc(title))]
@@ -165,7 +171,7 @@ def _layout(notification, esc, bold, code, quote):
     if notification.error_kind:
         lines.append(esc(f"错误类别：{notification.error_kind}"))
     if notification.body:
-        lines.append(quote(esc(notification.body)))
+        lines.append(quote((body or esc)(notification.body)))
     return "\n".join(lines)
 
 

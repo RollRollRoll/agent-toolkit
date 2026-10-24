@@ -6,7 +6,7 @@ from agent_notify.channels import render_plain
 
 
 def _title(notification):
-    """消息前两行：标题行与 Agent · 主机 · 分支 · 会话短 ID 行。"""
+    """消息前两行：图标 项目 @ 主机，以及 事件名 · Agent · 分支 · 会话短 ID。"""
     return render_plain(notification).splitlines()[:2]
 
 
@@ -17,7 +17,7 @@ def test_claude_stop_sends_turn_complete(env, fake, tmp_path):
     assert len(fake.sent) == 1
     n = fake.sent[0]
     assert n.event_type == "回合完成"
-    assert _title(n) == ["✅ 回合完成 · proj", f"Claude · {n.host} · abcdef12"]
+    assert _title(n) == [f"✅ proj @ {n.host}", "回合完成 · Claude · abcdef12"]
 
 
 def test_codex_stop_sends_single_turn_end_waiting(env, fake, tmp_path):
@@ -26,7 +26,7 @@ def test_codex_stop_sends_single_turn_end_waiting(env, fake, tmp_path):
                "turn_id": "t1"}
     process("codex", payload, env, channels=[fake])
     assert [n.event_type for n in fake.sent] == ["回合结束，等待输入"]
-    assert _title(fake.sent[0])[0] == "✅ 回合结束 · svc"
+    assert _title(fake.sent[0]) == [f"✅ svc @ {fake.sent[0].host}", "回合结束 · Codex · c0dex999"]
     assert fake.sent[0].session_id == "c0dex999"
 
 
@@ -142,8 +142,8 @@ def test_short_and_missing_summary(env, fake, tmp_path):
 def test_render_text_contains_all_parts(env, fake, tmp_path):
     process("claude", _stop(tmp_path, "已完成重构"), env, channels=[fake])
     text = render_plain(fake.sent[0])
-    assert text.splitlines()[0] == "✅ 回合完成 · " + tmp_path.name
-    assert text.splitlines()[1].endswith(" · abcdefgh")
+    assert text.splitlines()[0] == f"✅ {tmp_path.name} @ {fake.sent[0].host}"
+    assert text.splitlines()[1] == "回合完成 · Claude · abcdefgh"
     assert "回合完成" in text
     assert "已完成重构" in text
 

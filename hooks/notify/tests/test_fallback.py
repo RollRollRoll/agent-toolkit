@@ -31,7 +31,7 @@ def test_parse_error_resends_once_as_plain_text():
     first, second = ch.opener.requests
     assert first.body["parse_mode"] == "HTML"
     assert second.body == {"chat_id": "42",
-                           "text": "✅ 回合完成 · p\nClaude · box · 12345678\na<b>&c"}
+                           "text": "✅ p @ box\n回合完成 · Claude · 12345678\na<b>&c"}
 
 
 def test_fallback_is_logged_without_body_or_token(env, tmp_path):
@@ -96,8 +96,8 @@ def test_long_html_message_fits_4096_and_keeps_first_two_lines(env, tmp_path):
     [text] = ch.opener.texts()
     assert _utf16(text) <= 4096
     lines = visible(text).splitlines()
-    assert lines[0].startswith("✅ 回合完成 · 项目&<项目&<")
-    assert lines[1] == "Claude · box · abcdef12"
+    assert lines[0] == "✅ " + "项目&<" * 16 + "… @ box"
+    assert lines[1] == "回合完成 · Claude · abcdef12"
     assert lines[-1].endswith("…")
     assert set(lines[-1][:-1]) <= {"&", "😀"}
 
@@ -109,7 +109,8 @@ def test_plain_fallback_request_also_fits_4096(env, tmp_path):
     assert "parse_mode" not in ch.opener.requests[1].body
     assert _utf16(plain_text) <= 4096
     lines = plain_text.splitlines()
-    assert lines[1] == "Claude · box · abcdef12"
+    assert lines[0] == "✅ " + "项目&<" * 16 + "… @ box"
+    assert lines[1] == "回合完成 · Claude · abcdef12"
     assert lines[-1].endswith("…")
 
 
