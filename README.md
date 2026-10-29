@@ -72,7 +72,7 @@ Skill 文件（`SKILL.md`、`references/`、`agents/openai.yaml`）统一用英�
 | `notify-doctor` | 人类 / agent | Telegram 通知收不到，或想看当前生效的通知配置 | 逐项检查配置、凭据、日志和 Bot 可达性，给出修复建议；只读，不发消息 |
 | `notify-setup` | 人类 / agent | 第一次配置或更换 Telegram Bot | 给出配置向导命令，在你的终端里校验 token、获取 chat_id 并写入配置 |
 | `notify-test` | 人类 / agent | 想确认 Telegram 通知配置是否正确 | 发送一条测试通知，报告成功或失败原因 |
-| `re-explain` | **仅人类** | 上一段解释没看懂 | 补充上下文，用更简单、明确的中文重新解释一遍 |
+| `re-explain` | **仅人类** | 上一段解释没看懂 | 补充上下文，用更简单、明确的中文重新解释一遍；内容适合时附 ASCII 图或 HTML 页面 |
 | `teach` | **仅人类** | 想学一项新技能或新概念 | 把当前目录当有状态的教学工作区，跨会话产出自包含 HTML 课与参照文档 |
 
 ### 维护 agent 自身

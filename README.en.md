@@ -76,7 +76,7 @@ their `description`, and other skills may also call them as capability units.
 | `notify-doctor` | human / agent | Telegram notifications don't arrive, or you want to see the effective notify config | Checks config, credentials, logs, and bot reachability with a fix hint for each problem; read-only, sends no messages |
 | `notify-setup` | human / agent | First-time setup or switching Telegram bots | Gives you the wizard command; in your terminal it validates the token, detects the chat_id, and writes the config |
 | `notify-test` | human / agent | You want to check the Telegram notification setup | Sends a test notification and reports success or the failure reason |
-| `re-explain` | **human only** | You did not understand the previous explanation | Adds context and explains it again in simpler, clearer Chinese |
+| `re-explain` | **human only** | You did not understand the previous explanation | Adds context and explains it again in simpler, clearer Chinese, with an ASCII diagram or HTML page when the content suits one |
 | `teach` | **human only** | You want to learn a new skill or concept | Treats the current directory as a stateful teaching workspace and produces self-contained HTML lessons and reference docs across sessions |
 
 ### Maintaining the agent itself
