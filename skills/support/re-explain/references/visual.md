@@ -31,11 +31,11 @@ Show movement with arrows from old position to new. When several moments matter,
 ## HTML page
 
 - **One self-contained file.** Inline all CSS, JS, and diagrams; draw diagrams as inline SVG. The page opens offline.
-- **Location**: `${TMPDIR:-/tmp}/re-explain/<topic-slug>-<YYYYMMDD>.html`, outside the repository. When that file exists, add `-2`, `-3`, and so on. Example: `/tmp/re-explain/agv-deadlock-20261027.html`.
+- **Location**: `${TMPDIR:-/tmp}/re-explain/<topic-slug>-<YYYYMMDD>.html`, outside the repository. The date is today's, the day the page is written. When that file exists, add `-2`, `-3`, and so on.
 - **Structure**: a title naming the topic; the same 1-2 sentence background as the text; the pictures, each with its caption; under each picture, a short plain-Chinese explanation of its parts (follow `plain-chinese.md`). The page reads on its own, without the chat.
 - **Readable everywhere**: legible in light and dark color schemes, at narrow window widths, and when printed.
 - **Interaction earns its place**: add it only when it shows what a static picture cannot, such as stepping through a flow or a sequence of spatial frames with previous/next buttons, or highlighting a node's links on hover.
-- **Hand-off**: after writing the file, try to open it (`open` on macOS, `wslview` on WSL, `xdg-open` on other Linux). Whether or not that works, give the absolute path in the reply.
+- **Hand-off**: after writing the file, try to open it (`open` on macOS, `explorer.exe "$(wslpath -w <path>)"` on WSL, `xdg-open` on other Linux). Whether or not that works, give the absolute path in the reply.
 - **Fallback**: when the file cannot be written, say why in one line, then draw the key frames as ASCII diagrams in the reply.
 
 The page is done when the file exists, its absolute path is in the reply, and every label on it matches a term in the text explanation.
