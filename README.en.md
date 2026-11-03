@@ -53,6 +53,7 @@ their `description`, and other skills may also call them as capability units.
 | `setup-worktree` | model-invocable | You need an isolated workspace before starting, or are running several lines of development in parallel | Creates and verifies an isolated git worktree from an explicit base commit |
 | `implement` | **human only** | You already have a spec or tickets and want to build them directly | Implements the spec or tickets: uses `tdd` at the agreed seams where possible, runs `code-review` at the end, then commits to the current branch |
 | `implement-spec` | **human only** | The spec has been split into linked tickets and you want all of them done in one run | Schedules subagents in separate worktrees in parallel by blocking order (each implements with `tdd` and self-reviews with `code-review`; the main agent relays their questions to you), merges them one by one into an integration branch, and reviews the whole; opens a PR when the tracker closes work through PRs |
+| `implement-sequence` | **human only** | You want the tickets done one by one, pausing for your decisions | Each round picks, among unblocked tickets, the one closest in business or implementation logic to the last one done; a subagent builds it the `implement` way and commits, then the ticket is closed right away (no PR); stops to ask you when a decision is needed, and runs one overall `code-review` once all tickets are done |
 | `tdd` | model-invocable | You want to land a behavior change test-first | Reference for the red-green loop: what a good test is, where to put seams, anti-patterns, loop rules |
 | `diagnosing-bugs` | model-invocable | You need to track down a hard bug or performance regression | Builds a tight loop that can go red first, then reproduces, minimizes, tests hypotheses, and instruments; leaves a regression test after the fix |
 | `wizard` | model-invocable | Some steps only a human can do: provisioning services, getting keys, clicking through third-party dashboards | Generates an interactive bash wizard that walks the human through each phase, and writes captured values into `.env` or GitHub secrets |
@@ -110,6 +111,9 @@ Existing call points:
 | `implement-spec` | Each implementation subagent completing a ticket | `tdd` |
 | `implement-spec` | Each implementation subagent's self-review before merge | `code-review` |
 | `implement-spec` | Overall review after all tickets are integrated | `code-review` |
+| `implement-sequence` | Each implementation subagent completing a ticket | `tdd` |
+| `implement-sequence` | Each implementation subagent's self-review before commit | `code-review` |
+| `implement-sequence` | Overall review after all tickets are done | `code-review` |
 | `finish-branch` | Writing the body when creating a PR | `pr` |
 | `retro` | Checking the writing rules at the start of the retrospective | `writing-for-agents` |
 
