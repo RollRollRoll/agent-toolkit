@@ -25,6 +25,7 @@
     "./skills/development/grill-demand",
     "./skills/development/implement",
     "./skills/development/implement-spec",
+    "./skills/development/implement-sequence",
     "./skills/development/improve-codebase-architecture",
     "./skills/development/pr",
     "./skills/development/prototype",

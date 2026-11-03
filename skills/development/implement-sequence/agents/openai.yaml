@@ -1,0 +1,5 @@
+interface:
+  display_name: "Implement Sequence"
+  short_description: "Implement tickets one at a time, picking the next by closeness."
+policy:
+  allow_implicit_invocation: false
