@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ontology Decomposition"
+  short_description: "Decompose a system into a business ontology"
+  default_prompt: "Use $ontology-decomposition to decompose this system into an ontology of its business world and map it onto the architecture."
