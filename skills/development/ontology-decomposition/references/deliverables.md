@@ -4,7 +4,7 @@ The files of [`ontology-decomposition`](../SKILL.md), their formats, and the acc
 
 | File | Asset | Written in step | Acceptance bar |
 |---|---|---|---|
-| `README.md` | 索引、版本、未决问题 | 1, updated every step | lists every file, the current version, every open question |
+| `README.md` | 索引、版本、未决问题 | 2, updated every step | lists every file, the current version, every open question |
 | `00-scope-and-scenarios.md` | 业务范围与场景 | 1-2 | user-confirmed |
 | `01-semantic-dictionary.md` | 业务语义词典 | 3, extended in 4-6 | no ambiguity, no term defined twice |
 | `02-object-catalog.md` | 领域对象清单 | 3 | each Object's responsibility is clear |
