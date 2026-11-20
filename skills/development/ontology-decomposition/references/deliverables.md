@@ -6,7 +6,7 @@ The files of [`ontology-decomposition`](../SKILL.md), their formats, and the acc
 |---|---|---|---|
 | `README.md` | 索引、版本、未决问题 | 2, updated every step | lists every file, the current version, every open question |
 | `00-scope-and-scenarios.md` | 业务范围与场景 | 1-2 | user-confirmed |
-| `01-semantic-dictionary.md` | 业务语义词典 | 3, extended in 4-6 | no ambiguity, no term defined twice |
+| `01-semantic-dictionary.md` | 业务语义词典 | 6, collected from 02-04 | no ambiguity, no term defined twice |
 | `02-object-catalog.md` | 领域对象清单 | 3 | each Object's responsibility is clear |
 | `03-relation-graph.md` | 本体关系图 | 4 | every relation is explainable and traceable to a scenario |
 | `04-behavior-model.md` | 动态行为模型 | 5-6 | the main business paths can be executed against it |
@@ -172,7 +172,7 @@ stateDiagram-v2
 - 执行行为：…
 - 状态变化：待分配 → 已分配
 - 产生事件：E-01 机器人已分配
-- 异常与补偿：…
+- 异常与补偿：{半途失败时释放、重试或升级什么；恒成立的规则写进规则清单}
 
 ## 事件
 

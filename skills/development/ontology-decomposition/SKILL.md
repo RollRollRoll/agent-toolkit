@@ -53,7 +53,7 @@ Judge an Object's independence by business meaning: would the business refer to 
 - A **managed Object** has a lifecycle this system drives. Record its identity criterion (what makes two instances the same one), type hierarchy, properties, lifecycle, and two or three sample instances.
 - A **reference Object** is owned by another system or role and only referenced here (a patient, a ward). Record its identity criterion, key properties, two sample instances, and its owner.
 
-Done when every concept in the scenarios sits in exactly one category, each concept has one term (its synonyms collapsed into the dictionary's 避免 column), every Object states its tier and identity criterion, and every managed Object its lifecycle. Write `01-semantic-dictionary.md` and `02-object-catalog.md` now; steps 4-6 add their terms to the dictionary as they go.
+Done when every concept in the scenarios sits in exactly one category, each concept has one term (its synonyms noted for the dictionary's 避免 column), every Object states its tier and identity criterion, and every managed Object its lifecycle. Write `02-object-catalog.md` now.
 
 ### 4. Build relations
 
@@ -77,13 +77,13 @@ TaskExecution ── performedBy ──> Robot
 
 Mark each as association, inheritance, composition, or dependency. Relations define structure; execution order belongs to scenarios and actions. A candidate relation that only says "A happens before B" is a process step: move it to step 6.
 
-Done when every relation has all six dimensions filled and every Object is connected by at least one relation. An isolated Object is out of scope or missing a relation: resolve which. Write `03-relation-graph.md` and add the relations to the dictionary.
+Done when every relation has all six dimensions filled and every Object is connected by at least one relation. An isolated Object is out of scope or missing a relation: resolve which. Write `03-relation-graph.md`.
 
 ### 5. Define states and rules
 
 Every Object you gave a lifecycle in step 3 gets a state machine (states, allowed transitions, terminal states), including one whose state is derived from other Objects. Collect rules in three kinds: **state constraints** (what a state permits), **invariants** (true in every state), **decision rules** (conditions that choose an outcome).
 
-Done when every state is reachable from the initial state and either has an exit or is marked terminal, and every rule cites the elements it constrains and the scenario step it came from. Write the state and rule sections of `04-behavior-model.md` and add the rules to the dictionary.
+Done when every state is reachable from the initial state and either has an exit or is marked terminal, and every rule cites the elements it constrains and the scenario step it came from. Write the state and rule sections of `04-behavior-model.md`.
 
 ### 6. Define actions and events
 
@@ -99,7 +99,7 @@ Failure handling answers one question: if this action fails halfway, what is rel
 
 Name events as past-tense facts.
 
-Done when every transition from step 5 is caused by a named action, every action has all five parts, and every exception flow from step 2 lands in an action's failure handling or in an action of its own. Complete `04-behavior-model.md` with the actions and events, and add them to the dictionary.
+Done when every transition from step 5 is caused by a named action, every action has all five parts, and every exception flow from step 2 lands in an action's failure handling or in an action of its own. An exception flow that needs something to happen, such as a reminder or an escalation, lands in an action: a rule only forbids or decides. Complete `04-behavior-model.md` with the actions and events, then write `01-semantic-dictionary.md`, collecting every term from 02-04.
 
 ### 7. Map to system capabilities
 
