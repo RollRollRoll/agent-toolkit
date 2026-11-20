@@ -119,7 +119,7 @@ Done when every Object and Action has a row, every empty cell is marked 缺口, 
 
 ### 8. Validate with instances and iterate
 
-Walk every scenario step by step with concrete instances (`R-07` 接到 `T-123`), citing the element IDs each step uses. A step with nothing to cite is a gap: return to the step that owns the missing element, fix it, and re-walk. An element no scenario cites is redundant: remove it, or add the scenario that needs it. Then run the quality check, giving each item a verdict with evidence. A check passes only when no open gap counts against it; otherwise it fails and names those gaps.
+Walk every scenario step by step with concrete instances (`R-07` 接到 `T-123`), citing the element IDs each step uses. Walk each exception flow listed under a scenario as its own path, and mark as a gap every step that a 缺口 in the capability matrix affects. A step with nothing to cite is a gap: return to the step that owns the missing element, fix it, and re-walk. An element no scenario cites is redundant: remove it, or add the scenario that needs it. Then run the quality check, giving each item a verdict with evidence. A check passes only when no open gap counts against it; otherwise it fails and names those gaps.
 
 - **Completeness**: the model explains the core scenarios and their exceptions.
 - **Consistency**: each concept has one definition and one set of rules. Test it: search every file for each term in the dictionary's 避免 column; any hit outside that column fails the check.
@@ -127,8 +127,8 @@ Walk every scenario step by step with concrete instances (`R-07` 接到 `T-123`)
 - **Composability**: different businesses reuse the same Objects and actions.
 - **Evolvability**: a new scenario fits without wide changes to the core model. Test it: invent one plausible new scenario and count the elements it forces you to change.
 
-Done when every step of every scenario cites elements or is listed as an open gap with its reason, every competency question is answered by naming the Objects and relations that answer it, and all five checks carry a verdict. Write `06-scenario-validation.md`, and record the model version and what changed in this pass in `README.md`.
+Done when every step of every scenario and exception flow cites elements or is listed as an open gap with its reason, every competency question is answered by naming the Objects and relations that answer it, and all five checks carry a verdict. Write `06-scenario-validation.md`, and record the model version and what changed in this pass in `README.md`.
 
 ## Report
 
-Finish with a short Chinese summary in the conversation: where the files are and the count of objects, relations, rules, actions, and events, then every capability gap, failed quality check, and open question that needs the user, each by its ID in one line.
+Finish with a short Chinese summary in the conversation: where the files are and the count of objects, relations, rules, actions, and events, then every capability gap, failed quality check, and open question that needs the user, each by its ID in one line. A question you proceeded on by assumption is still open: list it with its assumption.
