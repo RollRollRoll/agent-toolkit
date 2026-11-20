@@ -73,6 +73,8 @@ The files of [`ontology-decomposition`](../SKILL.md), their formats, and the acc
 2. …
 
 异常流程：S-02（第 2 步分配失败）、…
+
+跨系统协作：{系统} — {第几步、交互内容}；没有则写「无」
 ```
 
 ## 01-semantic-dictionary.md
@@ -97,6 +99,7 @@ One row per term, across all seven categories. A term appears once; its synonyms
 
 ## Robot 机器人
 
+- 层级：受管对象
 - 定义：…
 - 职责：…
 - 身份标识：{两个实例在什么条件下算同一个}
@@ -106,6 +109,11 @@ One row per term, across all seven categories. A term appears once; its synonyms
 
 | 属性 | 含义 | 取值 / 单位 | 是否可变 |
 |---|---|---|---|
+
+## 参考对象
+
+| 对象 | 定义 | 身份标识 | 关键属性 | 实例示例 | 归属（系统或角色） |
+|---|---|---|---|---|---|
 ```
 
 ## 03-relation-graph.md
@@ -197,7 +205,7 @@ stateDiagram-v2
 |---|---|---|
 ```
 
-For a new system nothing exists yet, so 现状 is 规划 (a home is planned) or 缺口 (no planned home).
+For a new system nothing exists yet, so 现状 is 规划 (a home is planned) or 缺口 (no planned home). An empty cell holds 缺口, or 不适用 with its reason (a reference Object needs no page).
 
 ## 06-scenario-validation.md
 

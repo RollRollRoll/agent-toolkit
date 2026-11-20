@@ -48,9 +48,12 @@ Pull every noun and verb phrase out of the scenario steps and classify each with
 | Does it name an operation applied to an object? | Action | 分配机器人 |
 | Does it limit the conditions under which something may happen? | Rule | 能力不匹配禁止分配 |
 
-Judge an Object's independence by business meaning: would the business refer to it, track it, or ask about it on its own? Having a database ID is evidence of nothing. Keep Object and instance apart (`机器人` is the Object, `R-07` an instance). For each Object record its identity criterion (what makes two instances the same one), type hierarchy, properties, lifecycle, and two or three sample instances.
+Judge an Object's independence by business meaning: would the business refer to it, track it, or ask about it on its own? Having a database ID is evidence of nothing. Keep Object and instance apart (`机器人` is the Object, `R-07` an instance). Objects come in two tiers:
 
-Done when every concept in the scenarios sits in exactly one category, each concept has one term (its synonyms collapsed into the dictionary's 避免 column), and every Object states its identity criterion and lifecycle. Write `01-semantic-dictionary.md` and `02-object-catalog.md` now; steps 4-6 add their terms to the dictionary as they go.
+- A **managed Object** has a lifecycle this system drives. Record its identity criterion (what makes two instances the same one), type hierarchy, properties, lifecycle, and two or three sample instances.
+- A **reference Object** is owned by another system or role and only referenced here (a patient, a ward). Record its identity criterion, key properties, two sample instances, and its owner.
+
+Done when every concept in the scenarios sits in exactly one category, each concept has one term (its synonyms collapsed into the dictionary's 避免 column), every Object states its tier and identity criterion, and every managed Object its lifecycle. Write `01-semantic-dictionary.md` and `02-object-catalog.md` now; steps 4-6 add their terms to the dictionary as they go.
 
 ### 4. Build relations
 
@@ -78,7 +81,7 @@ Done when every relation has all six dimensions filled and every Object is conne
 
 ### 5. Define states and rules
 
-For every Object with a lifecycle, draw its state machine: states, allowed transitions, terminal states. Collect rules in three kinds: **state constraints** (what a state permits), **invariants** (true in every state), **decision rules** (conditions that choose an outcome).
+Every Object you gave a lifecycle in step 3 gets a state machine (states, allowed transitions, terminal states), including one whose state is derived from other Objects. Collect rules in three kinds: **state constraints** (what a state permits), **invariants** (true in every state), **decision rules** (conditions that choose an outcome).
 
 Done when every state is reachable from the initial state and either has an exit or is marked terminal, and every rule cites the elements it constrains and the scenario step it came from. Write the state and rule sections of `04-behavior-model.md` and add the rules to the dictionary.
 
@@ -92,9 +95,11 @@ Describe every action in the same five parts:
 - **Event**: 机器人已分配
 - **Failure handling**: 分配失败时释放预留资源，或重新选择机器人
 
+Failure handling answers one question: if this action fails halfway, what is released, retried, or escalated? A business rule that always holds belongs in step 5.
+
 Name events as past-tense facts.
 
-Done when every transition from step 5 is caused by a named action, every action has all five parts (failure handling states what is released, retried, or escalated), and every exception flow from step 2 lands in an action's failure handling or in an action of its own. Complete `04-behavior-model.md` with the actions and events, and add them to the dictionary.
+Done when every transition from step 5 is caused by a named action, every action has all five parts, and every exception flow from step 2 lands in an action's failure handling or in an action of its own. Complete `04-behavior-model.md` with the actions and events, and add them to the dictionary.
 
 ### 7. Map to system capabilities
 
@@ -110,7 +115,7 @@ Done when every transition from step 5 is caused by a named action, every action
 
 Fill the capability matrix: one row per Object and per Action, mapped to application function, service, API, and data. An Object is a unit of meaning, a service a unit of deployment: draw each service boundary from business consistency, transactions, team ownership, and deployment needs, and write that reason beside it.
 
-Done when every Object and Action has a row, every empty cell is marked 缺口, and every service boundary carries its reason. Write `05-capability-matrix.md`.
+Done when every Object and Action has a row, every empty cell is marked 缺口, or 不适用 with its reason, and every service boundary carries its reason. Write `05-capability-matrix.md`.
 
 ### 8. Validate with instances and iterate
 
