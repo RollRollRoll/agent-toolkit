@@ -70,7 +70,7 @@ Low-level modules (e.g. `common/` `utils/` `infra/` `core/`) are worth a dedicat
 ## Task brief template (prompt for subagents)
 
 If the current environment provides a "subagent / multi-agent" tool,
-use it to send each module out as a separate read-only investigation task (Claude Code uses `Agent` + `subagent_type=Explore`;
+use it to send each module out as a separate read-only investigation task, each started with a fresh context window (Claude Code uses `Agent` + `subagent_type=Explore`;
 Codex uses a read-only `explorer` or equivalent agent thread; other environments use their own equivalent). **If the current environment has no such tool, skip this section, investigate sequentially with a single agent,
 and state "未启用并行" (parallelism not enabled) in the report.** The brief template:
 

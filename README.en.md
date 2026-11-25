@@ -269,6 +269,8 @@ agent-toolkit/
    `disable-model-invocation: true` to entry points meant only for humans.
    If other skills will call it, the body must also state the calling contract (what goes in,
    what comes back, what it does not do).
+   If it dispatches a subagent, say to start it with a fresh context window: some harnesses
+   (Codex, for one) fork the parent conversation by default, and a fork inherits its context.
 3. Write `description` in English, using the "verb describes the capability" template
    (Action + Object): start with a verb followed by its object, say what it does in one sentence,
    and end with a period. Do not open with a preposition or time clause (such as When / For / By /

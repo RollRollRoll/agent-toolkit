@@ -255,6 +255,8 @@ agent-toolkit/
 2. `SKILL.md` 的 frontmatter 写清 `name`（与目录名一致）和 `description`
    （决定模型认不认得出该用它）；只给人用的入口加 `disable-model-invocation: true`。
    若它会被别的 skill 调用，正文还要写明调用契约（传入 / 取回 / 不做什么）。
+   若它会派子 agent，要写明用全新上下文启动（"with a fresh context window"）：
+   Codex 等运行环境默认 fork 父会话，fork 出来的子 agent 会继承父会话的上下文。
 3. `description` 用英文书写，统一用「动词描述能力」模版（Action + Object）：
    动词开头、紧跟宾语、一句话说清做什么、句号收尾，
    不用介词或时间状语开场（如 When / For / By / Using），也不加分类标签前缀。
