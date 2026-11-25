@@ -33,7 +33,7 @@ Read each source for the semantics it implies:
 
 Record every extracted element with its evidence as `path:line`, under the name the system uses. Keep that name even where it differs from the target term: the mismatch is a finding.
 
-Where a subagent tool exists, dispatch one extraction per source kind in parallel. Give each the scope, the table row it owns, and the seven categories from step 3; keep the target ontology out of the brief, so the extraction reports what the system says.
+Where a subagent tool exists, dispatch one extraction per source kind in parallel, each with a fresh context window. Give each the scope, the table row it owns, and the seven categories from step 3; keep the target ontology out of the brief, so the extraction reports what the system says.
 
 Done when every table, endpoint, page, and status enum in scope is either mapped to an extracted element or listed as skipped with its reason.
 

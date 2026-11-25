@@ -65,7 +65,7 @@ Each item has only three valid end states: **settled** / **not applicable (with 
 
 ### D · Fact checklist (look these up yourself; don't ask the user)
 
-Following grilling's rules, dispatch subagents to find these facts as the basis for each layer's questions:
+Following grilling's rules, dispatch subagents, each with a fresh context window, to find these facts as the basis for each layer's questions:
 
 - **Current state**: relevant modules and responsibilities, main data flows, interfaces / events / data structures, error handling and runtime constraints, existing behavior that must not break.
 - **Prior art**: similar implementations, existing test seams and test patterns, fixture and harness conventions.

@@ -13,11 +13,27 @@
   `gh issue edit <parent> --add-sub-issue <child>`（`gh` 2.94+）。旧版 `gh`：
   `gh api --method POST repos/<owner>/<repo>/issues/<parent>/sub_issues -F sub_issue_id=<child-db-id>`
   （数据库 id，取法同下方**阻塞**）。不支持 sub-issues 时，在子 issue 正文顶部写 `Part of #<parent>`。
+- **阻塞**：用 GitHub 的**原生 issue dependencies**，那是**权威的、UI 里看得见**的表示。
+  加一条边：`gh issue create --blocked-by <n>,<n> ...` 或 `gh issue edit <child> --add-blocked-by <blocker>`
+  （`gh` 2.94+）。旧版 `gh`：
+  `gh api --method POST repos/<owner>/<repo>/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`，
+  其中 `<blocker-db-id>` 是阻塞者的数字**数据库 id**
+  （`gh api repos/<owner>/<repo>/issues/<n> --jq .id`，**不是** `#number`，也不是 `node_id`）。
+  没有 dependencies 可用时，退回到子工单正文顶部的一行 `Blocked by: #<n>, #<n>`。
+  **所有阻塞者都关闭了，这张工单才算未被阻塞。**
+- **统计打开着的阻塞者**：`gh api repos/<owner>/<repo>/issues/<n> --jq .issue_dependencies_summary.blocked_by`
+  （只算打开着的，0 表示可以开工）。`gh issue view <n> --json blockedBy` 会连已关闭的阻塞者一起列出，
+  要过滤：`--jq '[.blockedBy.nodes[] | select(.state == "OPEN")] | length'`。
 - **评论**：`gh issue comment <number> --body "..."`
 - **加 / 去 label**：`gh issue edit <number> --add-label "..."` / `--remove-label "..."`
-- **关闭**：`gh issue close <number> --comment "..."`
+- **关闭**：先用 `gh issue comment <number> --body "..."` 写说明，再 `gh issue close <number>`。
+  对已关闭的 issue，`gh issue close --comment` 会丢掉评论，退出码仍是 0。
 
 通过 `git remote -v` 确认仓库；在克隆目录中运行时，`gh` 会使用当前仓库上下文。
+
+只往用户自己的仓库建 issue。在 fork 里，`gh` 可能默认指向上游父仓库，所以每次会话第一次
+`gh issue create` 之前，先用 `gh repo view --json nameWithOwner` 确认目标是 `RollRollRoll/agent-toolkit`，
+不是的话先跟用户确认。
 
 ## PR 作为 triage 入口
 
@@ -25,7 +41,8 @@
 
 改成「是」之后，PR 走**和 issue 一样的标签与状态**，用 `gh pr` 那套对应命令：
 
-- **读 PR**：`gh pr view <number> --comments`，看 diff 用 `gh pr diff <number>`。
+- **读 PR**：先 `gh pr view <number>`，再 `gh pr view <number> --comments`
+  （不在终端里运行时，`--comments` 只输出评论、不输出正文），看 diff 用 `gh pr diff <number>`。
 - **列出待 triage 的外部 PR**：
   `gh api --paginate 'repos/{owner}/{repo}/pulls?state=open' --jq '.[] | select(.author_association | IN("OWNER","MEMBER","COLLABORATOR") | not) | {number, title, author: .user.login, author_association, labels: [.labels[].name]}'`。
   `gh pr list --json` 不提供作者关系字段，所以走 REST 端点。
@@ -52,17 +69,10 @@
   没启用 sub-issues 时，把子工单加进地图正文的任务清单，并在子工单正文顶部写 `Part of #<map>`。
   标签：`wayfinder:<type>`（`research`/`prototype`/`grilling`/`task`）。
   **一旦被认领，这张工单就指派给驱动它的那位开发者。**
-- **阻塞**：用 GitHub 的**原生 issue dependencies**，那是**权威的、UI 里看得见**的表示。
-  加一条边：
-  `gh api --method POST repos/<owner>/<repo>/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`，
-  其中 `<blocker-db-id>` 是阻塞者的数字**数据库 id**
-  （`gh api repos/<owner>/<repo>/issues/<n> --jq .id`，**不是** `#number`，也不是 `node_id`）。
-  GitHub 会报 `issue_dependencies_summary.blocked_by`（只算打开着的阻塞者，那就是实时的闸）。
-  没有 dependencies 可用时，退回到子工单正文顶部的一行 `Blocked by: #<n>, #<n>`。
-  **所有阻塞者都关闭了，这张工单才算未被阻塞。**
+- **阻塞**：见「约定」里的**阻塞**。
 - **前沿查询**：列出地图打开着的子工单（`gh issue list --state open`，范围限定在地图的
   sub-issues / 任务清单里），**去掉有打开着的阻塞者的**
-  （`issue_dependencies_summary.blocked_by > 0`，或 `Blocked by` 那行里还有打开着的 issue）
+  （见**统计打开着的阻塞者**，或 `Blocked by` 那行里还有打开着的 issue）
   **和有 assignee 的**；**地图顺序里排第一的胜出。**
 - **认领**：`gh issue edit <n> --add-assignee @me`，**本次会话的第一个写操作**。
 - **解开**：`gh issue comment <n> --body "<答案>"`，然后 `gh issue close <n>`，

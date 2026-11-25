@@ -12,6 +12,8 @@ The goal is the entire spec implemented on a single **integration branch**, with
 
 The tickets are not a list of steps. They are a **task graph** with blocking relationships between them. This means there is always a **frontier** of tickets which are ready to be grabbed.
 
+Start every subagent with a fresh context window.
+
 Communication to and from subagents should be sparse. Communicate primarily through **context pointers**: to the spec, tickets, research notes, and previous commits. Don't duplicate information already available via pointers.
 
 **Implementer subagents** should be run in the background where possible for maximum concurrency. They have no channel to the user: their questions come back to you as a **blocked** report (see [Questions for the user](#questions-for-the-user)).
@@ -24,13 +26,13 @@ Communication to and from subagents should be sparse. Communicate primarily thro
 
 3. Create the integration branch. If the issue tracker closes work through PRs, or the user asks for one, open a draft PR after the first merge in step 5 (a branch with no commits ahead of main can't open one), marked as closing the spec and tickets.
 
-4. For each ticket on the **frontier**, create a worktree on its own branch from the integration branch tip, inside the repo under `.worktrees/`, and dispatch an **implementer subagent** into it. `.worktrees/` stays untracked in the main checkout, so stage files by name whenever you commit there. Brief it with pointers to the spec and its ticket, and with the workflow in [Implementer subagents](#implementer-subagents).
+4. For each ticket on the **frontier**, create a worktree on its own branch from the integration branch tip, inside the repo under `.worktrees/`, and dispatch a fresh **implementer subagent** into it. `.worktrees/` stays untracked in the main checkout, so stage files by name whenever you commit there. Brief it with pointers to the spec and its ticket, and with the workflow in [Implementer subagents](#implementer-subagents).
 
 5. When an **implementer subagent** reports **blocked**, relay its questions as described in [Questions for the user](#questions-for-the-user). When it reports done, fast-forward the integration branch onto its branch (`git merge --ff-only`). If the integration branch has moved since the subagent merged it, the fast-forward fails: [resume](#resuming-an-implementer-subagent) the same subagent to redo its merge step, and hold every other merge until it reports done and you fast-forward. After each fast-forward, tell every running **implementer subagent** that the integration branch has moved, so its merge step picks up the new tip.
 
 6. If this changes the **frontier** of available tickets, kick off more **implementer subagents** to work on the new tickets. This allows for maximum concurrency.
 
-7. Once all tickets are complete, call the Skill tool with `code-review` on the integration branch. Fix all issues raised by the code review in a single **implementer subagent**, with the review findings in place of a ticket.
+7. Once all tickets are complete, call the Skill tool with `code-review` on the integration branch. Fix all issues raised by the code review in a single fresh **implementer subagent**, with the review findings in place of a ticket.
 
 8. If a draft PR exists, mark it ready for review. Otherwise, resolve each ticket the way the issue tracker closes work, and report the integration branch.
 

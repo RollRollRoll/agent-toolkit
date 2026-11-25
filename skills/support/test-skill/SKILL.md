@@ -78,7 +78,7 @@ Phase 6  Write the persistent report
     When you hit an unknown event type or a corrupt line, record it and skip it; do not let it abort the whole analysis.
 18. Check that the skill name and source actually triggered in the transcript are the copy injected into the sandbox. If not, or if the source cannot be confirmed and that would affect the conclusion, mark the result invalid or doubtful; do not pass it off as a valid blind test.
 19. Judge both sides: each semantic step gets one of three labels, `依据 Rx` (based on Rx), `偏离 Rx` (deviates from Rx), or `无依据` (no basis); each instruction gets one of four labels, `已遵守` (followed), `被违反` (violated), `被跳过` (skipped), or `未触发` (not triggered). Use the Chinese labels in the report.
-20. If the transcript is longer than about 200k characters, split it by conversation turn across subagents. Give every chunk the full checklist and the judging criteria, then reconcile the results into one consistent standard at the end.
+20. If the transcript is longer than about 200k characters, split it by conversation turn across subagents, each started with a fresh context window. Give every chunk the full checklist and the judging criteria, then reconcile the results into one consistent standard at the end.
 
 ### Phase 6 · Write the persistent report
 

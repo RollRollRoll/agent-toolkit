@@ -31,7 +31,7 @@ The tickets are a **task graph** with blocking edges. The **frontier** is the op
 
    `Next: <ticket> — shares <what> with <last ticket>`
 
-4. Dispatch one **implementer subagent** for the picked ticket; every ticket and the review fixes are built by implementer subagents, never by you. Dispatch it in the foreground, on the branch. Brief it as described in [Implementer subagents](#implementer-subagents), adding the answers from the user so far that apply beyond their ticket. Only one subagent runs at a time.
+4. Dispatch a new **implementer subagent** for the picked ticket, started with a fresh context window; every ticket and the review fixes are built by implementer subagents, never by you. Dispatch it in the foreground, on the branch. Brief it as described in [Implementer subagents](#implementer-subagents), adding the answers from the user so far that apply beyond their ticket. Only one subagent runs at a time.
 
 5. When it reports **blocked**, ask the user its questions as described in [Questions for the user](#questions-for-the-user), then resume it. When it reports done, check its commit is on the branch, close the ticket with a comment naming the commit and the pick reason from step 3 (when the tracker lives in the repo, commit that change), and record its summary and changed files as the evidence for the next pick.
 
@@ -41,7 +41,7 @@ The tickets are a **task graph** with blocking edges. The **frontier** is the op
    - **Product decisions**: findings that change agreed or shipped behaviour, or that the spec leaves open. Ask the user about them first, each with the options and the one you recommend.
    - **Fixes**: every other finding.
 
-   Then dispatch a single **implementer subagent** with the fixes and the user's answers in place of a ticket; there is no ticket to close for it.
+   Then dispatch a single fresh **implementer subagent** with the fixes and the user's answers in place of a ticket; there is no ticket to close for it.
 
 8. Report: the tickets in the order built, each with its commit and pick reason, and the review-fix commit.
 
