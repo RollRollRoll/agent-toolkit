@@ -109,14 +109,18 @@ For each batch, give:
 
 ### 4. Write commit messages
 
-Follow the repo's existing commit conventions first. If the repo has none, use a short, clear, searchable subject that states directly "what was done" and why.
-Use the Conventional Commits format only when the repo already uses it.
+Pick the format by the repo's commit history:
+
+- **The repo has commits**: read recent history (e.g. `git log -n 30 --format='%s%n%b---'`) and match its dominant format as closely as you can: type prefixes and scopes, subject language and casing, issue references, and body style. A documented convention found in preflight overrides history.
+- **The repo has no commits, or history shows no consistent format**: use [Conventional Commits](https://www.conventionalcommits.org/) (`<type>(<scope>): <subject>`).
+
+Either way, the subject is short, clear, searchable, and states directly "what was done".
 
 Avoid vague descriptions such as `update`, `fix bug`, `misc changes`, `tweak code`. Complex commits must have a body that gives at least two of the following:
 background / reason, key implementation decisions, behavior impact or compatibility, risks and how it was verified. The body explains "why";
 do not repeat the diff's file list.
 
-Example:
+Example in Conventional Commits format:
 
 ```text
 fix(config): avoid overwriting existing settings when fields are missing
